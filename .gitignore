@@ -1,3 +1,4 @@
 /build
 /dist
 /src/ni_cts3.egg-info
+/src/ni_cts3/__pycache__

@@ -12,14 +12,14 @@ CTS3 Python Wrapper
 
 NI Contactless Test Station 3 wrapper for `Python <https://www.python.org>`_.
 
-It gives access to CTS3-related API provided in *MPuLib* communication library.
+Gives access to CTS3-related API provided in *MPuLib* communication library.
 
 Installation
 ============
 
 CTS3 Python wrapper is published on `PyPI <https://pypi.org/project/ni-cts3>`_ and can be installed from there::
 
-   pip install --upgrade ni-cts3
+   python -m pip install --upgrade ni-cts3
 
 Documentation
 =============

@@ -5,7 +5,8 @@ from platform import architecture, processor
 from os.path import dirname, abspath, isfile, sep
 from time import sleep
 from atexit import register
-from subprocess import Popen, PIPE, DEVNULL, CREATE_NEW_PROCESS_GROUP
+from subprocess import Popen, PIPE, DEVNULL
+from shlex import split
 from threading import Thread, Event
 from ipaddress import IPv4Address, IPv4Interface
 from typing import List, Dict, Type, Union, Optional, Callable
@@ -52,6 +53,7 @@ else:
         _lib_name = 'libMPuLib.dylib'
     elif platform == 'linux':
         if processor().startswith('armv7'):
+            # CTS3 embedded library
             _lib_path += 'Arm/'
         else:
             _lib_path += 'Linux/'
@@ -82,56 +84,84 @@ if platform == 'win32' and architecture()[0] == '32bit':
 
 
 class _FirmwareLog(Thread):
-    """Firmware log listening thread"""
+    """Firmware log listening thread
+
+    Attributes
+    ----------
+    host : str
+        Connection string
+    started : Event
+        Event raised when log redirection is established or failed
+    running : bool
+        True if thread is running
+    log : Popen
+        Log redirection subprocess
+    """
 
     def __init__(self, host: str, started: Event):
-        """Contructor
+        """Inits _FirmwareLog Thread
 
         Parameters
         ----------
         host: str
             Connection string
         started: Event
-            Event raised when redirection is initialized
+            Event raised when log redirection is established or failed
         """
-        self.host = host
+        if platform == 'linux' and processor().startswith('armv7'):
+            # Running from CTS3 embedded environment
+            self.host = 'localhost'
+        else:
+            self.host = host
         self.started = started
         self.running = False
         Thread.__init__(self, daemon=True)
 
     def run(self):
-        """Starts redirection"""
-        log_command = 'journalctl --unit=tgapp --follow --lines=1 --output=cat'
-        self.running = True
+        """Starts log redirection"""
+        # Follow log and read last entry
+        log_cmd = ' journalctl --unit=tgapp --follow --lines=1 --output=cat'
         try:
             try:
-                self.ssh = Popen('ssh -Tfnq -l default' +
-                                 ' -o StrictHostKeyChecking=no ' +
-                                 self.host + ' ' + log_command,
-                                 bufsize=1,
-                                 universal_newlines=True,
-                                 encoding='ascii',
-                                 stdout=PIPE,
-                                 stderr=DEVNULL,
-                                 creationflags=CREATE_NEW_PROCESS_GROUP)
-                # Read first line to ensure SSH is initialized
-                self.ssh.stdout.readline()
+                if platform == 'linux' and processor().startswith('armv7'):
+                    # Running from CTS3 embedded environment
+                    self.log = Popen(log_cmd,
+                                     bufsize=1,
+                                     universal_newlines=True,
+                                     encoding='ascii',
+                                     shell=True,
+                                     stdout=PIPE,
+                                     stderr=DEVNULL)
+                else:
+                    # Running from remote environment, open SSH connection
+                    ssh_cmd = 'ssh -Tnq -l default -o ' + \
+                              'StrictHostKeyChecking=no ' + self.host
+                    self.log = Popen(split(ssh_cmd + log_cmd),
+                                     bufsize=1,
+                                     universal_newlines=True,
+                                     encoding='ascii',
+                                     stdout=PIPE,
+                                     stderr=DEVNULL)
+                self.running = True
+                # Read last log entry to ensure link is established
+                self.log.stdout.readline()
             except Exception as e:
                 raise e
             finally:
                 self.started.set()
             while self.running:
-                log = self.ssh.stdout.readline()
+                log = self.log.stdout.readline()
                 if len(log) > 0:
                     stderr.write(f'{{{self.host}}}\t{log}')
         except Exception:
             self.running = False
 
     def join(self):
-        """Stops redirection"""
+        """Stops log redirection"""
         if self.running:
             self.running = False
-            self.ssh.kill()
+            self.log.terminate()
+            self.log.wait()
             Thread.join(self)
 
 
@@ -196,6 +226,7 @@ def GetMifareErrorMessageFromCode(error_code: int) -> str:
     str
         Error message
     """
+    _check_limits(c_int32, error_code, 'error_code')
     _MPuLib.GetMifareErrorMessageFromCode.restype = c_char_p
     message = _MPuLib.GetMifareErrorMessageFromCode(
         c_int32(error_code)).decode('ascii')
@@ -239,7 +270,7 @@ def _log_stop() -> None:
 
 @register
 def _logs_cleanup() -> None:
-    """Stops all firmware log redirections to stderr"""
+    """Stops all firmware log redirections"""
     global _logs_dict
     for log in _logs_dict.values():
         log.join()
