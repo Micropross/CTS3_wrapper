@@ -2670,6 +2670,7 @@ class ProtocolParameters(IntEnum):
     CPP_FRAME_TYPE_F_CLK = 64
     CPP_ANALOG_IN_AUTORANGE = 65
     CPP_ASK_FILTER_106 = 66
+    CPP_TX_FIRST_BUFFER_SIZE = 67
 
 
 def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
@@ -2879,12 +2880,12 @@ def MPC_GetProtocolParameters(parameter_type: ProtocolParameters) \
     param_size = c_uint32()
     if parameter_type == ProtocolParameters.CPP_CURRENT_CID or \
             parameter_type == ProtocolParameters.CPP_CURRENT_NAD:
-        val = c_uint32()
+        val = c_uint8()
         ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(val),
-            c_uint32(4),
+            c_uint32(1),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
