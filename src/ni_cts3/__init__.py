@@ -25,7 +25,7 @@ else:
     from ctypes import CFUNCTYPE
 
 
-__version__ = '21.1.0'
+__version__ = '21.1.1'
 __author__ = 'NI'
 __copyright__ = 'Copyright 2021, NI'
 __license__ = 'MIT'
