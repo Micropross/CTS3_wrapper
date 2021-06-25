@@ -3547,9 +3547,14 @@ class NfcTrigger(IntEnum):
     TRIG_CE_PDC_CHAR_TYPE_A = 47
     TRIG_CE_PDC_CHAR_TYPE_B = 48
     TRIG_CE_PDC_CHAR_TYPE_F = 49
+    TRIG_CE_PDC_CHAR_TYPE_V = 50
     TRIG_RX_FRAME = 59
     TRIG_ON_ERROR = 60
     TRIG_TX_FRAME = 61
+    TRIG_PICC_CHAR_TYPE_A = 62
+    TRIG_PICC_CHAR_TYPE_B = 63
+    TRIG_PICC_CHAR_TYPE_F = 64
+    TRIG_PICC_CHAR_TYPE_V = 65
 
 
 def MPC_TriggerConfig(trigger_id: NfcTriggerId, config: NfcTrigger,
