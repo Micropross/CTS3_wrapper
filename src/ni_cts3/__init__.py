@@ -750,8 +750,7 @@ def MPS_ProbeTemperature(sensor: TemperatureSensor) -> float:
         raise TypeError('sensor must be an instance of '
                         'TemperatureSensor IntEnum')
     _MPuLib.MPS_ProbeTemperature.restype = c_double
-    return _MPuLib.MPS_ProbeTemperature(
-        c_uint8(sensor))
+    return _MPuLib.MPS_ProbeTemperature(c_uint8(sensor))
 
 
 def MPS_Beep(duration: float) -> None:
@@ -1109,7 +1108,7 @@ def MPS_I2cAuxRead(slave_address: int, data_length: int) -> bytes:
     _check_limits(c_uint8, data_length, 'data_length')
     data = bytes(255)
     size = c_uint8(data_length)
-    ret = CTS3ErrorCode(_MPuLib.MPS_I2cAuxWrite(
+    ret = CTS3ErrorCode(_MPuLib.MPS_I2cAuxRead(
         c_uint8(slave_address),
         byref(size),
         data))
@@ -1159,7 +1158,7 @@ def MPS_I2cAux1Read(slave_address: int, data_length: int) -> bytes:
     _check_limits(c_uint8, data_length, 'data_length')
     data = bytes(255)
     size = c_uint8(data_length)
-    ret = CTS3ErrorCode(_MPuLib.MPS_I2cAux1Write(
+    ret = CTS3ErrorCode(_MPuLib.MPS_I2cAux1Read(
         c_uint8(slave_address),
         byref(size),
         data))
