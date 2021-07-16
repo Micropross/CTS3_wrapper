@@ -2645,7 +2645,6 @@ class ProtocolParameters(IntEnum):
     CPP_EXTRA_FWT_ETU = 26
     CPP_SFGT = 27
     CPP_FRAME_WITH_ERROR_CORRECTION = 29
-    CPP_MUTE_ATTENTION = 30
     CPP_EGT_BEFORE_EOF_CLK = 31
     CPP_FRAME_FELICA_OPTION = 32
     CPP_FORCE_PICC_14443_MAX_FRAME_SIZE = 34
@@ -2663,7 +2662,6 @@ class ProtocolParameters(IntEnum):
     CPP_ALLOW_TA1_RFU = 53
     CPP_DISABLE_ATQA_CHECK = 54
     CPP_RF_FIELD_LOCK_ANTENNA = 55
-    CPP_CREATE_VICINITY_COLLISION = 60
     CPP_NFC_ACTIVE_FDT_MODE = 61
     CPP_PLI_STEP = 62
     CPP_DAQ_AUTORANGE = 63
@@ -2684,7 +2682,7 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
     ----------
     parameter_type : ProtocolParameters
         Parameter to change
-    parameter_value
+    parameter_value : int, float, bool, list(int) or list(float)
         Parameter value
     """
     if not isinstance(parameter_type, ProtocolParameters):
@@ -2773,19 +2771,6 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
             c_uint32(parameter_type),
             val,
             c_uint32(3)))
-    elif parameter_type == ProtocolParameters.CPP_CREATE_VICINITY_COLLISION:
-        if not isinstance(parameter_value, list):
-            raise TypeError('parameter_value must be an instance of 2-int'
-                            ' list')
-        val = (2 * c_uint8)()
-        for i in range(2):
-            _check_limits(c_uint8, parameter_value[i], 'parameter_value')
-            val[i] = c_uint8(parameter_value[i])
-        ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
-            c_uint8(0),
-            c_uint32(parameter_type),
-            val,
-            c_uint32(2)))
 
     # Boolean parameter
     elif parameter_type == ProtocolParameters.CPP_CID or \
@@ -2797,7 +2782,6 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
             parameter_type == ProtocolParameters.CPP_ANTI_EMD or \
             parameter_type == ProtocolParameters.CPP_CONFIG_ANTI_EMD or \
             parameter_type == ProtocolParameters.CPP_SFGT or \
-            parameter_type == ProtocolParameters.CPP_MUTE_ATTENTION or \
             parameter_type == ProtocolParameters.CPP_CE_REVERSE_POLARITY or \
             parameter_type == ProtocolParameters.\
             CPP_ACTIVE_TARGET_MUTE_BEHAVIOR or \
@@ -2872,6 +2856,7 @@ def MPC_GetProtocolParameters(parameter_type: ProtocolParameters) \
 
     Returns
     -------
+    int, float, bool, list(int) or list(float)
         Parameter value
     """
     if not isinstance(parameter_type, ProtocolParameters):
@@ -2949,17 +2934,6 @@ def MPC_GetProtocolParameters(parameter_type: ProtocolParameters) \
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
         return [float(val[i]) / 1e6 for i in range(3)]
-    elif parameter_type == ProtocolParameters.CPP_CREATE_VICINITY_COLLISION:
-        val = (2 * c_uint8)()
-        ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
-            c_uint8(0),
-            c_uint32(parameter_type),
-            val,
-            c_uint32(2),
-            byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
-        return [val[i].value for i in range(2)]
 
     # Boolean parameter
     elif parameter_type == ProtocolParameters.CPP_CID or \
@@ -2971,7 +2945,6 @@ def MPC_GetProtocolParameters(parameter_type: ProtocolParameters) \
             parameter_type == ProtocolParameters.CPP_ANTI_EMD or \
             parameter_type == ProtocolParameters.CPP_CONFIG_ANTI_EMD or \
             parameter_type == ProtocolParameters.CPP_SFGT or \
-            parameter_type == ProtocolParameters.CPP_MUTE_ATTENTION or \
             parameter_type == ProtocolParameters.CPP_CE_REVERSE_POLARITY or \
             parameter_type == ProtocolParameters.\
             CPP_ACTIVE_TARGET_MUTE_BEHAVIOR or \
@@ -4055,7 +4028,7 @@ def MPC_Sdd() -> Dict[str, bytes]:
     -------
     dict
         'sel_res' (bytes): SEL_RES byte
-        'nfc_id1' (bytes): NFC Unique Identifier
+        'nfc_id1' (bytes): Random ID for Single Device Detection
     """
     data = bytes(12)
     length = c_uint16()
@@ -4071,12 +4044,12 @@ def MPC_Sdd() -> Dict[str, bytes]:
 
 
 def MPC_SelReq(nfc_id1: bytes) -> bytes:
-    """Selects a target by its NFC Unique Identifier
+    """Selects a target by its NFCID1
 
     Parameters
     ----------
     nfc_id1 : bytes
-        NFC Unique Identifier
+        Random ID for Single Device Detection
 
     Returns
     -------

@@ -3,3 +3,7 @@
 /src/ni_cts3.egg-info
 /src/ni_cts3/__pycache__
 /src/ni_cts3/.lib/Windows/LabVIEW
+/src/ni_cts3/.lib/Windows/*.lib
+/src/ni_cts3/.lib/macOS/*.a
+/src/ni_cts3/.lib/Linux/x86/*.a
+/src/ni_cts3/.lib/Linux/x64/*.a

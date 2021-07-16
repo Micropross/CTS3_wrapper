@@ -230,6 +230,49 @@ def MPC_RfFieldOffDetected() -> bool:
     return field > 0
 
 
+def MPC_WaitTypeAActiveState(atqa: bytes, uid: bytes,
+                             sak: Union[bytes, int],
+                             timeout: float) -> None:
+    """Waits for Type A activation
+
+    Parameters
+    ----------
+    atqa : bytes
+        2-byte ATQA to answer
+    uid : bytes or int
+        UID to answer
+    sak : bytes
+        SAK byte to answer
+    timeout : float
+        Activation timeout in s
+    """
+    if not isinstance(atqa, bytes) or len(atqa) != 2:
+        raise TypeError('atqa must be an instance of 2 bytes')
+    if not isinstance(uid, bytes):
+        raise TypeError('uid must be an instance of bytes')
+    _check_limits(c_uint32, len(uid), 'uid')
+    if isinstance(sak, bytes):
+        if len(sak) != 1:
+            raise TypeError('sak must be an instance of 1 byte')
+        sak_value = sak[0]
+    elif isinstance(sak, int):
+        _check_limits(c_uint8, sak, 'sak')
+        sak_value = sak
+    else:
+        raise TypeError('sak must be an instance of int or 1 byte')
+    timeout_ms = round(timeout * 1e3)
+    _check_limits(c_uint32, timeout_ms, 'timeout')
+    ret = CTS3ErrorCode(_MPuLib.MPC_WaitTypeAActiveState(
+        c_uint8(0),
+        atqa,
+        uid,
+        c_uint32(len(uid)),
+        byref(c_uint8(sak_value)),
+        c_uint32(timeout_ms)))
+    if ret != CTS3ErrorCode.RET_OK:
+        raise CTS3Exception(ret)
+
+
 def MPC_WaitAndGetFrame(timeout: float) -> Dict[str,
                                                 Union[bytes, TechnologyType]]:
     """Waits for an incoming frame

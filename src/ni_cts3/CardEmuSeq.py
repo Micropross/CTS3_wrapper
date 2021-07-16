@@ -114,12 +114,22 @@ class S_EMD_pattern(IntEnum):
 
 class S_EMD():
     """EMD definition"""
-    def __init__(self, pattern_number: int, pattern_type: S_EMD_pattern):
+    def __init__(self, patterns_number: int, pattern_type: S_EMD_pattern):
+        """Inits S_EMD class
+
+        Attributes
+        ----------
+        pattern_number : int
+            Patterns number to send
+        pattern_type : S_EMD_pattern
+            EMD waveform pattern
+        """
+        _check_limits(c_uint16, patterns_number, 'patterns_number')
         if not isinstance(pattern_type, S_EMD_pattern):
             raise TypeError('pattern_type must be an instance of '
                             'S_EMD_pattern IntEnum')
-        self.number = pattern_number
-        self.type = c_uint16(pattern_type)
+        self.number = patterns_number
+        self.type = pattern_type
 
 
 def MPC_AddToScenarioPcd(scenario_id: int,
@@ -388,9 +398,9 @@ def MPC_AddToScenarioPcd(scenario_id: int,
             if not isinstance(args[1][i], S_EMD):
                 raise TypeError('args[1] must be an instance of '
                                 'S_EMD list')
-            _check_limits(c_uint16, args[1][i].number, 'args[1]')
-            emd[i] = _S_EMD(args[1][i].number, args[1][i].type.value)
-        emd[len(args[1])] = _S_EMD(0, 0)
+            emd[i] = _S_EMD(c_uint16(args[1][i].number),
+                            c_uint16(args[1][i].type.value))
+        emd[len(args[1])] = _S_EMD(c_uint16(0), c_uint16(0))
         ret = CTS3ErrorCode(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),

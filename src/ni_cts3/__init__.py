@@ -120,7 +120,7 @@ class _FirmwareLog(Thread):
     def run(self):
         """Starts log redirection"""
         # Follow log and read last entry
-        log_cmd = ' journalctl --unit=tgapp --follow --lines=1 --output=cat'
+        log_cmd = 'journalctl --unit=tgapp --follow --lines=1 --output=cat'
         try:
             try:
                 if platform == 'linux' and processor().startswith('armv7'):
@@ -136,7 +136,7 @@ class _FirmwareLog(Thread):
                     # Running from remote environment, open SSH connection
                     ssh_cmd = 'ssh -Tnq -l default -o ' + \
                               'StrictHostKeyChecking=no ' + self.host
-                    self.log = Popen(split(ssh_cmd + log_cmd),
+                    self.log = Popen(split(ssh_cmd + ' ' + log_cmd),
                                      bufsize=1,
                                      universal_newlines=True,
                                      encoding='ascii',
@@ -807,12 +807,12 @@ def MPS_CouplerCheckLicense(embedded_license: LicenseId) -> bool:
 
 
 def GetLastSystemErrorMessageEx() -> str:
-    """Gets the device error log
+    """Gets the firmware log
 
     Returns
     -------
     str
-        Error log
+        Firmware log
     """
     max_size = 2 * 1024 * 1024
     message = create_string_buffer(max_size)
