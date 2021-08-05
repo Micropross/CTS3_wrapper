@@ -24,7 +24,7 @@ class NfcUnit(IntEnum):
     UNIT_SAMPLES = 8
 
 
-def _unit_autoselect(unit: NfcUnit, values: List[float]) -> Tuple[int,
+def _unit_autoselect(unit: NfcUnit, values: List[float]) -> Tuple[NfcUnit,
                                                                   List[int]]:
     """Converts float values to best interger values and unit
 
@@ -37,7 +37,7 @@ def _unit_autoselect(unit: NfcUnit, values: List[float]) -> Tuple[int,
 
     Returns
     -------
-    tuple(int, list(int))
+    tuple(NfcUnit, list(int))
         Best unit and converted values
     """
     if unit == NfcUnit.UNIT_NS:
@@ -55,11 +55,13 @@ def _unit_autoselect(unit: NfcUnit, values: List[float]) -> Tuple[int,
         value_us = [round(i * 1e3) for i in values]
         value_ms = [round(i) for i in values]
         value_s = [round(i / 1e3) for i in values]
-    else:
+    elif unit == NfcUnit.UNIT_S:
         value_ns = [round(i * 1e9) for i in values]
         value_us = [round(i * 1e6) for i in values]
         value_ms = [round(i * 1e3) for i in values]
         value_s = [round(i) for i in values]
+    else:
+        return unit, [round(i) for i in values]
 
     if max(value_ns) <= 0xFFFFFFFF:
         return NfcUnit.UNIT_NS, [i for i in value_ns]
@@ -671,12 +673,8 @@ def MPC_SetTxDelay(tx_delay: float, unit: NfcUnit) -> None:
     """
     if not isinstance(unit, NfcUnit):
         raise TypeError('unit must be an instance of NfcUnit IntEnum')
-    if unit > NfcUnit.UNIT_NS:
-        computed_unit = unit
-        computed_delay = round(tx_delay)
-    else:
-        # Unit auto-selection
-        computed_unit, [computed_delay] = _unit_autoselect(unit, [tx_delay])
+    # Unit auto-selection
+    computed_unit, [computed_delay] = _unit_autoselect(unit, [tx_delay])
     _check_limits(c_uint32, computed_delay, 'tx_delay')
     ret = CTS3ErrorCode(_MPuLib.MPC_SetTxDelay(
         c_uint8(0),
@@ -4437,25 +4435,16 @@ def MPC_SetActiveTimings(unit: NfcUnit, t_idt: float = 0, t_irfg: float = 0,
     """
     if not isinstance(unit, NfcUnit):
         raise TypeError('unit must be an instance of NfcUnit IntEnum')
-    if unit > NfcUnit.UNIT_NS:
-        computed_unit = unit
-        computed_tidt = round(t_idt)
-        computed_tirfg = round(t_irfg)
-        computed_tadt = round(t_adt)
-        computed_tarfg = round(t_arfg)
-        computed_toff = round(t_off)
-        computed_tmute = round(t_mute)
-    else:
-        # Unit auto-selection
-        computed_unit, [computed_tidt,
-                        computed_tirfg,
-                        computed_tadt,
-                        computed_tarfg,
-                        computed_toff,
-                        computed_tmute] = _unit_autoselect(unit,
-                                                           [t_idt, t_irfg,
-                                                            t_adt, t_arfg,
-                                                            t_off, t_mute])
+    # Unit auto-selection
+    computed_unit, [computed_tidt,
+                    computed_tirfg,
+                    computed_tadt,
+                    computed_tarfg,
+                    computed_toff,
+                    computed_tmute] = _unit_autoselect(unit,
+                                                       [t_idt, t_irfg,
+                                                        t_adt, t_arfg,
+                                                        t_off, t_mute])
     _check_limits(c_uint32, computed_tidt, 't_idt')
     _check_limits(c_uint32, computed_tirfg, 't_irfg')
     _check_limits(c_uint32, computed_tadt, 't_adt')

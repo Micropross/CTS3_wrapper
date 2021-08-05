@@ -128,16 +128,10 @@ def MPC_StartRFMeasure2(settings: MeasureTriggerSetting, source: MeasureSource,
         raise TypeError('source must be an instance of MeasureSource IntEnum')
     if not isinstance(unit, NfcUnit):
         raise TypeError('unit must be an instance of NfcUnit IntEnum')
-    if unit > NfcUnit.UNIT_NS:
-        computed_unit = unit
-        computed_delay = round(delay)
-        computed_duration = round(duration)
-    else:
-        # Unit auto-selection
-        computed_unit, [computed_delay,
-                        computed_duration] = _unit_autoselect(unit,
-                                                              [delay,
-                                                               duration])
+    # Unit auto-selection
+    computed_unit, [computed_delay,
+                    computed_duration] = _unit_autoselect(unit,
+                                                          [delay, duration])
     _check_limits(c_int32, computed_delay, 'delay')
     _check_limits(c_uint32, computed_duration, 'duration')
     ret = CTS3ErrorCode(_MPuLib.MPC_StartRFMeasure2(

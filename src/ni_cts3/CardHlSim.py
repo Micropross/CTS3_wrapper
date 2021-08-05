@@ -3,7 +3,7 @@ from typing import Optional, Union, Dict
 from enum import IntEnum, IntFlag, unique
 from . import _MPuLib, _check_limits
 from .Nfc import VicinityDataRate, VicinitySubCarrier, NfcMode
-from .Nfc import TechnologyType, NfcDataRate
+from .Nfc import TechnologyType, NfcDataRate, NfcUnit, _unit_autoselect
 from .CardEmu import CardEmulationMode
 from .MPStatus import CTS3ErrorCode
 from .MPException import CTS3Exception
@@ -1478,10 +1478,6 @@ def MPS_GetLastError() -> CTS3ErrorCode:
 
 # endregion
 
-# region Rules management
-
-# endregion
-
 # region Filters management
 
 
@@ -1639,10 +1635,10 @@ def MPS_AddFilter(filter: Union[IoClCrcFilter_index, IoClCrcFilter_pattern,
     elif isinstance(filter, IoClCrcFilter_pattern):
         index = c_uint32(0)
         length = c_uint32(len(filter.pattern))
-        mask = bytearray(filter.pattern +
+        mask = bytearray(filter.mask +
                          b'\x00' * (256 - len(filter.mask)))
         mask = (c_uint8 * 256).from_buffer(mask)
-        pattern = bytearray(filter.mask +
+        pattern = bytearray(filter.pattern +
                             b'\x00' * (256 - len(filter.pattern)))
         pattern = (c_uint8 * 256).from_buffer(pattern)
         crc = c_uint16(filter.crc)
@@ -1660,10 +1656,10 @@ def MPS_AddFilter(filter: Union[IoClCrcFilter_index, IoClCrcFilter_pattern,
     elif isinstance(filter, IoClFrameSuppFilter_pattern):
         index = c_uint32(0)
         length = c_uint32(len(filter.pattern))
-        mask = bytearray(filter.pattern +
+        mask = bytearray(filter.mask +
                          b'\x00' * (256 - len(filter.mask)))
         mask = (c_uint8 * 256).from_buffer(mask)
-        pattern = bytearray(filter.mask +
+        pattern = bytearray(filter.pattern +
                             b'\x00' * (256 - len(filter.pattern)))
         pattern = (c_uint8 * 256).from_buffer(pattern)
         filter_ctypes = _IoClFrameSuppFilter(index, length, mask, pattern)
@@ -1687,6 +1683,164 @@ def MPS_RemoveFilters() -> None:
     """Removes all simulation filters"""
     ret = CTS3ErrorCode(_MPuLib.MPS_RemoveFilters(
         c_uint8(0)))
+    if ret != CTS3ErrorCode.RET_OK:
+        raise CTS3Exception(ret)
+
+# endregion
+
+# region Rules management
+
+
+class _ActionConditionDataPattern(Structure):
+    """Simulation rule pattern condition structure"""
+    _fields_ = [('length', c_uint32),
+                ('mask', c_uint8 * 256),
+                ('pattern', c_uint8 * 256)]
+
+
+class ActionConditionDataPattern():
+    """Simulation rule pattern condition"""
+    def __init__(self, pattern: bytes,
+                 mask: Optional[bytes] = None):
+        """Inits ActionConditionDataPattern class
+
+        Attributes
+        ----------
+        pattern : bytes
+            Frame pattern
+        mask : bytes, optional
+            Frame pattern mask
+        """
+        if not isinstance(pattern, bytes):
+            raise TypeError('pattern must be an instance of bytes')
+        if len(pattern) == 0 or len(pattern) > 256:
+            raise ValueError('invalid pattern length')
+        if mask is not None:
+            if not isinstance(mask, bytes):
+                raise TypeError('mask must be an instance of bytes')
+        else:
+            mask = b'\xFF' * len(pattern)
+        self.pattern = pattern
+        self.mask = mask
+
+
+def MPS_SimAddRule(event_mask: Union[IsoSimulatorEvent,
+                                     FeliCaSimulatorEvent,
+                                     VicinitySimulatorEvent,
+                                     NfcSimulatorEvent,
+                                     Type2TagSimulatorEvent],
+                   delay: float, execute_count: Optional[int],
+                   pattern_condition: Optional[ActionConditionDataPattern],
+                   remote_command: str) -> int:
+    """Adds a simulation rule
+
+    Parameters
+    ----------
+    event_mask : IsoSimulatorEvent, Type2TagSimulatorEvent, \
+                 FeliCaSimulatorEvent, VicinitySimulatorEvent \
+                 or NfcSimulatorEvent
+        Mask of events which triggers the rule
+    delay : float
+        Delay between event occurrence and rule execution in s
+    execute_count : int
+        Rule executions count, or None if always active
+    pattern_condition : ActionConditionDataPattern
+        Pattern condition
+    remote_command : str
+        Remote command to run when the rule conditions are met
+
+    Returns
+    -------
+    int
+        Rule identifier
+    """
+    if isinstance(event_mask, IsoSimulatorEvent):
+        protocol = _SimulatorProtocol.CL_14443_SIMULATOR
+    elif isinstance(event_mask, FeliCaSimulatorEvent):
+        protocol = _SimulatorProtocol.CL_FELICA_SIMULATOR
+    elif isinstance(event_mask, VicinitySimulatorEvent):
+        protocol = _SimulatorProtocol.CL_VICINITY_SIMULATOR
+    elif isinstance(event_mask, NfcSimulatorEvent):
+        protocol = _SimulatorProtocol.CL_NFC_SIMULATOR
+    elif isinstance(event_mask, Type2TagSimulatorEvent):
+        protocol = _SimulatorProtocol.CL_TAG_TYPE2_SIMULATOR
+    else:
+        raise TypeError('event_mask must be an instance of '
+                        'IsoSimulatorEvent IntFlag, '
+                        'FeliCaSimulatorEvent IntFlag, '
+                        'VicinitySimulatorEvent IntFlag, '
+                        'NfcSimulatorEvent IntFlag or '
+                        'Type2TagSimulatorEvent IntFlag')
+    # Unit auto-selection
+    computed_unit, [computed_delay] = _unit_autoselect(NfcUnit.UNIT_S, [delay])
+    _check_limits(c_uint32, computed_delay, 'delay')
+    if execute_count is not None:
+        _check_limits(c_uint32, execute_count, 'execute_count')
+        count = execute_count
+    else:
+        count = 0xFFFFFFFF  # Always active
+    rule_id = c_uint32()
+    if pattern_condition is None:
+        ret = CTS3ErrorCode(_MPuLib.MPS_SimAddRule(
+            c_uint8(0),
+            c_uint32(protocol),
+            c_uint32(event_mask),
+            c_uint32(computed_delay),
+            c_uint32(computed_unit),
+            c_uint32(count),
+            c_uint32(0),
+            c_uint32(0),
+            c_uint32(0),
+            c_uint32(0),
+            None,
+            c_uint32(len(remote_command)),
+            remote_command.encode('ascii'),
+            byref(rule_id)))
+    elif isinstance(pattern_condition, ActionConditionDataPattern):
+        length = c_uint32(len(pattern_condition.pattern))
+        mask = bytearray(pattern_condition.pattern +
+                         b'\x00' * (256 - len(pattern_condition.mask)))
+        mask = (c_uint8 * 256).from_buffer(mask)
+        pattern = bytearray(pattern_condition.mask +
+                            b'\x00' * (256 - len(pattern_condition.pattern)))
+        pattern = (c_uint8 * 256).from_buffer(pattern)
+        condition_ctypes = _ActionConditionDataPattern(length, mask, pattern)
+        ret = CTS3ErrorCode(_MPuLib.MPS_SimAddRule(
+            c_uint8(0),
+            c_uint32(protocol),
+            c_uint32(event_mask),
+            c_uint32(computed_delay),
+            c_uint32(computed_unit),
+            c_uint32(count),
+            c_uint32(0),
+            c_uint32(0),
+            c_uint32(0),
+            c_uint32(516),
+            byref(condition_ctypes),
+            c_uint32(len(remote_command)),
+            remote_command.encode('ascii'),
+            byref(rule_id)))
+    else:
+        raise TypeError('pattern_condition must be an instance of '
+                        'ActionConditionDataPattern')
+    if ret != CTS3ErrorCode.RET_OK:
+        raise CTS3Exception(ret)
+    return rule_id.value
+
+
+def MPS_SimRemoveRule(rule_id: int) -> None:
+    """Removes a simulation rule
+
+    Parameters
+    ----------
+    rule_id : int
+        Rule identifier
+    """
+    _check_limits(c_uint32, rule_id, 'rule_id')
+    ret = CTS3ErrorCode(_MPuLib.MPS_SimRemoveRule(
+        c_uint8(0),
+        c_uint32(0),
+        c_uint32(rule_id)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
