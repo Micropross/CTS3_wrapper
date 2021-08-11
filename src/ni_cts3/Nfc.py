@@ -2667,6 +2667,7 @@ class ProtocolParameters(IntEnum):
     CPP_ANALOG_IN_AUTORANGE = 65
     CPP_ASK_FILTER_106 = 66
     CPP_TX_FIRST_BUFFER_SIZE = 67
+    CPP_NFC_MAX_LR_VALUE_NFCFORUM = 68
 
 
 def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
