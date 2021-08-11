@@ -214,9 +214,11 @@ def MPC_Set15693InitParameters(data_rate: VicinityDataRate,
 
 
 def MPC_SetNFCInitParameters(mode: NfcMode, data_rate: NfcDataRate,
-                             masked_events: NfcSimulatorEvent,
-                             sens_res: bytes, sel_res: Union[bytes, int],
-                             nfc_id: bytes, atr_res: bytes) -> None:
+                             masked_events: Optional[NfcSimulatorEvent],
+                             sens_res: Optional[bytes],
+                             sel_res: Union[bytes, int, None],
+                             nfc_id: Optional[bytes],
+                             atr_res: bytes) -> None:
     """Initializes NFC simulation parameters
 
     Parameters
@@ -240,31 +242,47 @@ def MPC_SetNFCInitParameters(mode: NfcMode, data_rate: NfcDataRate,
         raise TypeError('mode must be an instance of NfcMode IntEnum')
     if not isinstance(data_rate, NfcDataRate):
         raise TypeError('data_rate must be an instance of NfcDataRate IntEnum')
-    if not isinstance(masked_events, NfcSimulatorEvent):
+
+    if masked_events is not None and \
+            not isinstance(masked_events, NfcSimulatorEvent):
         raise TypeError('masked_events must be an instance of '
                         'NfcSimulatorEvent IntFlag')
-    if not isinstance(sens_res, bytes) or len(sens_res) != 2:
-        raise TypeError('sens_res must be an instance of 2 bytes')
-    if isinstance(sel_res, bytes):
-        if len(sel_res) != 1:
-            raise TypeError('sel_res must be an instance of 1 byte')
-        sel_res_value = sel_res[0]
-    elif isinstance(sel_res, int):
-        _check_limits(c_uint8, sel_res, 'sel_res')
-        sel_res_value = sel_res
+
+    if sens_res is not None:
+        if not isinstance(sens_res, bytes) or len(sens_res) != 2:
+            raise TypeError('sens_res must be an instance of 2 bytes')
     else:
-        raise TypeError('sel_res must be an instance of int or 1 byte')
-    if not isinstance(nfc_id, bytes):
-        raise TypeError('nfc_id must be an instance of bytes')
-    _check_limits(c_uint32, len(nfc_id), 'nfc_id')
+        sens_res = bytes(2)
+
+    if sel_res is None:
+        sel_res_value = 0
+    else:
+        if isinstance(sel_res, bytes):
+            if len(sel_res) != 1:
+                raise TypeError('sel_res must be an instance of 1 byte')
+            sel_res_value = sel_res[0]
+        elif isinstance(sel_res, int):
+            _check_limits(c_uint8, sel_res, 'sel_res')
+            sel_res_value = sel_res
+        else:
+            raise TypeError('sel_res must be an instance of int or 1 byte')
+
+    if nfc_id is None:
+        nfc_id = bytes(1)
+    else:
+        if not isinstance(nfc_id, bytes):
+            raise TypeError('nfc_id must be an instance of bytes')
+        _check_limits(c_uint32, len(nfc_id), 'nfc_id')
+
     if not isinstance(atr_res, bytes):
         raise TypeError('atr_res must be an instance of bytes')
     _check_limits(c_uint32, len(atr_res), 'atr_res')
+
     ret = CTS3ErrorCode(_MPuLib.MPC_SetNFCInitParameters(
         c_uint8(0),
         c_uint8(mode),
         c_uint16(data_rate),
-        c_uint32(masked_events),
+        c_uint32(0) if masked_events is None else c_uint32(masked_events),
         sens_res,
         byref(c_uint8(sel_res_value)),
         c_uint32(len(nfc_id)),
@@ -336,7 +354,7 @@ def MPC_SetSParameterInit(pcd_to_picc_bitrate: Union[bytes, int],
         raise CTS3Exception(ret)
 
 
-def MPC_SetT2TInitParameters(masked_events: Type2TagSimulatorEvent,
+def MPC_SetT2TInitParameters(masked_events: Optional[Type2TagSimulatorEvent],
                              sens_res: bytes, sel_res: Union[bytes, int],
                              nfc_id: bytes) -> None:
     """Initializes NFC Forum Type 2 Tag simulation parameters
@@ -352,7 +370,8 @@ def MPC_SetT2TInitParameters(masked_events: Type2TagSimulatorEvent,
     nfc_id : bytes
         NFCID1 to answer
     """
-    if not isinstance(masked_events, Type2TagSimulatorEvent):
+    if masked_events is not None and \
+            not isinstance(masked_events, Type2TagSimulatorEvent):
         raise TypeError('masked_events must be an instance of '
                         'Type2TagSimulatorEvent IntFlag')
     if not isinstance(sens_res, bytes) or len(sens_res) != 2:
@@ -369,13 +388,22 @@ def MPC_SetT2TInitParameters(masked_events: Type2TagSimulatorEvent,
     if not isinstance(nfc_id, bytes):
         raise TypeError('nfc_id must be an instance of bytes')
     _check_limits(c_uint32, len(nfc_id), 'nfc_id')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetT2TInitParameters(
-        c_uint8(0),
-        c_uint32(masked_events),
-        sens_res,
-        byref(c_uint8(sel_res_value)),
-        c_uint32(len(nfc_id)),
-        nfc_id))
+    if masked_events is not None:
+        ret = CTS3ErrorCode(_MPuLib.MPC_SetT2TInitParameters(
+            c_uint8(0),
+            c_uint32(masked_events),
+            sens_res,
+            byref(c_uint8(sel_res_value)),
+            c_uint32(len(nfc_id)),
+            nfc_id))
+    else:
+        ret = CTS3ErrorCode(_MPuLib.MPC_SetT2TInitParameters(
+            c_uint8(0),
+            c_uint32(0),
+            sens_res,
+            byref(c_uint8(sel_res_value)),
+            c_uint32(len(nfc_id)),
+            nfc_id))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
@@ -553,8 +581,9 @@ class _TypeNFC_ATR_REQ(Structure):
         bytes
             Bytes representation of ATR_REQ
         """
-        return bytes(list(self.nfc_id3i) + [self.didi, self.bsi, self.bri] +
-                     self.general_bytes[:length-12])
+        return bytes(list(self.nfc_id3i) +
+                     [self.didi, self.bsi, self.bri, self.ppi] +
+                     self.general_bytes[:length-14])
 
 
 def MPC_GetNFC_ATR_REQ() -> Optional[bytes]:
@@ -652,12 +681,12 @@ def MPC_GetNFC_WUP_REQ() -> Optional[bytes]:
 
 
 def MPC_GetNFC_DEP_REQ() -> Optional[bytes]:
-    """Gets DEP_REQ request
+    """Gets the last DEP_REQ frame
 
     Returns
     -------
     bytes
-        Received DEP_REQ request
+        Received DEP_REQ frame
     """
     dep_req = bytes(0xFFFF)
     length = c_uint32()
@@ -673,7 +702,7 @@ def MPC_GetNFC_DEP_REQ() -> Optional[bytes]:
 
 
 def MPC_GetNFC_UserData() -> Optional[bytes]:
-    """Gets NFC user data over DEP_REQ protocol
+    """Gets NFC user data over DEP protocol
 
     Returns
     -------
@@ -686,7 +715,7 @@ def MPC_GetNFC_UserData() -> Optional[bytes]:
         c_uint8(0),
         byref(length),
         data))
-    if ret == CTS3ErrorCode.ERRSIM_NO_DEP_REQ_AVAILABLE:
+    if ret == CTS3ErrorCode.ERRSIM_NO_NFC_DATA_AVAILABLE:
         return None
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
@@ -966,11 +995,11 @@ def MPC_SendNFC_DEP_RES(pfb: Union[int, bytes],
     pfb : int or bytes
         1-byte RTOX value
     data : bytes
-        User data
+        DEP_RES data
     did : int or bytes, optional
         1-byte DID
     nad : int or bytes, optional
-        1-byte DID
+        1-byte NAD
     crc : int or bytes, optional
         2-byte CRC
     """
@@ -1026,7 +1055,7 @@ def MPC_SendNFC_DEP_RES(pfb: Union[int, bytes],
 
 
 def MPC_SendNFC_RUserData(data: bytes) -> None:
-    """Sends data using DEP_REQ protocol
+    """Sends data using DEP protocol
 
     Parameters
     ----------
@@ -1125,7 +1154,7 @@ def MPS_SimWaitNStart(mode: CardEmulationMode,
     event_mask : IsoSimulatorEvent, Type2TagSimulatorEvent, \
                  FeliCaSimulatorEvent, VicinitySimulatorEvent \
                  or NfcSimulatorEvent
-        Enabled events
+        Subscribed events
     start_spy : bool
         True to start protocol analyzer
     timeout : float
