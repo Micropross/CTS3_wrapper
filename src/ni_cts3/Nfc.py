@@ -2796,7 +2796,8 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
             parameter_type == ProtocolParameters.CPP_DISABLE_ATQA_CHECK or \
             parameter_type == ProtocolParameters.CPP_RF_FIELD_LOCK_ANTENNA or \
             parameter_type == ProtocolParameters.CPP_NFC_ACTIVE_FDT_MODE or \
-            parameter_type == ProtocolParameters.CPP_ASK_FILTER_106:
+            parameter_type == ProtocolParameters.CPP_ASK_FILTER_106 or \
+            parameter_type == ProtocolParameters.CPP_NFC_MAX_LR_VALUE_NFCFORUM:
         val = c_uint32(1) if parameter_value else c_uint32(0)
         ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
