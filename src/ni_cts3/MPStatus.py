@@ -37,11 +37,6 @@ class CTS3ErrorCode(IntEnum):
     RET_PORT_NOT_OPEN = 0x0C1D
 
     """
-    Embedded events error codes
-    """
-    RET_EVENT_TIMEOUT = 0x0C88
-
-    """
     Firmware update error codes
     """
     RET_FIRM_GPG_DECRYPT_FAIL = 0x0CEE
