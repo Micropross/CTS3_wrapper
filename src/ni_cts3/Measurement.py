@@ -1,11 +1,12 @@
 from ctypes import c_uint8, c_uint16, c_int32, c_uint32, c_double, byref
 from ctypes import c_void_p, cast, POINTER, create_string_buffer
-from typing import List, Optional, Dict, Union
+from typing import List, Optional, Dict, Union, overload
 from enum import IntEnum, IntFlag, unique
 from . import _MPuLib, _check_limits
 from .MPStatus import CTS3ErrorCode
 from .MPException import CTS3Exception
 from .Nfc import TechnologyType, NfcUnit, _unit_autoselect, DataRate
+from warnings import warn
 
 
 @unique
@@ -490,32 +491,40 @@ class FrequencyResolution(IntEnum):
     RESOLUTION_AUTO = 5
 
 
+@overload
+def MPC_GetRFFrequency() -> int:
+    ...
+
+
+@overload
 def MPC_GetRFFrequency(resolution: FrequencyResolution,
                        timeout: float) -> int:
+    ...
+
+
+def MPC_GetRFFrequency(resolution: Optional[FrequencyResolution] = None,
+                       timeout: Optional[float] = None) -> int:
     """Performs a carrier frequency measurement
 
     Parameters
     ----------
-    resolution : FrequencyResolution
-        Acquisition resolution
-    timeout : float
-        Acquisition timeout in s
+    resolution : FrequencyResolution, optional
+        Not used
+    timeout : float, optional
+        Not used
 
     Returns
     -------
     int
         Measured frequency in Hz
     """
-    if not isinstance(resolution, FrequencyResolution):
-        raise TypeError('resolution must be an instance of '
-                        'FrequencyResolution IntEnum')
-    timeout_ms = round(timeout * 1e3)
-    _check_limits(c_uint32, timeout_ms, 'timeout')
+    if resolution is not None or timeout is not None:
+        warn("deprecated parameters", DeprecationWarning)
     freq = c_uint32()
     ret = CTS3ErrorCode(_MPuLib.MPC_GetRFFrequency(
         c_uint8(0),
-        c_uint32(resolution),
-        c_uint32(timeout_ms),
+        c_uint32(0),
+        c_uint32(0),
         byref(freq)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
