@@ -1,8 +1,6 @@
-from sys import version_info, platform, stderr
-if version_info[0] != 3 or version_info[1] < 6:
-    raise Exception('Requires Python ≥ 3.6')
-from platform import architecture, processor
-from os.path import dirname, abspath, isfile, sep
+import sys
+from platform import processor, architecture
+from os.path import dirname, abspath, isfile, join
 from time import sleep
 from atexit import register
 from subprocess import Popen, PIPE, DEVNULL
@@ -13,13 +11,16 @@ from typing import List, Dict, Type, Union, Optional, Callable
 from enum import IntEnum, IntFlag, unique
 from xml.dom import minidom
 from datetime import datetime
-if version_info[1] > 8:
-    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from ctypes import c_char_p, c_uint8, c_int16, c_uint16
 from ctypes import c_int32, c_uint32, c_double, sizeof
 from ctypes import c_void_p, byref, create_string_buffer
 from ctypes import CDLL, Structure
-if platform == 'win32':
+
+if sys.version_info < (3, 6):
+    raise Exception('Requires Python ≥ 3.6')
+if sys.version_info > (3, 8):
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+if sys.platform == 'win32':
     from ctypes import WinDLL, WINFUNCTYPE
 else:
     from ctypes import CFUNCTYPE
@@ -31,43 +32,44 @@ __copyright__ = 'Copyright 2021, NI'
 __license__ = 'MIT'
 
 
-# Load MPuLib from local path
-_lib_sys: str = None
-_lib_name: str = None
-_lib_path: str = dirname(abspath(__file__)) + sep + '.lib' + sep
-if platform == 'win32':
-    class MpDLL(WinDLL):
-        _func_restype_ = c_int16
+class MpDll(CDLL):
+    _func_restype_ = c_int16  # type: ignore
 
-    _lib_path += 'Windows' + sep
+
+# Load MPuLib from local path
+_lib_sys: Optional[str] = None
+_lib_name: Optional[str] = None
+_lib_path: str = join(dirname(abspath(__file__)), '.lib')
+if sys.platform == 'win32':
+    class MpWinDll(WinDLL):
+        _func_restype_ = c_int16  # type: ignore
+
+    _lib_path = join(_lib_path, 'Windows')
     if architecture()[0] == '32bit':
         _lib_name = 'MPuLib-win32.dll'
     else:
         _lib_name = 'MPuLib-win64.dll'
 else:
-    class MpDLL(CDLL):
-        _func_restype_ = c_int16
-
-    if platform == 'darwin':
-        _lib_path += 'macOS/'
+    if sys.platform == 'darwin':
+        _lib_path = join(_lib_path, 'macOS')
         _lib_name = 'libMPuLib.dylib'
-    elif platform == 'linux':
+    elif sys.platform == 'linux':
         if processor().startswith('armv7'):
             # CTS3 embedded library
-            _lib_path += 'Arm/'
+            _lib_path = join(_lib_path, 'Arm')
         else:
-            _lib_path += 'Linux/'
+            _lib_path = join(_lib_path, 'Linux')
             if architecture()[0] == '32bit':
-                _lib_path += 'x86/'
+                _lib_path = join(_lib_path, 'x86')
             else:
-                _lib_path += 'x64/'
+                _lib_path = join(_lib_path, 'x64')
         _lib_name = 'libMPuLib.so'
     else:
-        raise NotImplementedError(f'Unsupported platform: {platform}')
-    _lib_sys = '/usr/lib/' + _lib_name
+        raise NotImplementedError(f'Unsupported platform: {sys.platform}')
+    _lib_sys = join('usr', 'lib', _lib_name)
 
 # Locate library
-_lib_path += _lib_name
+_lib_path = join(_lib_path, _lib_name)
 if not isfile(_lib_path):
     if _lib_sys and isfile(_lib_sys):
         # Use library located in system path
@@ -76,11 +78,14 @@ if not isfile(_lib_path):
         raise FileNotFoundError(f'Library "{_lib_path}" not found')
 
 # Load library
-_MPuLib: MpDLL = MpDLL(_lib_path)
-_MPuLib_variadic: CDLL = None
-if platform == 'win32' and architecture()[0] == '32bit':
+if sys.platform == 'win32':
+    _MPuLib: MpWinDll = MpWinDll(_lib_path)
+else:
+    _MPuLib: MpDll = MpDll(_lib_path)
+_MPuLib_variadic: Optional[MpDll] = None
+if sys.platform == 'win32' and architecture()[0] == '32bit':
     # Load library for variadic functions
-    _MPuLib_variadic = CDLL(_lib_path)
+    _MPuLib_variadic = MpDll(_lib_path)
 
 
 class _FirmwareLog(Thread):
@@ -108,7 +113,7 @@ class _FirmwareLog(Thread):
         started: Event
             Event raised when log redirection is established or failed
         """
-        if platform == 'linux' and processor().startswith('armv7'):
+        if sys.platform == 'linux' and processor().startswith('armv7'):
             # Running from CTS3 embedded environment
             self.host = 'localhost'
         else:
@@ -123,7 +128,7 @@ class _FirmwareLog(Thread):
         log_cmd = 'journalctl --unit=tgapp --follow --lines=1 --output=cat'
         try:
             try:
-                if platform == 'linux' and processor().startswith('armv7'):
+                if sys.platform == 'linux' and processor().startswith('armv7'):
                     # Running from CTS3 embedded environment
                     self.log = Popen(log_cmd,
                                      bufsize=1,
@@ -152,7 +157,7 @@ class _FirmwareLog(Thread):
             while self.running:
                 log = self.log.stdout.readline()
                 if len(log) > 0:
-                    stderr.write(f'{{{self.host}}}\t{log}')
+                    sys.stderr.write(f'{{{self.host}}}\t{log}')
         except Exception:
             self.running = False
 
@@ -462,7 +467,7 @@ def MPS_EEGetConfig(config: EEConfig) -> bool:
         byref(value)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
-    return value > 0
+    return value.value > 0
 
 
 def MPS_SelectActivePartition(partition: int) -> None:
@@ -554,7 +559,7 @@ def UpdateFirmware(path: str, partIndex: int,
     """
     _check_limits(c_uint8, partIndex, 'partIndex')
     if call_back:
-        if platform == 'win32':
+        if sys.platform == 'win32':
             cmp_func = WINFUNCTYPE(c_int32, c_int32)
         else:
             cmp_func = CFUNCTYPE(c_int32, c_int32)
@@ -622,8 +627,11 @@ def MPS_CPUAutoTest(test_id: CpuAutotestId,
         byref(result)))
     if (ret >= CTS3ErrorCode.RET_FAIL and ret <= CTS3ErrorCode.RET_WARNING) \
             or ret == CTS3ErrorCode.RET_OK:
-        tests_result = ''.join(map(chr, result.value)).strip().split('\n')
-        return [test.split('\t') for test in tests_result]
+        if result.value is None:
+            return [['']]
+        else:
+            tests_result = ''.join(map(chr, result.value)).strip().split('\n')
+            return [test.split('\t') for test in tests_result]
     else:
         raise CTS3Exception(ret)
 
@@ -762,7 +770,7 @@ def MPS_Beep(duration: float) -> None:
         Beep duration in s
     """
     duration_ms = round(duration * 1e3)
-    _check_limits(c_uint32, duration, 'duration_ms')
+    _check_limits(c_uint32, duration_ms, 'duration')
     ret = CTS3ErrorCode(_MPuLib.MPS_Beep(
         c_uint32(duration_ms)))
     if ret != CTS3ErrorCode.RET_OK:
@@ -923,7 +931,7 @@ def MPS_GetTime() -> datetime:
     local_time = datetime(date.Year + 1900, date.Month, date.DayOfMonth,
                           time.Hours, time.Minutes, time.Seconds)
 
-    if version_info[1] > 8:
+    if sys.version_info > (3, 8):
         try:
             tz = ZoneInfo(MPS_GetTimeZone())
             local_time = local_time.replace(tzinfo=tz)
@@ -941,12 +949,12 @@ def MPS_SetTime(time: datetime = datetime.now().astimezone()) -> None:
     time : datetime, optional
         Time to set
     """
-    if version_info[1] > 8:
+    if sys.version_info > (3, 8):
         try:
-            if platform == 'win32':
+            if sys.platform == 'win32':
                 try:
-                    import tzlocal
-                    zone = tzlocal.get_localzone()
+                    from tzlocal import get_localzone  # noqa: E402
+                    zone = get_localzone()
                     MPS_SetTimeZone(str(zone))
                 except ModuleNotFoundError:
                     pass
@@ -1214,7 +1222,7 @@ def MPS_PortInit(baud_rate: Baudrate = Baudrate.BAUDS_115200,
         raise TypeError('baud_rate must be an instance of Baudrate IntEnum')
     if not isinstance(parity, SerialParity):
         raise TypeError('parity must be an instance of SerialParity IntEnum')
-    flag = parity
+    flag = parity.value
     if stop_bits == 2:
         flag |= 0x04
     elif stop_bits != 1:
@@ -1402,11 +1410,10 @@ def LaunchEmbeddedScript(script_command: str,
                         'EmbeddedScriptMode IntFlag')
     retCode = c_uint8(0)
     if call_back:
-        if platform == 'win32':
+        if sys.platform == 'win32':
             cmp_func = WINFUNCTYPE(c_int32, c_char_p)
         else:
             cmp_func = CFUNCTYPE(c_int32, c_char_p)
-
     ret = CTS3ErrorCode(_MPuLib.LaunchEmbeddedScript(
         script_command.encode('ascii'),
         c_uint32(option),
@@ -1433,7 +1440,7 @@ def StartEmbeddedApplication(application_path: str, args: str,
         Program callback function
     """
     if call_back:
-        if platform == 'win32':
+        if sys.platform == 'win32':
             cmp_func = WINFUNCTYPE(c_int32, c_char_p)
         else:
             cmp_func = CFUNCTYPE(c_int32, c_char_p)
@@ -1565,7 +1572,7 @@ def SetDLLDebugMode(path: Optional[str]) -> None:
 
 
 def SendFrame(command: str, timeout: int = -1,
-              asynchronous_tx: bool = False) -> str:
+              asynchronous_tx: bool = False) -> Optional[str]:
     """Sends a remote command to the connected CTS3
 
     Parameters

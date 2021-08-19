@@ -445,8 +445,11 @@ def MPS_DaqAutoTest(test_id: DaqAutotestId) -> List[List[str]]:
         byref(result)))
     if (ret >= CTS3ErrorCode.RET_FAIL and ret <= CTS3ErrorCode.RET_WARNING) \
             or ret == CTS3ErrorCode.RET_OK:
-        tests_result = ''.join(map(chr, result.value)).strip().split('\n')
-        return [test.split('\t') for test in tests_result]
+        if result.value is None:
+            return [['']]
+        else:
+            tests_result = ''.join(map(chr, result.value)).strip().split('\n')
+            return [test.split('\t') for test in tests_result]
     else:
         raise CTS3Exception(ret)
 

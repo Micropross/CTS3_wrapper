@@ -1,15 +1,19 @@
-from sys import platform
-from typing import Dict, Union, Optional, List, Tuple, Callable
+import sys
+from typing import Dict, Union, Optional, List, Tuple, Callable, overload
 from enum import IntEnum, IntFlag, unique
 from . import _MPuLib, _MPuLib_variadic, _check_limits
 from .MPStatus import CTS3ErrorCode, MifareErrorCode
 from .MPException import CTS3Exception, CTS3MifareException
 from ctypes import c_uint8, c_int16, c_uint16, c_int32, c_uint32
-from ctypes import byref, c_char_p, POINTER, c_int, c_double
-if platform == 'win32':
+from ctypes import byref, POINTER, c_char_p, c_int, c_double
+if sys.platform == 'win32':
     from ctypes import WINFUNCTYPE
 else:
     from ctypes import CFUNCTYPE
+
+
+_callback: Optional[Callable[[int, int, POINTER(c_uint8), int],  # type: ignore
+                             int]] = None
 
 
 @unique
@@ -198,13 +202,21 @@ def MPC_SelectFieldStrength(unit: FieldUnit, value: float,
         raise CTS3Exception(ret)
 
 
-def MPC_SetupFindFieldStrength(expected_voltage: float) -> None:
+def MPC_SetupFindFieldStrength(expected_voltage: float) -> Dict[str,
+                                                                Union[float,
+                                                                      int]]:
     """Reaches Vov by adjusting RF field strength
 
     Parameters
     ----------
     expected_voltage : float
         Vdc value to reach in V
+
+    Returns
+    -------
+    dict
+        'voltage_reached' (float): Reached Vdc in V
+        'field_per_mille' (int): Reached field strength in ‰
     """
     expected_voltage_mV = round(expected_voltage * 1e3)
     _check_limits(c_uint32, expected_voltage_mV, 'expected_voltage')
@@ -1290,14 +1302,16 @@ def MPC_FELICA_Read_Without_Encryption(idm: bytes, service_codes: List[int],
     """
     if not isinstance(idm, bytes) or len(idm) != 8:
         raise TypeError('idm must be an instance of 8 bytes')
-    if not isinstance(service_codes, list):
+    if not isinstance(service_codes, list) or \
+            any(not isinstance(i, int) for i in service_codes):
         raise TypeError('service_codes must be an instance of integers list')
     _check_limits(c_uint8, len(service_codes), 'service_codes')
     services_list = (c_uint16 * len(service_codes))()
     for i in range(len(service_codes)):
         _check_limits(c_uint16, service_codes[i], 'service_codes')
         services_list[i] = c_uint16(service_codes[i])
-    if not isinstance(blocks, list):
+    if not isinstance(blocks, list) or \
+            any(not isinstance(i, int) for i in blocks):
         raise TypeError('blocks must be an instance of integers list')
     _check_limits(c_uint8, len(blocks), 'blocks')
     blocks_list = (c_uint32 * len(blocks))()
@@ -1357,21 +1371,24 @@ def MPC_FELICA_Write_Without_Encryption(idm: bytes, service_codes: List[int],
     """
     if not isinstance(idm, bytes) or len(idm) != 8:
         raise TypeError('idm must be an instance of 8 bytes')
-    if not isinstance(service_codes, list):
+    if not isinstance(service_codes, list) or \
+            any(not isinstance(i, int) for i in service_codes):
         raise TypeError('service_codes must be an instance of integers list')
     _check_limits(c_uint8, len(service_codes), 'service_codes')
     services_list = (c_uint16 * len(service_codes))()
     for i in range(len(service_codes)):
         _check_limits(c_uint16, service_codes[i], 'service_codes')
         services_list[i] = c_uint16(service_codes[i])
-    if not isinstance(blocks, list):
+    if not isinstance(blocks, list) or \
+            any(not isinstance(i, int) for i in blocks):
         raise TypeError('blocks must be an instance of integers list')
     _check_limits(c_uint8, len(blocks), 'blocks')
     blocks_list = (c_uint32 * len(blocks))()
     for i in range(len(blocks)):
         _check_limits(c_uint32, blocks[i], 'blocks')
         blocks_list[i] = c_uint32(blocks[i])
-    if not isinstance(blocks_data, list):
+    if not isinstance(blocks_data, list) or \
+            any(not isinstance(i, int) for i in blocks_data):
         raise TypeError('blocks_data must be an instance of integers list')
     blocks_data_list = (c_uint16 * len(blocks_data))()
     for i in range(len(blocks_data)):
@@ -2449,10 +2466,12 @@ def MPC_SetModulationShape(pattern_index: int,
         Rising edge points
     """
     _check_limits(c_uint8, pattern_index, 'pattern_index')
-    if not isinstance(falling_edge_per_mille, list):
+    if not isinstance(falling_edge_per_mille, list) or \
+            any(not isinstance(i, int) for i in falling_edge_per_mille):
         raise TypeError('falling_edge_per_mille must be an instance of'
                         ' integers list')
-    if not isinstance(rising_edge_per_mille, list):
+    if not isinstance(rising_edge_per_mille, list) or \
+            any(not isinstance(i, int) for i in rising_edge_per_mille):
         raise TypeError('rising_edge_per_mille must be an instance of'
                         ' integers list')
     falling = (c_uint16 * len(falling_edge_per_mille))()
@@ -2689,86 +2708,108 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
                         'ProtocolParameters IntEnum')
     if parameter_type == ProtocolParameters.CPP_CURRENT_CID or \
             parameter_type == ProtocolParameters.CPP_CURRENT_NAD:
-        val = c_uint32(parameter_value)
+        if not isinstance(parameter_value, int):
+            raise TypeError('parameter_type must be an instance of int')
+        int_val = c_uint32(parameter_value)
         ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            byref(val),
+            byref(int_val),
             c_uint32(1)))
 
     # List parameter
     elif parameter_type == ProtocolParameters.CPP_FRAME_TYPE_B or \
             parameter_type == ProtocolParameters.CPP_FRAME_FELICA_OPTION or \
             parameter_type == ProtocolParameters.CPP_FRAME_TYPE_F_CLK:
-        if not isinstance(parameter_value, list):
-            raise TypeError('parameter_value must be an instance of 4-int'
-                            ' list')
-        val = (4 * c_uint16)()
+        if not isinstance(parameter_value, list) or \
+                len(parameter_value) != 4:
+            raise TypeError('parameter_value must be an instance of'
+                            ' 4-int list')
+        list_u16_val = (4 * c_uint16)()
         for i in range(4):
-            _check_limits(c_uint16, parameter_value[i], 'parameter_value')
-            val[i] = c_uint16(parameter_value[i])
+            item = parameter_value[i]
+            if not isinstance(item, int):
+                raise TypeError('parameter_value must be an instance of'
+                                ' 4-int list')
+            _check_limits(c_uint16, item, 'parameter_value')
+            list_u16_val[i] = c_uint16(item)
         ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            val,
+            list_u16_val,
             c_uint32(4)))
     elif parameter_type == ProtocolParameters.CPP_CHANGE_BIT_BOUNDARY:
-        if not isinstance(parameter_value, list):
-            raise TypeError('parameter_value must be an instance of 2-int'
-                            ' list')
-        val = (2 * c_uint16)()
+        if not isinstance(parameter_value, list) or len(parameter_value) != 2:
+            raise TypeError('parameter_value must be an instance of'
+                            ' 2-int list')
+        list_u16_val = (2 * c_uint16)()
         for i in range(2):
-            _check_limits(c_uint16, parameter_value[i], 'parameter_value')
-            val[i] = c_uint16(parameter_value[i])
+            item = parameter_value[i]
+            if not isinstance(item, int):
+                raise TypeError('parameter_value must be an instance of'
+                                ' 2-int list')
+            _check_limits(c_uint16, item, 'parameter_value')
+            list_u16_val[i] = c_uint16(item)
         ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            val,
+            list_u16_val,
             c_uint32(2)))
     elif parameter_type == ProtocolParameters.CPP_FRAME_TYPE_B_CLK:
-        if not isinstance(parameter_value, list):
-            raise TypeError('parameter_value must be an instance of 14-int'
-                            ' list')
-        val = (14 * c_uint16)()
+        if not isinstance(parameter_value, list) or len(parameter_value) != 14:
+            raise TypeError('parameter_value must be an instance of'
+                            ' 14-int list')
+        list_u16_val = (14 * c_uint16)()
         for i in range(14):
-            _check_limits(c_uint16, parameter_value[i], 'parameter_value')
-            val[i] = c_uint16(parameter_value[i])
+            item = parameter_value[i]
+            if not isinstance(item, int):
+                raise TypeError('parameter_value must be an instance of'
+                                ' 14-int list')
+            _check_limits(c_uint16, item, 'parameter_value')
+            list_u16_val[i] = c_uint16(item)
         ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            val,
+            list_u16_val,
             c_uint32(14)))
     elif parameter_type == ProtocolParameters.CPP_FRAME_WITH_ERROR_CORRECTION:
-        if not isinstance(parameter_value, list):
-            raise TypeError('parameter_value must be an instance of 8-int'
-                            ' list')
-        val = (8 * c_uint16)()
+        if not isinstance(parameter_value, list) or len(parameter_value) != 8:
+            raise TypeError('parameter_value must be an instance of'
+                            ' 8-int list')
+        list_u16_val = (8 * c_uint16)()
         for i in range(8):
-            _check_limits(c_uint16, parameter_value[i], 'parameter_value')
-            val[i] = c_uint16(parameter_value[i])
+            item = parameter_value[i]
+            if not isinstance(item, int):
+                raise TypeError('parameter_value must be an instance of'
+                                ' 8-int list')
+            _check_limits(c_uint16, item, 'parameter_value')
+            list_u16_val[i] = c_uint16(item)
         ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            val,
+            list_u16_val,
             c_uint32(8)))
     elif parameter_type == ProtocolParameters.CPP_POWER_ON_TRIGGER_IN:
-        if not isinstance(parameter_value, list):
-            raise TypeError('parameter_value must be an instance of 3-float'
-                            ' list')
-        val = (3 * c_uint32)()
-        _check_limits(c_uint32, round(parameter_value[0] * 1e6),
-                      'parameter_value')
-        val[0] = c_uint32(round(parameter_value[0] * 1e6))
-        _check_limits(c_uint32, round(parameter_value[1] * 1e6),
-                      'parameter_value')
-        val[1] = c_uint32(round(parameter_value[1] * 1e6))
-        _check_limits(c_uint32, round(parameter_value[2] * 1e3),
-                      'parameter_value')
-        val[2] = c_uint32(round(parameter_value[2] * 1e3))
+        if not isinstance(parameter_value, list) or len(parameter_value) != 3:
+            raise TypeError('parameter_value must be an instance of'
+                            ' 3-float list')
+        list_u32_val = (3 * c_uint32)()
+        for i in range(3):
+            item = parameter_value[i]
+            if not isinstance(item, float):
+                raise TypeError('parameter_value must be an instance of'
+                                ' 3-float list')
+            if i == 2:
+                _check_limits(c_uint32, round(item * 1e3), 'parameter_value')
+                int_item = round(item * 1e3)
+            else:
+                _check_limits(c_uint32, round(item * 1e6), 'parameter_value')
+                int_item = round(item * 1e6)
+            list_u32_val[i] = c_uint32(int_item)
         ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            val,
+            list_u32_val,
             c_uint32(3)))
 
     # Boolean parameter
@@ -2798,11 +2839,11 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
             parameter_type == ProtocolParameters.CPP_NFC_ACTIVE_FDT_MODE or \
             parameter_type == ProtocolParameters.CPP_ASK_FILTER_106 or \
             parameter_type == ProtocolParameters.CPP_NFC_MAX_LR_VALUE_NFCFORUM:
-        val = c_uint32(1) if parameter_value else c_uint32(0)
+        int_val = c_uint32(1) if parameter_value else c_uint32(0)
         ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            byref(val),
+            byref(int_val),
             c_uint32(4)))
 
     # ms/mdB parameter
@@ -2810,34 +2851,42 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
             parameter_type == ProtocolParameters.CPP_DAQ_AUTORANGE or \
             parameter_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE or \
             parameter_type == ProtocolParameters.CPP_PLI_STEP:
+        if not isinstance(parameter_value, float) and \
+                not isinstance(parameter_value, int):
+            raise TypeError('parameter_value must be an instance of float')
         value_ms = round(parameter_value * 1e3)
         _check_limits(c_uint32, value_ms, 'parameter_value')
-        val = c_uint32(value_ms)
+        int_val = c_uint32(value_ms)
         ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            byref(val),
+            byref(int_val),
             c_uint32(4)))
 
     # µs parameter
     elif parameter_type == ProtocolParameters.CPP_FRAME_FDT:
+        if not isinstance(parameter_value, float) and \
+                not isinstance(parameter_value, int):
+            raise TypeError('parameter_value must be an instance of float')
         value_us = round(parameter_value * 1e6)
         _check_limits(c_uint32, value_us, 'parameter_value')
-        val = c_uint32(value_us)
+        int_val = c_uint32(value_us)
         ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            byref(val),
+            byref(int_val),
             c_uint32(4)))
 
     # c_uint32 parameter
     else:
+        if not isinstance(parameter_value, int):
+            raise TypeError('parameter_value must be an instance of int')
         _check_limits(c_uint32, parameter_value, 'parameter_value')
-        val = c_uint32(parameter_value)
+        int_val = c_uint32(parameter_value)
         ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            byref(val),
+            byref(int_val),
             c_uint32(4)))
 
     if ret != CTS3ErrorCode.RET_OK:
@@ -2865,75 +2914,75 @@ def MPC_GetProtocolParameters(parameter_type: ProtocolParameters) \
     param_size = c_uint32()
     if parameter_type == ProtocolParameters.CPP_CURRENT_CID or \
             parameter_type == ProtocolParameters.CPP_CURRENT_NAD:
-        val = c_uint8()
+        int8_val = c_uint8()
         ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            byref(val),
+            byref(int8_val),
             c_uint32(1),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
-        return val.value
+        return int8_val.value
 
     # List parameter
     elif parameter_type == ProtocolParameters.CPP_FRAME_TYPE_B or \
             parameter_type == ProtocolParameters.CPP_FRAME_FELICA_OPTION or \
             parameter_type == ProtocolParameters.CPP_FRAME_TYPE_F_CLK:
-        val = (4 * c_uint16)()
+        list_u16_val = (4 * c_uint16)()
         ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            val,
+            list_u16_val,
             c_uint32(8),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
-        return [val[i] for i in range(4)]
+        return [list_u16_val[i] for i in range(4)]
     elif parameter_type == ProtocolParameters.CPP_CHANGE_BIT_BOUNDARY:
-        val = (2 * c_uint16)()
+        list_u16_val = (2 * c_uint16)()
         ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            val,
+            list_u16_val,
             c_uint32(4),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
-        return [val[i] for i in range(2)]
+        return [list_u16_val[i] for i in range(2)]
     elif parameter_type == ProtocolParameters.CPP_FRAME_TYPE_B_CLK:
-        val = (14 * c_uint16)()
+        list_u16_val = (14 * c_uint16)()
         ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            val,
+            list_u16_val,
             c_uint32(28),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
-        return [val[i] for i in range(14)]
+        return [list_u16_val[i] for i in range(14)]
     elif parameter_type == ProtocolParameters.CPP_FRAME_WITH_ERROR_CORRECTION:
-        val = (8 * c_uint16)()
+        list_u16_val = (8 * c_uint16)()
         ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            val,
+            list_u16_val,
             c_uint32(16),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
-        return [val[i] for i in range(8)]
+        return [list_u16_val[i] for i in range(8)]
     elif parameter_type == ProtocolParameters.CPP_POWER_ON_TRIGGER_IN:
-        val = (3 * c_uint32)()
+        list_u32_val = (3 * c_uint32)()
         ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            val,
+            list_u32_val,
             c_uint32(12),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
-        return [float(val[i]) / 1e6 for i in range(3)]
+        return [float(list_u32_val[i]) / 1e6 for i in range(3)]
 
     # Boolean parameter
     elif parameter_type == ProtocolParameters.CPP_CID or \
@@ -2960,58 +3009,58 @@ def MPC_GetProtocolParameters(parameter_type: ProtocolParameters) \
             parameter_type == ProtocolParameters.CPP_DISABLE_ATQA_CHECK or \
             parameter_type == ProtocolParameters.CPP_RF_FIELD_LOCK_ANTENNA or \
             parameter_type == ProtocolParameters.CPP_NFC_ACTIVE_FDT_MODE:
-        val = c_uint32()
+        int_val = c_uint32()
         ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            byref(val),
+            byref(int_val),
             c_uint32(1),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
-        return val.value > 0
+        return int_val.value > 0
 
     # ms/mdB parameter
     elif parameter_type == ProtocolParameters.CPP_PROTOCOL_STOP_TIMEOUT or \
             parameter_type == ProtocolParameters.CPP_DAQ_AUTORANGE or \
             parameter_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE or \
             parameter_type == ProtocolParameters.CPP_PLI_STEP:
-        val = c_uint32()
+        int_val = c_uint32()
         ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            byref(val),
+            byref(int_val),
             c_uint32(1),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
-        return float(val.value) / 1e3
+        return float(int_val.value) / 1e3
 
     # µs parameter
     elif parameter_type == ProtocolParameters.CPP_FRAME_FDT:
-        val = c_uint32()
+        int_val = c_uint32()
         ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            byref(val),
+            byref(int_val),
             c_uint32(1),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
-        return float(val.value) / 1e6
+        return float(int_val.value) / 1e6
 
     # c_uint32 parameter
     else:
-        val = c_uint32()
+        int_val = c_uint32()
         ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            byref(val),
+            byref(int_val),
             c_uint32(1),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
-        return val.value
+        return int_val.value
 
 # endregion
 
@@ -3102,14 +3151,71 @@ class TestType(IntEnum):
     TEST_EMV_POLLING = 23
 
 
+@overload
+def MPC_Test(test_type: TestType,
+             *args: Union[Tuple[float]]) -> bytes:
+    # TEST_REQA_REQB, TEST_REQB_REQA, TEST_POWERON_REQA,
+    # TEST_POWERON_REQB, TEST_REQA_REQA, TEST_REQB_REQB,
+    # TEST_WUPA_WUPB, TEST_WUPB_WUPA
+    ...
+
+
+@overload
+def MPC_Test(test_type: TestType,
+             *args: Union[Tuple[float, float, float]]) -> bytes:
+    # TEST_SPECIAL_GET_ATS
+    ...
+
+
+@overload
+def MPC_Test(test_type: TestType,
+             *args: Union[Tuple[int, bytes, int, bytes,
+                                float]]) -> Dict[str, Union[int, bytes]]:
+    # TEST_FDT_PICCPCD_A, TEST_FDT_PICCPCD_B, TEST_FDT_PICCPCD_FELICA
+    ...
+
+
+@overload
+def MPC_Test(test_type: TestType,
+             *args: Union[Tuple[Union[int, float], float, int,
+                                bytes]]) -> Dict[str, Union[int, bytes]]:
+    # TEST_POWER_OFF_ON_CMD, TEST_TON_EXCHANGE_AFTER_DELAY_TOFF
+    ...
+
+
+@overload
+def MPC_Test(test_type: TestType,
+             *args: Union[Tuple[int, float, float, int,
+                                bytes]]) -> Dict[str, Union[int, bytes]]:
+    # TEST_RF_RESET_CMD
+    ...
+
+
+@overload
+def MPC_Test(test_type: TestType,
+             *args: Union[Tuple[int, float, float, float, int,
+                                bytes]]) -> Dict[str, Union[int, bytes]]:
+    # TEST_RF_RESET_CMD_WITH_TRIGGER_IN
+    ...
+
+
+@overload
+def MPC_Test(test_type: TestType,
+             *args: Union[Tuple[float, float, float,
+                                TechnologyType, int, bytes,
+                                TechnologyType, int, bytes,
+                                float]]) -> None:
+    # TEST_EMV_POLLING
+    ...
+
+
 def MPC_Test(test_type: TestType,
              *args: Union[Tuple[float],
+                          Tuple[float, float, float],
                           Tuple[int, bytes, int, bytes, float],
-                          Tuple[float, float, int, bytes],
-                          Tuple[int, float, int, bytes],
+                          Tuple[Union[int, float], float, int, bytes],
                           Tuple[int, float, float, int, bytes],
                           Tuple[int, float, float, float, int, bytes],
-                          Tuple[float, float, float],
                           Tuple[float, float, float,
                                 TechnologyType, int, bytes,
                                 TechnologyType, int, bytes, float]]) \
@@ -3138,6 +3244,8 @@ def MPC_Test(test_type: TestType,
             test_type == TestType.TEST_WUPA_WUPB or \
             test_type == TestType.TEST_REQB_REQB or \
             test_type == TestType.TEST_POWERON_REQB:
+        if not isinstance(args[0], float) and not isinstance(args[0], int):
+            raise TypeError('args[0] must be an instance of float')
         delay_us = round(args[0] * 1e6)
         _check_limits(c_uint32, delay_us, 'args[0]')
         data = bytes(550)
@@ -3156,6 +3264,8 @@ def MPC_Test(test_type: TestType,
             test_type == TestType.TEST_WUPB_WUPA or \
             test_type == TestType.TEST_REQA_REQA or \
             test_type == TestType.TEST_POWERON_REQA:
+        if not isinstance(args[0], float) and not isinstance(args[0], int):
+            raise TypeError('args[0] must be an instance of float')
         delay_us = round(args[0] * 1e6)
         _check_limits(c_uint32, delay_us, 'args[0]')
         atqa = c_uint16()
@@ -3171,12 +3281,18 @@ def MPC_Test(test_type: TestType,
     elif test_type == TestType.TEST_FDT_PICCPCD_A or \
             test_type == TestType.TEST_FDT_PICCPCD_B or \
             test_type == TestType.TEST_FDT_PICCPCD_FELICA:
+        if not isinstance(args[0], int):
+            raise TypeError('args[0] must be an instance of int')
         _check_limits(c_uint32, args[0], 'args[0]')  # TxBits1
         if not isinstance(args[1], bytes):
             raise TypeError('args[1] must be an instance of bytes')
+        if not isinstance(args[1], int):
+            raise TypeError('args[1] must be an instance of int')
         _check_limits(c_uint32, args[2], 'args[2]')  # TxBits2
         if not isinstance(args[3], bytes):
             raise TypeError('args[3] must be an instance of bytes')
+        if not isinstance(args[4], float) and not isinstance(args[4], int):
+            raise TypeError('args[4] must be an instance of float')
         delay_ns = round(args[4] * 1e9)
         _check_limits(c_uint32, delay_ns, 'args[4]')
         data = bytes(0xFFFF)
@@ -3200,10 +3316,16 @@ def MPC_Test(test_type: TestType,
                 'rx_bits_number': rx_bits.value}
 
     elif test_type == TestType.TEST_SPECIAL_GET_ATS:
+        if not isinstance(args[0], float) and not isinstance(args[0], int):
+            raise TypeError('args[0] must be an instance of float')
         reset_us = round(args[0] * 1e6)
         _check_limits(c_uint32, reset_us, 'args[0]')
+        if not isinstance(args[1], float) and not isinstance(args[1], int):
+            raise TypeError('args[1] must be an instance of float')
         time1_us = round(args[1] * 1e6)
         _check_limits(c_uint32, time1_us, 'args[1]')
+        if not isinstance(args[2], float) and not isinstance(args[2], int):
+            raise TypeError('args[2] must be an instance of float')
         time2_us = round(args[2] * 1e6)
         _check_limits(c_uint32, time2_us, 'args[2]')
         data = bytes(0xFFFF)
@@ -3221,13 +3343,19 @@ def MPC_Test(test_type: TestType,
         return data[:length.value]
 
     elif test_type == TestType.TEST_POWER_OFF_ON_CMD:
-        if not isinstance(args[3], bytes):
-            raise TypeError('args[3] must be an instance of bytes')
+        if not isinstance(args[0], float) and not isinstance(args[0], int):
+            raise TypeError('args[0] must be an instance of float')
         time1_us = round(args[0] * 1e6)
         _check_limits(c_uint32, time1_us, 'args[0]')
+        if not isinstance(args[1], float) and not isinstance(args[1], int):
+            raise TypeError('args[1] must be an instance of float')
         time2_us = round(args[1] * 1e6)
         _check_limits(c_uint32, time2_us, 'args[1]')
+        if not isinstance(args[2], int):
+            raise TypeError('args[2] must be an instance of int')
         _check_limits(c_uint32, args[2], 'args[2]')  # TxBits
+        if not isinstance(args[3], bytes):
+            raise TypeError('args[3] must be an instance of bytes')
         data = bytes(0xFFFF)
         rx_bits = c_uint32()
         ret = CTS3ErrorCode(func_pointer(
@@ -3248,9 +3376,15 @@ def MPC_Test(test_type: TestType,
                 'rx_bits_number': rx_bits.value}
 
     elif test_type == TestType.TEST_TON_EXCHANGE_AFTER_DELAY_TOFF:
+        if not isinstance(args[0], int):
+            raise TypeError('args[0] must be an instance of int')
         _check_limits(c_uint32, args[0], 'args[0]')  # TrigNum
+        if not isinstance(args[1], float) and not isinstance(args[1], int):
+            raise TypeError('args[1] must be an instance of float')
         delay_us = round(args[1] * 1e6)
         _check_limits(c_uint32, delay_us, 'args[1]')
+        if not isinstance(args[2], int):
+            raise TypeError('args[2] must be an instance of int')
         _check_limits(c_uint32, args[2], 'args[2]')  # TxBits
         if not isinstance(args[3], bytes):
             raise TypeError('args[3] must be an instance of bytes')
@@ -3274,11 +3408,19 @@ def MPC_Test(test_type: TestType,
                 'rx_bits_number': rx_bits.value}
 
     elif test_type == TestType.TEST_RF_RESET_CMD:
+        if not isinstance(args[0], float) and not isinstance(args[0], int):
+            raise TypeError('args[0] must be an instance of float')
         _check_limits(c_uint32, args[0], 'args[0]')  # Ask_pm
+        if not isinstance(args[1], float) and not isinstance(args[1], int):
+            raise TypeError('args[1] must be an instance of float')
         time1_us = round(args[1] * 1e6)
         _check_limits(c_uint32, time1_us, 'args[1]')
+        if not isinstance(args[2], float) and not isinstance(args[2], int):
+            raise TypeError('args[2] must be an instance of float')
         time2_us = round(args[2] * 1e6)
         _check_limits(c_uint32, time2_us, 'args[2]')
+        if not isinstance(args[3], int):
+            raise TypeError('args[3] must be an instance of int')
         _check_limits(c_uint32, args[3], 'args[3]')  # TxBits
         if not isinstance(args[4], bytes):
             raise TypeError('args[4] must be an instance of bytes')
@@ -3303,13 +3445,23 @@ def MPC_Test(test_type: TestType,
                 'rx_bits_number': rx_bits.value}
 
     elif test_type == TestType.TEST_RF_RESET_CMD_WITH_TRIGGER_IN:
+        if not isinstance(args[0], int):
+            raise TypeError('args[0] must be an instance of int')
         _check_limits(c_uint32, args[0], 'args[0]')  # Ask_pm
+        if not isinstance(args[1], float) and not isinstance(args[1], int):
+            raise TypeError('args[1] must be an instance of float')
         time1_us = round(args[1] * 1e6)
         _check_limits(c_uint32, time1_us, 'args[1]')
+        if not isinstance(args[2], float) and not isinstance(args[2], int):
+            raise TypeError('args[2] must be an instance of float')
         time2_us = round(args[2] * 1e6)
         _check_limits(c_uint32, time2_us, 'args[2]')
+        if not isinstance(args[3], float) and not isinstance(args[3], int):
+            raise TypeError('args[3] must be an instance of float')
         timeout_triggerin_ms = round(args[3] * 1e3)
         _check_limits(c_uint32, timeout_triggerin_ms, 'args[3]')
+        if not isinstance(args[4], int):
+            raise TypeError('args[4] must be an instance of int')
         _check_limits(c_uint32, args[4], 'args[4]')  # TxBits
         if not isinstance(args[5], bytes):
             raise TypeError('args[5] must be an instance of bytes')
@@ -3335,24 +3487,36 @@ def MPC_Test(test_type: TestType,
                 'rx_bits_number': rx_bits.value}
 
     elif test_type == TestType.TEST_EMV_POLLING:
+        if not isinstance(args[0], float) and not isinstance(args[0], int):
+            raise TypeError('args[0] must be an instance of float')
         reset_time_us = round(args[0] * 1e6)
         _check_limits(c_uint32, reset_time_us, 'args[0]')
+        if not isinstance(args[1], float) and not isinstance(args[1], int):
+            raise TypeError('args[1] must be an instance of float')
         first_delay_us = round(args[1] * 1e6)
         _check_limits(c_uint32, first_delay_us, 'args[1]')
+        if not isinstance(args[2], float) and not isinstance(args[2], int):
+            raise TypeError('args[2] must be an instance of float')
         frames_delay_us = round(args[2] * 1e6)
         _check_limits(c_uint32, frames_delay_us, 'args[2]')
         if not isinstance(args[3], TechnologyType):
             raise TypeError('args[3] must be an instance of '
                             'TechnologyType IntEnum')
+        if not isinstance(args[4], int):
+            raise TypeError('args[4] must be an instance of int')
         _check_limits(c_uint32, args[4], 'args[4]')  # TxBits1
         if not isinstance(args[5], bytes):
             raise TypeError('args[5] must be an instance of bytes')
         if not isinstance(args[6], TechnologyType):
             raise TypeError('args[6] must be an instance of '
                             'TechnologyType IntEnum')
+        if not isinstance(args[7], int):
+            raise TypeError('args[7] must be an instance of int')
         _check_limits(c_uint32, args[7], 'args[7]')  # TxBits2
         if not isinstance(args[8], bytes):
             raise TypeError('args[8] must be an instance of bytes')
+        if not isinstance(args[9], float) and not isinstance(args[9], int):
+            raise TypeError('args[9] must be an instance of float')
         timeout_ms = round(args[9] * 1e3)
         _check_limits(c_uint32, timeout_ms, 'args[9]')
         ret = CTS3ErrorCode(func_pointer(
@@ -3370,6 +3534,9 @@ def MPC_Test(test_type: TestType,
             c_uint32(timeout_ms)))  # Timeout_ms
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
+        return None
+    else:
+        raise TypeError('test_type must be an instance of TestType IntEnum')
 
 # endregion
 
@@ -3571,27 +3738,34 @@ def MPC_TriggerConfig(trigger_id: NfcTriggerId, config: NfcTrigger,
         mask = b'\xFF' * len(frame)
     if mask and frame and len(mask) != len(frame):
         raise TypeError('frame/mask mismatch')
-    if config == NfcTrigger.TRIG_DELAY_AFTER_TX:
-        value = round(value * 1e9)
-        _check_limits(c_uint32, value, 'value')
-    if frame:
-        ret = CTS3ErrorCode(_MPuLib.MPC_TriggerConfig(
-            c_uint8(0),
-            c_uint32(trigger_id),
-            c_uint32(config),
-            c_uint32(value),
-            c_uint32(len(frame)),
-            frame,
-            mask))
+
+    if config == NfcTrigger.TRIG_FORCE:
+        val = 1 if value else 0
+    elif config == NfcTrigger.TRIG_DELAY_AFTER_TX:
+        val = round(value * 1e9)
+        _check_limits(c_uint32, val, 'value')
+    elif config == NfcTrigger.TRIG_ON_ERROR:
+        if not isinstance(value, CTS3ErrorCode):
+            raise TypeError('value must be an instance of '
+                            'CTS3ErrorCode IntEnum')
+        val = value.value
+    elif config == NfcTrigger.TRIG_RX_FRAME or \
+            config == NfcTrigger.TRIG_TX_FRAME:
+        if not isinstance(value, TechnologyType):
+            raise TypeError('value must be an instance of '
+                            'TechnologyType IntEnum')
+        val = value.value
     else:
-        ret = CTS3ErrorCode(_MPuLib.MPC_TriggerConfig(
-            c_uint8(0),
-            c_uint32(trigger_id),
-            c_uint32(config),
-            c_uint32(value),
-            c_uint32(0),
-            None,
-            None))
+        val = 0
+
+    ret = CTS3ErrorCode(_MPuLib.MPC_TriggerConfig(
+        c_uint8(0),
+        c_uint32(trigger_id),
+        c_uint32(config),
+        c_uint32(val),
+        c_uint32(0) if frame is None else c_uint32(len(frame)),
+        frame,
+        mask))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
@@ -3804,8 +3978,11 @@ def MPS_CPLAutoTest(test_id: CplAutotestId) -> List[List[str]]:
         byref(result)))
     if (ret >= CTS3ErrorCode.RET_FAIL and ret <= CTS3ErrorCode.RET_WARNING) \
             or ret == CTS3ErrorCode.RET_OK:
-        tests_result = ''.join(map(chr, result.value)).strip().split('\n')
-        return [test.split('\t') for test in tests_result]
+        if result.value is None:
+            return [['']]
+        else:
+            tests_result = ''.join(map(chr, result.value)).strip().split('\n')
+            return [test.split('\t') for test in tests_result]
     else:
         raise CTS3Exception(ret)
 
@@ -4615,7 +4792,8 @@ def MPS_SetUserEvent(user_event_number: int) -> None:
         raise CTS3Exception(ret)
 
 
-def BeginDownload(call_back: Callable[[int, int, POINTER(c_uint8), int],
+def BeginDownload(call_back: Callable[[int, int,
+                                       POINTER(c_uint8), int],  # type: ignore
                                       int]) -> None:
     """Starts protocol analyzer events download
 
@@ -4624,16 +4802,17 @@ def BeginDownload(call_back: Callable[[int, int, POINTER(c_uint8), int],
     call_back : Callable
         Events callback
     """
-    if platform == 'win32':
+    global _callback
+    if sys.platform == 'win32':
         cmp_func = WINFUNCTYPE(c_int32, c_uint32, c_uint32, POINTER(c_uint8),
                                c_int)
     else:
         cmp_func = CFUNCTYPE(c_int32, c_uint32, c_uint32, POINTER(c_uint8),
                              c_int)
-    BeginDownload.spy_callback = cmp_func(call_back)
+    _callback = cmp_func(call_back)
     ret = CTS3ErrorCode(_MPuLib.BeginDownload(
         c_uint8(0),
-        BeginDownload.spy_callback,
+        _callback,
         c_uint32(0),
         c_int(0)))
     if ret != CTS3ErrorCode.RET_OK:
@@ -4657,8 +4836,10 @@ def BeginDownloadTo(path: str) -> None:
 
 def MPS_EndDownload() -> None:
     """Ends protocol analyzer events download"""
+    global _callback
     ret = CTS3ErrorCode(_MPuLib.MPS_EndDownload(
         c_uint8(0)))
+    _callback = None
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 

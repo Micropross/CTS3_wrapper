@@ -227,7 +227,7 @@ def MPC_RfFieldOffDetected() -> bool:
         byref(field)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
-    return field > 0
+    return field.value > 0
 
 
 def MPC_WaitTypeAActiveState(atqa: bytes, uid: bytes,
@@ -339,7 +339,7 @@ def MPC_WaitAndGetFrameTypeA106ModeBit(timeout: float) -> Dict[str,
     bytes_number = int(rx_bits.value / 8)
     if rx_bits.value % 8 > 0:
         bytes_number += 1
-    return {'rx_frame': data[:bytes_number.value],
+    return {'rx_frame': data[:bytes_number],
             'rx_bits_number': rx_bits.value}
 
 
@@ -434,9 +434,9 @@ def MPS_SimSetDesyncPattern(enable: bool, t1_fc: Optional[float] = None,
     t2_fc : float
         t2 pattern duration in carrier periods
     """
-    t1_10fc = t1_fc * 1e1 if t1_fc else 0
+    t1_10fc = round(t1_fc * 1e1) if t1_fc else 0
     _check_limits(c_uint32, t1_10fc, 't1_fc')
-    t2_10fc = t2_fc * 1e1 if t2_fc else 0
+    t2_10fc = round(t2_fc * 1e1) if t2_fc else 0
     _check_limits(c_uint32, t2_10fc, 't2_fc')
     ret = CTS3ErrorCode(_MPuLib.MPS_SimSetDesyncPattern(
         c_uint8(0),

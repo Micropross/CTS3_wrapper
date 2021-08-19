@@ -1376,16 +1376,18 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
 
     # int parameter
     elif parameter_type == SimulatorParameter.SIM_AUTO_WTX_VALUE:
+        if not isinstance(parameter_value, int):
+            raise TypeError('parameter_value must be an instance of int')
         _check_limits(c_uint8, parameter_value, 'parameter_value')
         ret = CTS3ErrorCode(_MPuLib.MPS_ChangeSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(c_uint8(parameter_value)),
             c_uint32(1)))
-    elif parameter_type == SimulatorParameter.\
-            SIM_SET_NFC_MAX_SUCCESSIVE_NAK or \
-            parameter_type == SimulatorParameter.\
-            SIM_SET_NFC_MAX_SUCCESSIVE_ATTENTION:
+    elif parameter_type == SimulatorParameter.SIM_NFC_MAX_NAK or \
+            parameter_type == SimulatorParameter.SIM_NFC_MAX_ATN:
+        if not isinstance(parameter_value, int):
+            raise TypeError('parameter_value must be an instance of int')
         _check_limits(c_uint32, parameter_value, 'parameter_value')
         ret = CTS3ErrorCode(_MPuLib.MPS_ChangeSimParameters(
             c_uint8(0),
@@ -1419,79 +1421,79 @@ def MPS_GetSimParameters(parameter_type: SimulatorParameter) \
 
     # bytes parameter:
     if parameter_type == SimulatorParameter.SIM_VICINITY_COLLISIONS:
-        value = bytes(255)
+        val = bytes(255)
         ret = CTS3ErrorCode(_MPuLib.MPS_GetSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            value,
+            val,
             c_uint32(255),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
-        return value[param_size.value]
+        return val[param_size.value]
 
     # c_uint16 parameter
     elif parameter_type == SimulatorParameter.SIM_ATS_CRC or \
             parameter_type == SimulatorParameter.SIM_ATR_RES_CRC or \
             parameter_type == SimulatorParameter.SIM_WUP_RES_CRC or \
             parameter_type == SimulatorParameter.SIM_POLL_RES_CRC:
-        value = c_uint16()
+        int16_val = c_uint16()
         ret = CTS3ErrorCode(_MPuLib.MPS_GetSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            byref(value),
+            byref(int16_val),
             c_uint32(2),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
         if param_size.value == 0:
             return None
-        return bytes([value.value >> 8, value.value & 0xFF])
+        return bytes([int16_val.value >> 8, int16_val.value & 0xFF])
 
     # boolean parameter
     elif parameter_type == SimulatorParameter.SIM_AUTO_WTX or \
             parameter_type == SimulatorParameter.SIM_MUTE_ATN or \
             parameter_type == SimulatorParameter.SIM_STRICT_RFU:
-        value = c_uint8()
+        int8_val = c_uint8()
         ret = CTS3ErrorCode(_MPuLib.MPS_GetSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            byref(value),
+            byref(int8_val),
             c_uint32(1),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
-        return value.value > 0
+        return int8_val.value > 0
 
     # int parameter
     elif parameter_type == SimulatorParameter.SIM_AUTO_WTX_VALUE:
-        value = c_uint8()
+        int8_val = c_uint8()
         ret = CTS3ErrorCode(_MPuLib.MPS_GetSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            byref(value),
+            byref(int8_val),
             c_uint32(1),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
-        return value.value
+        return int8_val.value
     else:
-        value = c_uint32()
+        int32_val = c_uint32()
         ret = CTS3ErrorCode(_MPuLib.MPS_GetSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
-            byref(value),
+            byref(int32_val),
             c_uint32(4),
             byref(param_size)))
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
         if parameter_type == SimulatorParameter.SIM_INITRULE_MASK:
-            if value.value > 0:
-                return IsoSimulatorEvent(value.value)
+            if int32_val.value > 0:
+                return IsoSimulatorEvent(int32_val.value)
             else:
                 return None
         else:
-            return value.value
+            return int32_val.value
 
 
 def MPS_GetLastError() -> CTS3ErrorCode:
@@ -1654,56 +1656,61 @@ def MPS_AddFilter(filter: Union[IoClCrcFilter_index, IoClCrcFilter_pattern,
     if isinstance(filter, IoClCrcFilter_index):
         index = c_uint32(filter.index)
         length = c_uint32(0)
-        mask = bytearray(256)
-        mask = (c_uint8 * 256).from_buffer(mask)
-        pattern = bytearray(256)
-        pattern = (c_uint8 * 256).from_buffer(pattern)
+        mask = (c_uint8 * 256).from_buffer(bytearray(256))
+        pattern = (c_uint8 * 256).from_buffer(bytearray(256))
         crc = c_uint16(filter.crc)
-        filter_ctypes = _IoClCrcFilter(index, length, mask, pattern, crc)
+        crc_filter = _IoClCrcFilter(index, length, mask, pattern, crc)
         filter_type = _FilterType.FILTER_TYPE_CL_CRC_TX
     elif isinstance(filter, IoClCrcFilter_pattern):
         index = c_uint32(0)
         length = c_uint32(len(filter.pattern))
-        mask = bytearray(filter.mask +
+        temp = bytearray(filter.mask +
                          b'\x00' * (256 - len(filter.mask)))
-        mask = (c_uint8 * 256).from_buffer(mask)
-        pattern = bytearray(filter.pattern +
-                            b'\x00' * (256 - len(filter.pattern)))
-        pattern = (c_uint8 * 256).from_buffer(pattern)
+        mask = (c_uint8 * 256).from_buffer(temp)
+        temp = bytearray(filter.pattern +
+                         b'\x00' * (256 - len(filter.pattern)))
+        pattern = (c_uint8 * 256).from_buffer(temp)
         crc = c_uint16(filter.crc)
-        filter_ctypes = _IoClCrcFilter(index, length, mask, pattern, crc)
+        crc_filter = _IoClCrcFilter(index, length, mask, pattern, crc)
         filter_type = _FilterType.FILTER_TYPE_CL_CRC_TX
     elif isinstance(filter, IoClFrameSuppFilter_index):
         index = c_uint32(filter.index)
         length = c_uint32(0)
-        mask = bytearray(256)
-        mask = (c_uint8 * 256).from_buffer(mask)
-        pattern = bytearray(256)
-        pattern = (c_uint8 * 256).from_buffer(pattern)
-        filter_ctypes = _IoClFrameSuppFilter(index, length, mask, pattern)
+        mask = (c_uint8 * 256).from_buffer(bytearray(256))
+        pattern = (c_uint8 * 256).from_buffer(bytearray(256))
+        supp_filter = _IoClFrameSuppFilter(index, length, mask, pattern)
         filter_type = _FilterType.FILTER_TYPE_CL_SUPP_TX
     elif isinstance(filter, IoClFrameSuppFilter_pattern):
         index = c_uint32(0)
         length = c_uint32(len(filter.pattern))
-        mask = bytearray(filter.mask +
+        temp = bytearray(filter.mask +
                          b'\x00' * (256 - len(filter.mask)))
-        mask = (c_uint8 * 256).from_buffer(mask)
-        pattern = bytearray(filter.pattern +
-                            b'\x00' * (256 - len(filter.pattern)))
-        pattern = (c_uint8 * 256).from_buffer(pattern)
-        filter_ctypes = _IoClFrameSuppFilter(index, length, mask, pattern)
+        mask = (c_uint8 * 256).from_buffer(temp)
+        temp = bytearray(filter.pattern +
+                         b'\x00' * (256 - len(filter.pattern)))
+        pattern = (c_uint8 * 256).from_buffer(temp)
+        supp_filter = _IoClFrameSuppFilter(index, length, mask, pattern)
         filter_type = _FilterType.FILTER_TYPE_CL_SUPP_TX
     else:
         raise TypeError('filter must be an instance of IoClCrcFilter_index, '
                         'IoClCrcFilter_pattern, IoClFrameSuppFilter_index '
                         'or IoClFrameSuppFilter_pattern')
 
-    ret = CTS3ErrorCode(_MPuLib.MPS_AddFilter(
-        c_uint8(0),
-        c_uint32(0),
-        c_uint32(filter_type.value),
-        c_uint32(0),
-        byref(filter_ctypes)))
+    if isinstance(filter, IoClCrcFilter_index) or \
+            isinstance(filter, IoClCrcFilter_pattern):
+        ret = CTS3ErrorCode(_MPuLib.MPS_AddFilter(
+            c_uint8(0),
+            c_uint32(0),
+            c_uint32(filter_type.value),
+            c_uint32(0),
+            byref(crc_filter)))
+    else:
+        ret = CTS3ErrorCode(_MPuLib.MPS_AddFilter(
+            c_uint8(0),
+            c_uint32(0),
+            c_uint32(filter_type.value),
+            c_uint32(0),
+            byref(supp_filter)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
@@ -1827,12 +1834,12 @@ def MPS_SimAddRule(event_mask: Union[IsoSimulatorEvent,
             byref(rule_id)))
     elif isinstance(pattern_condition, ActionConditionDataPattern):
         length = c_uint32(len(pattern_condition.pattern))
-        mask = bytearray(pattern_condition.pattern +
+        temp = bytearray(pattern_condition.pattern +
                          b'\x00' * (256 - len(pattern_condition.mask)))
-        mask = (c_uint8 * 256).from_buffer(mask)
-        pattern = bytearray(pattern_condition.mask +
-                            b'\x00' * (256 - len(pattern_condition.pattern)))
-        pattern = (c_uint8 * 256).from_buffer(pattern)
+        mask = (c_uint8 * 256).from_buffer(temp)
+        temp = bytearray(pattern_condition.mask +
+                         b'\x00' * (256 - len(pattern_condition.pattern)))
+        pattern = (c_uint8 * 256).from_buffer(temp)
         condition_ctypes = _ActionConditionDataPattern(length, mask, pattern)
         ret = CTS3ErrorCode(_MPuLib.MPS_SimAddRule(
             c_uint8(0),
