@@ -7,7 +7,7 @@ from subprocess import Popen, PIPE, DEVNULL
 from shlex import split
 from threading import Thread, Event
 from ipaddress import IPv4Address, IPv4Interface
-from typing import List, Dict, Type, Union, Optional, Callable
+from typing import List, Dict, Type, Union, Optional, Callable, cast
 from enum import IntEnum, IntFlag, unique
 from xml.dom import minidom
 from datetime import datetime
@@ -33,7 +33,7 @@ __license__ = 'MIT'
 
 
 class MpDll(CDLL):
-    _func_restype_ = c_int16  # type: ignore
+    _func_restype_ = c_int16  # type: ignore[assignment]
 
 
 # Load MPuLib from local path
@@ -42,7 +42,7 @@ _lib_name: Optional[str] = None
 _lib_path: str = join(dirname(abspath(__file__)), '.lib')
 if sys.platform == 'win32':
     class MpWinDll(WinDLL):
-        _func_restype_ = c_int16  # type: ignore
+        _func_restype_ = c_int16  # type: ignore[assignment]
 
     _lib_path = join(_lib_path, 'Windows')
     if architecture()[0] == '32bit':
@@ -108,9 +108,9 @@ class _FirmwareLog(Thread):
 
         Parameters
         ----------
-        host: str
+        host : str
             Connection string
-        started: Event
+        started : Event
             Event raised when log redirection is established or failed
         """
         if sys.platform == 'linux' and processor().startswith('armv7'):
@@ -122,7 +122,7 @@ class _FirmwareLog(Thread):
         self.running = False
         Thread.__init__(self, daemon=True)
 
-    def run(self):
+    def run(self) -> None:
         """Starts log redirection"""
         # Follow log and read last entry
         log_cmd = 'journalctl --unit=tgapp --follow --lines=1 --output=cat'
@@ -149,19 +149,21 @@ class _FirmwareLog(Thread):
                                      stderr=DEVNULL)
                 self.running = True
                 # Read last log entry to ensure link is established
-                self.log.stdout.readline()
+                if self.log.stdout is not None:
+                    self.log.stdout.readline()
             except Exception as e:
                 raise e
             finally:
                 self.started.set()
             while self.running:
-                log = self.log.stdout.readline()
-                if len(log) > 0:
-                    sys.stderr.write(f'{{{self.host}}}\t{log}')
+                if self.log.stdout is not None:
+                    log = self.log.stdout.readline()
+                    if len(log) > 0:
+                        sys.stderr.write(f'{{{self.host}}}\t{log}')
         except Exception:
             self.running = False
 
-    def join(self):
+    def stop(self) -> None:
         """Stops log redirection"""
         if self.running:
             self.running = False
@@ -170,10 +172,9 @@ class _FirmwareLog(Thread):
             Thread.join(self)
 
 
-_logs_dict: Dict[str, _FirmwareLog] = {}
-
-
-def _check_limits(c_type: Type, int_value: int, var_name: str) -> None:
+def _check_limits(c_type: Union[Type[c_uint8], Type[c_uint16], Type[c_uint32],
+                                Type[c_int16], Type[c_int32]],
+                  int_value: int, var_name: str) -> None:
     """Checks if integer value is within C type integer range
 
     Parameters
@@ -211,11 +212,11 @@ def GetErrorMessageFromCode(error_code: int) -> str:
     """
     _check_limits(c_int16, error_code, 'error_code')
     _MPuLib.GetErrorMessageFromCode.restype = c_char_p
-    message = _MPuLib.GetErrorMessageFromCode(
-        c_uint16(error_code)).decode('ascii')
+    message = cast(bytes, _MPuLib.GetErrorMessageFromCode(
+        c_uint16(error_code))).decode('ascii')
     if len(message) > 0:
         return message
-    return 'Unknown error code ' + str(error_code)
+    return f'Unknown error code {error_code}'
 
 
 def GetMifareErrorMessageFromCode(error_code: int) -> str:
@@ -233,15 +234,18 @@ def GetMifareErrorMessageFromCode(error_code: int) -> str:
     """
     _check_limits(c_int32, error_code, 'error_code')
     _MPuLib.GetMifareErrorMessageFromCode.restype = c_char_p
-    message = _MPuLib.GetMifareErrorMessageFromCode(
-        c_int32(error_code)).decode('ascii')
+    message = cast(bytes, _MPuLib.GetMifareErrorMessageFromCode(
+        c_int32(error_code))).decode('ascii')
     if len(message) > 0:
         return message
-    return 'Unknown error code ' + str(error_code)
+    return f'Unknown error code {error_code}'
 
 
 from .MPStatus import CTS3ErrorCode  # noqa: E402
 from .MPException import CTS3Exception  # noqa: E402
+
+
+_logs_dict: Dict[str, _FirmwareLog] = {}
 
 
 def _log_start() -> None:
@@ -269,16 +273,16 @@ def _log_stop() -> None:
         host = host_name.value.decode('ascii')
         if host in _logs_dict:
             sleep(0.5)  # Journal flush delay
-            _logs_dict[host].join()
+            _logs_dict[host].stop()
             _logs_dict.pop(host)
 
 
 @register
-def _logs_cleanup() -> None:
+def _logs_cleanup() -> None:  # type: ignore[misc]
     """Stops all firmware log redirections"""
     global _logs_dict
     for log in _logs_dict.values():
-        log.join()
+        log.stop()
 
 # region Resource management
 
@@ -415,8 +419,9 @@ def MPS_GetVersion2() -> str:
         message))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
-    return minidom.parseString(message.value.decode('ascii').
-                               strip()).toprettyxml()
+    print(type(message.value))
+    info = message.value.decode('ascii').strip()
+    return cast(str, minidom.parseString(info).toprettyxml())
 
 
 @unique
@@ -544,7 +549,7 @@ def MPS_ListVersions(partition: int) -> Dict[str, Union[str, int]]:
 
 
 def UpdateFirmware(path: str, partIndex: int,
-                   call_back: Optional[Callable[[c_int32], c_int32]] =
+                   call_back: Optional[Callable[[int], int]] =
                    None) -> None:
     """Updates the CTS3 firmware
 
@@ -758,7 +763,9 @@ def MPS_ProbeTemperature(sensor: TemperatureSensor) -> float:
         raise TypeError('sensor must be an instance of '
                         'TemperatureSensor IntEnum')
     _MPuLib.MPS_ProbeTemperature.restype = c_double
-    return _MPuLib.MPS_ProbeTemperature(c_uint8(sensor))
+    temp = _MPuLib.MPS_ProbeTemperature(
+        c_uint8(sensor))
+    return cast(float, temp)
 
 
 def MPS_Beep(duration: float) -> None:
@@ -886,7 +893,7 @@ def MPS_GetTickCount() -> float:
         Time in s
     """
     _MPuLib.MPS_GetTickCount.restype = c_uint32
-    return _MPuLib.MPS_GetTickCount() / 1e3
+    return cast(int, _MPuLib.MPS_GetTickCount()) / 1e3
 
 
 class _RTM_Time(Structure):
@@ -1381,7 +1388,7 @@ def LaunchEmbeddedScript(script_command: str,
                          timeout: float,
                          option: EmbeddedScriptMode =
                          EmbeddedScriptMode.EMBEDDED_WAIT_TERMINATION,
-                         call_back: Optional[Callable[[c_char_p], c_int32]] =
+                         call_back: Optional[Callable[[bytes], int]] =
                          None) -> int:
     """Launches an embedded script
 
@@ -1426,7 +1433,7 @@ def LaunchEmbeddedScript(script_command: str,
 
 
 def StartEmbeddedApplication(application_path: str, args: str,
-                             call_back: Optional[Callable[[c_char_p], c_int32]]
+                             call_back: Optional[Callable[[bytes], int]]
                              = None) -> None:
     """Launches an embedded C program within the firmware environment
 
@@ -1571,7 +1578,7 @@ def SetDLLDebugMode(path: Optional[str]) -> None:
             path.encode('ascii'))
 
 
-def SendFrame(command: str, timeout: int = -1,
+def SendFrame(command: Optional[str], timeout: int = -1,
               asynchronous_tx: bool = False) -> Optional[str]:
     """Sends a remote command to the connected CTS3
 

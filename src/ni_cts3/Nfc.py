@@ -12,7 +12,10 @@ else:
     from ctypes import CFUNCTYPE
 
 
-_callback: Optional[Callable[[int, int, POINTER(c_uint8), int],  # type: ignore
+_callback: Optional[Callable[[int,
+                              int,
+                              POINTER(c_uint8),  # type: ignore[misc]
+                              int],
                              int]] = None
 
 
@@ -1513,7 +1516,7 @@ def MPC_MFULCWriteKey(key1: bytes, key2: bytes) -> None:
 # region MIFARE
 
 
-def _check_mifare_code(status: int):
+def _check_mifare_code(status: int) -> None:
     """Checks MIFARE status
 
     Parameters
@@ -2851,8 +2854,8 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
             parameter_type == ProtocolParameters.CPP_DAQ_AUTORANGE or \
             parameter_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE or \
             parameter_type == ProtocolParameters.CPP_PLI_STEP:
-        if not isinstance(parameter_value, float) and \
-                not isinstance(parameter_value, int):
+        if isinstance(parameter_value, list) or \
+                not isinstance(parameter_value, float):
             raise TypeError('parameter_value must be an instance of float')
         value_ms = round(parameter_value * 1e3)
         _check_limits(c_uint32, value_ms, 'parameter_value')
@@ -2865,8 +2868,8 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
 
     # µs parameter
     elif parameter_type == ProtocolParameters.CPP_FRAME_FDT:
-        if not isinstance(parameter_value, float) and \
-                not isinstance(parameter_value, int):
+        if isinstance(parameter_value, list) or \
+                not isinstance(parameter_value, float):
             raise TypeError('parameter_value must be an instance of float')
         value_us = round(parameter_value * 1e6)
         _check_limits(c_uint32, value_us, 'parameter_value')
@@ -3152,8 +3155,7 @@ class TestType(IntEnum):
 
 
 @overload
-def MPC_Test(test_type: TestType,
-             *args: Union[Tuple[float]]) -> bytes:
+def MPC_Test(test_type: TestType, delay: float) -> bytes:
     # TEST_REQA_REQB, TEST_REQB_REQA, TEST_POWERON_REQA,
     # TEST_POWERON_REQB, TEST_REQA_REQA, TEST_REQB_REQB,
     # TEST_WUPA_WUPB, TEST_WUPB_WUPA
@@ -3161,72 +3163,59 @@ def MPC_Test(test_type: TestType,
 
 
 @overload
-def MPC_Test(test_type: TestType,
-             *args: Union[Tuple[float, float, float]]) -> bytes:
+def MPC_Test(test_type: TestType, reset_time: float,
+             time_1: float, time_2: float) -> bytes:
     # TEST_SPECIAL_GET_ATS
     ...
 
 
 @overload
-def MPC_Test(test_type: TestType,
-             *args: Union[Tuple[int, bytes, int, bytes,
-                                float]]) -> Dict[str, Union[int, bytes]]:
+def MPC_Test(test_type: TestType, tx_bits_1: int, tx_frame_1: bytes,
+             tx_bits_2: int, tx_frame_2: bytes,
+             delay: float) -> Dict[str, Union[int, bytes]]:
     # TEST_FDT_PICCPCD_A, TEST_FDT_PICCPCD_B, TEST_FDT_PICCPCD_FELICA
     ...
 
 
 @overload
-def MPC_Test(test_type: TestType,
-             *args: Union[Tuple[Union[int, float], float, int,
-                                bytes]]) -> Dict[str, Union[int, bytes]]:
+def MPC_Test(test_type: TestType, param: Union[int, float], delay: float,
+             tx_bits: int, tx_frame: bytes) -> Dict[str, Union[int, bytes]]:
     # TEST_POWER_OFF_ON_CMD, TEST_TON_EXCHANGE_AFTER_DELAY_TOFF
     ...
 
 
 @overload
-def MPC_Test(test_type: TestType,
-             *args: Union[Tuple[int, float, float, int,
-                                bytes]]) -> Dict[str, Union[int, bytes]]:
+def MPC_Test(test_type: TestType, ask: int, time_1: float, time_2: float,
+             tx_bits: int, tx_frame: bytes) -> Dict[str, Union[int, bytes]]:
     # TEST_RF_RESET_CMD
     ...
 
 
 @overload
-def MPC_Test(test_type: TestType,
-             *args: Union[Tuple[int, float, float, float, int,
-                                bytes]]) -> Dict[str, Union[int, bytes]]:
+def MPC_Test(test_type: TestType, ask: int, time_1: float,
+             time_2: float, timeout: float,
+             tx_bits: int, tx_frame: bytes) -> Dict[str, Union[int, bytes]]:
     # TEST_RF_RESET_CMD_WITH_TRIGGER_IN
     ...
 
 
 @overload
-def MPC_Test(test_type: TestType,
-             *args: Union[Tuple[float, float, float,
-                                TechnologyType, int, bytes,
-                                TechnologyType, int, bytes,
-                                float]]) -> None:
+def MPC_Test(test_type: TestType, reset_time: float, first_frame_delay: float,
+             next_frames_delay: float, type_odd: TechnologyType,
+             tx_bits_odd: int, tx_frame_odd: bytes, type_even: TechnologyType,
+             tx_bits_even: int, tx_frame_even: bytes, timeout: float) -> None:
     # TEST_EMV_POLLING
     ...
 
 
-def MPC_Test(test_type: TestType,
-             *args: Union[Tuple[float],
-                          Tuple[float, float, float],
-                          Tuple[int, bytes, int, bytes, float],
-                          Tuple[Union[int, float], float, int, bytes],
-                          Tuple[int, float, float, int, bytes],
-                          Tuple[int, float, float, float, int, bytes],
-                          Tuple[float, float, float,
-                                TechnologyType, int, bytes,
-                                TechnologyType, int, bytes, float]]) \
-             -> Union[bytes, Dict[str, Union[int, bytes]], None]:
+def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
     """Performs specific test
 
     Parameters
     ----------
     test_type : TestType
         Test to perform
-    args
+    *args
         Test parameters
 
     Returns
@@ -3244,30 +3233,36 @@ def MPC_Test(test_type: TestType,
             test_type == TestType.TEST_WUPA_WUPB or \
             test_type == TestType.TEST_REQB_REQB or \
             test_type == TestType.TEST_POWERON_REQB:
+        if len(args) != 1:
+            raise TypeError(f'MPC_Test({test_type.name}) takes exactly two '
+                            f'arguments ({len(args) + 1} given)')
         if not isinstance(args[0], float) and not isinstance(args[0], int):
-            raise TypeError('args[0] must be an instance of float')
+            raise TypeError('delay must be an instance of float')
         delay_us = round(args[0] * 1e6)
-        _check_limits(c_uint32, delay_us, 'args[0]')
+        _check_limits(c_uint32, delay_us, 'delay')
         data = bytes(550)
-        length = c_uint16()
+        length16 = c_uint16()
         ret = CTS3ErrorCode(func_pointer(
             c_uint8(0),
             c_uint32(test_type),
             c_uint32(delay_us),  # Delay_us
             data,  # pRxFrame
-            byref(length)))  # pRxBits
+            byref(length16)))  # pRxBits
         if ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
-        return data[:length.value]
+        return data[:length16.value]
 
     elif test_type == TestType.TEST_REQB_REQA or \
             test_type == TestType.TEST_WUPB_WUPA or \
             test_type == TestType.TEST_REQA_REQA or \
             test_type == TestType.TEST_POWERON_REQA:
+        if len(args) != 1:
+            raise TypeError(f'MPC_Test({test_type.name}) takes exactly two '
+                            f'arguments ({len(args) + 1} given)')
         if not isinstance(args[0], float) and not isinstance(args[0], int):
-            raise TypeError('args[0] must be an instance of float')
+            raise TypeError('delay must be an instance of float')
         delay_us = round(args[0] * 1e6)
-        _check_limits(c_uint32, delay_us, 'args[0]')
+        _check_limits(c_uint32, delay_us, 'delay')
         atqa = c_uint16()
         ret = CTS3ErrorCode(func_pointer(
             c_uint8(0),
@@ -3281,20 +3276,23 @@ def MPC_Test(test_type: TestType,
     elif test_type == TestType.TEST_FDT_PICCPCD_A or \
             test_type == TestType.TEST_FDT_PICCPCD_B or \
             test_type == TestType.TEST_FDT_PICCPCD_FELICA:
+        if len(args) != 5:
+            raise TypeError(f'MPC_Test({test_type.name}) takes exactly six '
+                            f'arguments ({len(args) + 1} given)')
         if not isinstance(args[0], int):
-            raise TypeError('args[0] must be an instance of int')
-        _check_limits(c_uint32, args[0], 'args[0]')  # TxBits1
+            raise TypeError('tx_bits_1 must be an instance of int')
+        _check_limits(c_uint32, args[0], 'tx_bits_1')  # TxBits1
         if not isinstance(args[1], bytes):
-            raise TypeError('args[1] must be an instance of bytes')
-        if not isinstance(args[1], int):
-            raise TypeError('args[1] must be an instance of int')
-        _check_limits(c_uint32, args[2], 'args[2]')  # TxBits2
+            raise TypeError('tx_frame_1 must be an instance of bytes')
+        if not isinstance(args[2], int):
+            raise TypeError('tx_bits_2 must be an instance of int')
+        _check_limits(c_uint32, args[2], 'tx_bits_2')  # TxBits2
         if not isinstance(args[3], bytes):
-            raise TypeError('args[3] must be an instance of bytes')
+            raise TypeError('tx_frame_2 must be an instance of bytes')
         if not isinstance(args[4], float) and not isinstance(args[4], int):
-            raise TypeError('args[4] must be an instance of float')
+            raise TypeError('delay must be an instance of float')
         delay_ns = round(args[4] * 1e9)
-        _check_limits(c_uint32, delay_ns, 'args[4]')
+        _check_limits(c_uint32, delay_ns, 'delay')
         data = bytes(0xFFFF)
         rx_bits = c_uint32()
         ret = CTS3ErrorCode(func_pointer(
@@ -3316,18 +3314,21 @@ def MPC_Test(test_type: TestType,
                 'rx_bits_number': rx_bits.value}
 
     elif test_type == TestType.TEST_SPECIAL_GET_ATS:
+        if len(args) != 3:
+            raise TypeError(f'MPC_Test({test_type.name}) takes exactly four '
+                            f'arguments ({len(args) + 1} given)')
         if not isinstance(args[0], float) and not isinstance(args[0], int):
-            raise TypeError('args[0] must be an instance of float')
+            raise TypeError('reset_time must be an instance of float')
         reset_us = round(args[0] * 1e6)
-        _check_limits(c_uint32, reset_us, 'args[0]')
+        _check_limits(c_uint32, reset_us, 'reset_time')
         if not isinstance(args[1], float) and not isinstance(args[1], int):
-            raise TypeError('args[1] must be an instance of float')
+            raise TypeError('time_1 must be an instance of float')
         time1_us = round(args[1] * 1e6)
-        _check_limits(c_uint32, time1_us, 'args[1]')
+        _check_limits(c_uint32, time1_us, 'time_1')
         if not isinstance(args[2], float) and not isinstance(args[2], int):
-            raise TypeError('args[2] must be an instance of float')
+            raise TypeError('time_2 must be an instance of float')
         time2_us = round(args[2] * 1e6)
-        _check_limits(c_uint32, time2_us, 'args[2]')
+        _check_limits(c_uint32, time2_us, 'time_2')
         data = bytes(0xFFFF)
         length = c_uint32()
         ret = CTS3ErrorCode(func_pointer(
@@ -3343,19 +3344,22 @@ def MPC_Test(test_type: TestType,
         return data[:length.value]
 
     elif test_type == TestType.TEST_POWER_OFF_ON_CMD:
+        if len(args) != 4:
+            raise TypeError(f'MPC_Test({test_type.name}) takes exactly five '
+                            f'arguments ({len(args) + 1} given)')
         if not isinstance(args[0], float) and not isinstance(args[0], int):
-            raise TypeError('args[0] must be an instance of float')
+            raise TypeError('param must be an instance of float')
         time1_us = round(args[0] * 1e6)
-        _check_limits(c_uint32, time1_us, 'args[0]')
+        _check_limits(c_uint32, time1_us, 'param')
         if not isinstance(args[1], float) and not isinstance(args[1], int):
-            raise TypeError('args[1] must be an instance of float')
+            raise TypeError('delay must be an instance of float')
         time2_us = round(args[1] * 1e6)
-        _check_limits(c_uint32, time2_us, 'args[1]')
+        _check_limits(c_uint32, time2_us, 'delay')
         if not isinstance(args[2], int):
-            raise TypeError('args[2] must be an instance of int')
-        _check_limits(c_uint32, args[2], 'args[2]')  # TxBits
+            raise TypeError('tx_bits must be an instance of int')
+        _check_limits(c_uint32, args[2], 'tx_bits')  # TxBits
         if not isinstance(args[3], bytes):
-            raise TypeError('args[3] must be an instance of bytes')
+            raise TypeError('tx_frame must be an instance of bytes')
         data = bytes(0xFFFF)
         rx_bits = c_uint32()
         ret = CTS3ErrorCode(func_pointer(
@@ -3376,18 +3380,21 @@ def MPC_Test(test_type: TestType,
                 'rx_bits_number': rx_bits.value}
 
     elif test_type == TestType.TEST_TON_EXCHANGE_AFTER_DELAY_TOFF:
+        if len(args) != 4:
+            raise TypeError(f'MPC_Test({test_type.name}) takes exactly five '
+                            f'arguments ({len(args) + 1} given)')
         if not isinstance(args[0], int):
-            raise TypeError('args[0] must be an instance of int')
-        _check_limits(c_uint32, args[0], 'args[0]')  # TrigNum
+            raise TypeError('param must be an instance of int')
+        _check_limits(c_uint32, args[0], 'param')  # TrigNum
         if not isinstance(args[1], float) and not isinstance(args[1], int):
-            raise TypeError('args[1] must be an instance of float')
+            raise TypeError('delay must be an instance of float')
         delay_us = round(args[1] * 1e6)
-        _check_limits(c_uint32, delay_us, 'args[1]')
+        _check_limits(c_uint32, delay_us, 'delay')
         if not isinstance(args[2], int):
-            raise TypeError('args[2] must be an instance of int')
-        _check_limits(c_uint32, args[2], 'args[2]')  # TxBits
+            raise TypeError('tx_bits must be an instance of int')
+        _check_limits(c_uint32, args[2], 'tx_bits')  # TxBits
         if not isinstance(args[3], bytes):
-            raise TypeError('args[3] must be an instance of bytes')
+            raise TypeError('tx_frame must be an instance of bytes')
         data = bytes(0xFFFF)
         rx_bits = c_uint32()
         ret = CTS3ErrorCode(func_pointer(
@@ -3408,22 +3415,25 @@ def MPC_Test(test_type: TestType,
                 'rx_bits_number': rx_bits.value}
 
     elif test_type == TestType.TEST_RF_RESET_CMD:
-        if not isinstance(args[0], float) and not isinstance(args[0], int):
-            raise TypeError('args[0] must be an instance of float')
-        _check_limits(c_uint32, args[0], 'args[0]')  # Ask_pm
+        if len(args) != 5:
+            raise TypeError(f'MPC_Test({test_type.name}) takes exactly six '
+                            f'arguments ({len(args) + 1} given)')
+        if not isinstance(args[0], int):
+            raise TypeError('ask must be an instance of int')
+        _check_limits(c_uint32, args[0], 'ask')  # Ask_pm
         if not isinstance(args[1], float) and not isinstance(args[1], int):
-            raise TypeError('args[1] must be an instance of float')
+            raise TypeError('time_1 must be an instance of float')
         time1_us = round(args[1] * 1e6)
-        _check_limits(c_uint32, time1_us, 'args[1]')
+        _check_limits(c_uint32, time1_us, 'time_1')
         if not isinstance(args[2], float) and not isinstance(args[2], int):
-            raise TypeError('args[2] must be an instance of float')
+            raise TypeError('time_2 must be an instance of float')
         time2_us = round(args[2] * 1e6)
-        _check_limits(c_uint32, time2_us, 'args[2]')
+        _check_limits(c_uint32, time2_us, 'time_2')
         if not isinstance(args[3], int):
-            raise TypeError('args[3] must be an instance of int')
-        _check_limits(c_uint32, args[3], 'args[3]')  # TxBits
+            raise TypeError('tx_bits must be an instance of int')
+        _check_limits(c_uint32, args[3], 'tx_bits')  # TxBits
         if not isinstance(args[4], bytes):
-            raise TypeError('args[4] must be an instance of bytes')
+            raise TypeError('tx_frame must be an instance of bytes')
         data = bytes(0xFFFF)
         rx_bits = c_uint32()
         ret = CTS3ErrorCode(func_pointer(
@@ -3445,26 +3455,29 @@ def MPC_Test(test_type: TestType,
                 'rx_bits_number': rx_bits.value}
 
     elif test_type == TestType.TEST_RF_RESET_CMD_WITH_TRIGGER_IN:
+        if len(args) != 6:
+            raise TypeError(f'MPC_Test({test_type.name}) takes exactly seven '
+                            f'arguments ({len(args) + 1} given)')
         if not isinstance(args[0], int):
-            raise TypeError('args[0] must be an instance of int')
-        _check_limits(c_uint32, args[0], 'args[0]')  # Ask_pm
+            raise TypeError('ask must be an instance of int')
+        _check_limits(c_uint32, args[0], 'ask')  # Ask_pm
         if not isinstance(args[1], float) and not isinstance(args[1], int):
-            raise TypeError('args[1] must be an instance of float')
+            raise TypeError('time_1 must be an instance of float')
         time1_us = round(args[1] * 1e6)
-        _check_limits(c_uint32, time1_us, 'args[1]')
+        _check_limits(c_uint32, time1_us, 'time_1')
         if not isinstance(args[2], float) and not isinstance(args[2], int):
-            raise TypeError('args[2] must be an instance of float')
+            raise TypeError('time_2 must be an instance of float')
         time2_us = round(args[2] * 1e6)
-        _check_limits(c_uint32, time2_us, 'args[2]')
+        _check_limits(c_uint32, time2_us, 'time_2')
         if not isinstance(args[3], float) and not isinstance(args[3], int):
-            raise TypeError('args[3] must be an instance of float')
+            raise TypeError('timeout must be an instance of float')
         timeout_triggerin_ms = round(args[3] * 1e3)
-        _check_limits(c_uint32, timeout_triggerin_ms, 'args[3]')
+        _check_limits(c_uint32, timeout_triggerin_ms, 'timeout')
         if not isinstance(args[4], int):
-            raise TypeError('args[4] must be an instance of int')
-        _check_limits(c_uint32, args[4], 'args[4]')  # TxBits
+            raise TypeError('tx_bits must be an instance of int')
+        _check_limits(c_uint32, args[4], 'tx_bits')  # TxBits
         if not isinstance(args[5], bytes):
-            raise TypeError('args[5] must be an instance of bytes')
+            raise TypeError('tx_frame must be an instance of bytes')
         data = bytes(0xFFFF)
         rx_bits = c_uint32()
         ret = CTS3ErrorCode(func_pointer(
@@ -3487,38 +3500,41 @@ def MPC_Test(test_type: TestType,
                 'rx_bits_number': rx_bits.value}
 
     elif test_type == TestType.TEST_EMV_POLLING:
+        if len(args) != 10:
+            raise TypeError(f'MPC_Test({test_type.name}) takes exactly eleven '
+                            f'arguments ({len(args) + 1} given)')
         if not isinstance(args[0], float) and not isinstance(args[0], int):
-            raise TypeError('args[0] must be an instance of float')
+            raise TypeError('reset_time must be an instance of float')
         reset_time_us = round(args[0] * 1e6)
-        _check_limits(c_uint32, reset_time_us, 'args[0]')
+        _check_limits(c_uint32, reset_time_us, 'reset_time')
         if not isinstance(args[1], float) and not isinstance(args[1], int):
-            raise TypeError('args[1] must be an instance of float')
+            raise TypeError('first_frame_delay must be an instance of float')
         first_delay_us = round(args[1] * 1e6)
-        _check_limits(c_uint32, first_delay_us, 'args[1]')
+        _check_limits(c_uint32, first_delay_us, 'first_frame_delay')
         if not isinstance(args[2], float) and not isinstance(args[2], int):
-            raise TypeError('args[2] must be an instance of float')
+            raise TypeError('next_frames_delay must be an instance of float')
         frames_delay_us = round(args[2] * 1e6)
-        _check_limits(c_uint32, frames_delay_us, 'args[2]')
+        _check_limits(c_uint32, frames_delay_us, 'next_frames_delay')
         if not isinstance(args[3], TechnologyType):
-            raise TypeError('args[3] must be an instance of '
+            raise TypeError('type_odd must be an instance of '
                             'TechnologyType IntEnum')
         if not isinstance(args[4], int):
-            raise TypeError('args[4] must be an instance of int')
-        _check_limits(c_uint32, args[4], 'args[4]')  # TxBits1
+            raise TypeError('tx_bits_odd must be an instance of int')
+        _check_limits(c_uint32, args[4], 'tx_bits_odd')
         if not isinstance(args[5], bytes):
-            raise TypeError('args[5] must be an instance of bytes')
+            raise TypeError('tx_frame_odd must be an instance of bytes')
         if not isinstance(args[6], TechnologyType):
-            raise TypeError('args[6] must be an instance of '
+            raise TypeError('type_even must be an instance of '
                             'TechnologyType IntEnum')
         if not isinstance(args[7], int):
-            raise TypeError('args[7] must be an instance of int')
-        _check_limits(c_uint32, args[7], 'args[7]')  # TxBits2
+            raise TypeError('tx_bits_even must be an instance of int')
+        _check_limits(c_uint32, args[7], 'tx_bits_even')
         if not isinstance(args[8], bytes):
-            raise TypeError('args[8] must be an instance of bytes')
+            raise TypeError('tx_frame_even must be an instance of bytes')
         if not isinstance(args[9], float) and not isinstance(args[9], int):
-            raise TypeError('args[9] must be an instance of float')
+            raise TypeError('timeout must be an instance of float')
         timeout_ms = round(args[9] * 1e3)
-        _check_limits(c_uint32, timeout_ms, 'args[9]')
+        _check_limits(c_uint32, timeout_ms, 'timeout')
         ret = CTS3ErrorCode(func_pointer(
             c_uint8(0),
             c_uint32(test_type),
@@ -4792,8 +4808,10 @@ def MPS_SetUserEvent(user_event_number: int) -> None:
         raise CTS3Exception(ret)
 
 
-def BeginDownload(call_back: Callable[[int, int,
-                                       POINTER(c_uint8), int],  # type: ignore
+def BeginDownload(call_back: Callable[[int,
+                                       int,
+                                       POINTER(c_uint8),  # type: ignore[misc]
+                                       int],
                                       int]) -> None:
     """Starts protocol analyzer events download
 

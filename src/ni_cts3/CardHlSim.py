@@ -427,7 +427,7 @@ class _TypeARATSStruct(Structure):
         bytes
             Bytes representation of RATS
         """
-        return bytes([self.sb, self.param, self.crc_1, self.crc_2])
+        return bytearray(self)
 
 
 def MPC_GetRATS() -> Optional[bytes]:
@@ -534,7 +534,7 @@ class _APDUHeader(Structure):
         bytes
             Bytes representation of APDU header
         """
-        return bytes([self.cla, self.ins, self.p1, self.p2, self.p3])
+        return bytearray(self)
 
 
 def MPS_GetAPDU2() -> Optional[Dict[str, bytes]]:
@@ -621,7 +621,7 @@ class _TypeNFC_PSL_REQ(Structure):
         bytes
             Bytes representation of PSL_REQ
         """
-        return bytes([self.did, self.brs, self.fsl])
+        return bytearray(self)
 
 
 def MPC_GetNFC_PSL_REQ() -> Optional[bytes]:
@@ -656,7 +656,7 @@ class _TypeNFC_WUP_REQ(Structure):
         bytes
             Bytes representation of WUP_REQ
         """
-        return bytes(list(self.nfc_id3i) + [self.didi])
+        return bytearray(self)
 
 
 def MPC_GetNFC_WUP_REQ() -> Optional[bytes]:
@@ -739,8 +739,7 @@ class _TypeAPPSStruct(Structure):
             Bytes representation of PPS
         """
         if self.pps0 & 0x10:
-            return bytes([self.ppss, self.pps0, self.pps1,
-                          self.crc1, self.crc2])
+            return bytearray(self)
         else:
             return bytes([self.ppss, self.pps0, self.crc1, self.crc2])
 
@@ -1072,7 +1071,7 @@ def MPC_SendNFC_RUserData(data: bytes) -> None:
         raise CTS3Exception(ret)
 
 
-def MPC_SendPPSResponse(pps: bytes = None) -> None:
+def MPC_SendPPSResponse(pps: Optional[bytes] = None) -> None:
     """Sends Type A PPS response
 
     Parameters

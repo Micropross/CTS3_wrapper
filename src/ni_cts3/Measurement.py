@@ -1,6 +1,7 @@
 from ctypes import c_uint8, c_uint16, c_int32, c_uint32, c_double, byref
-from ctypes import c_void_p, cast, POINTER, create_string_buffer
+from ctypes import c_void_p, POINTER, create_string_buffer
 from typing import List, Optional, Dict, Union, overload
+from ctypes import cast as c_cast
 from enum import IntEnum, IntFlag, unique
 from . import _MPuLib, _check_limits
 from .MPStatus import CTS3ErrorCode
@@ -364,7 +365,7 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
     if measurement_count.value:
-        ptr = cast(measurements, POINTER(c_int32 * measurement_count.value))
+        ptr = c_cast(measurements, POINTER(c_int32 * measurement_count.value))
         values = [i for i in ptr.contents]
         if measurement_type == MeasurementType.SCINFC_MEASTYPE_PCD_WAVEFORM:
             if card_type == TechnologyType.TYPE_A and data_rate == 106:
@@ -502,8 +503,8 @@ def MPC_GetRFFrequency(resolution: FrequencyResolution,
     ...
 
 
-def MPC_GetRFFrequency(resolution: Optional[FrequencyResolution] = None,
-                       timeout: Optional[float] = None) -> int:
+def MPC_GetRFFrequency(resolution=None,  # type: ignore[no-untyped-def]
+                       timeout=None):
     """Performs a carrier frequency measurement
 
     Parameters
@@ -804,7 +805,7 @@ def MPC_GetMeasureResFreq(measure_type: ResFreqMeasureType =
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
     if measurement_count.value:
-        ptr = cast(measurements, POINTER(c_double * measurement_count.value))
+        ptr = c_cast(measurements, POINTER(c_double * measurement_count.value))
         return [i for i in ptr.contents]
     else:
         return []
@@ -889,7 +890,7 @@ def MPC_GetMeasureS11(measure_type: S11MeasureType =
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
     if measurement_count.value:
-        ptr = cast(measurements, POINTER(c_double * measurement_count.value))
+        ptr = c_cast(measurements, POINTER(c_double * measurement_count.value))
         return [i for i in ptr.contents]
     else:
         return []
