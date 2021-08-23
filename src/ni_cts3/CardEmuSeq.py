@@ -113,11 +113,19 @@ class S_EMD_pattern(IntEnum):
 
 
 class S_EMD():
-    """EMD definition"""
-    def __init__(self, patterns_number: int, pattern_type: S_EMD_pattern):
-        """Inits S_EMD class
+    """EMD definition
 
-        Attributes
+    Attributes
+    ----------
+    number : int
+        Patterns number to send
+    type : S_EMD_pattern
+    """
+
+    def __init__(self, patterns_number: int, pattern_type: S_EMD_pattern):
+        """Inits S_EMD
+
+        Parameters
         ----------
         pattern_number : int
             Patterns number to send

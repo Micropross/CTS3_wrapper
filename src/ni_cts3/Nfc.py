@@ -1,4 +1,5 @@
 import sys
+from warnings import warn
 from typing import Dict, Union, Optional, List, Tuple, Callable, overload
 from enum import IntEnum, IntFlag, unique
 from . import _MPuLib, _MPuLib_variadic, _check_limits
@@ -1219,9 +1220,9 @@ def MPC_SelectETUWidthTX(etu_logic_0: int, etu_logic_1: int) -> None:
 # region FeliCa
 
 
-def MPC_FELICA_Polling(system_code: Union[bytes, int],
-                       request_code: Union[bytes, int],
-                       time_slot: Union[bytes, int]) -> bytes:
+def MPC_FelicaPolling(system_code: Union[bytes, int],
+                      request_code: Union[bytes, int],
+                      time_slot: Union[bytes, int]) -> bytes:
     """Performs a polling request
 
     Parameters
@@ -1269,7 +1270,7 @@ def MPC_FELICA_Polling(system_code: Union[bytes, int],
 
     data = bytes(550)
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_FELICA_Polling(
+    ret = CTS3ErrorCode(_MPuLib.MPC_FelicaPolling(
         c_uint8(0),
         c_uint16(sc_value),
         c_uint8(rc_value),
@@ -1281,52 +1282,214 @@ def MPC_FELICA_Polling(system_code: Union[bytes, int],
     return data[:length.value]
 
 
-def MPC_FELICA_Read_Without_Encryption(idm: bytes, service_codes: List[int],
-                                       blocks: List[int]) -> \
-                                       Dict[str, Union[bytes, int, List[int]]]:
-    """Reads memory blocks
+def MPC_FELICA_Polling(system_code: Union[bytes, int],
+                       request_code: Union[bytes, int],
+                       time_slot: Union[bytes, int]) -> bytes:
+    """Performs a polling request
+
+    Parameters
+    ----------
+    system_code : bytes or int
+        2-byte card system identifier
+    request_code : bytes or int
+        Request code byte
+    time_slot : bytes or int
+        Time slot byte
+
+    Returns
+    -------
+    bytes
+        PICC answer
+    """
+    warn("replaced by MPC_FelicaPolling", DeprecationWarning)
+    return MPC_FelicaPolling(system_code, request_code, time_slot)
+
+
+class FelicaService():
+    """FeliCa Service Code
+
+    Attributes
+    ----------
+    service_number : int
+        Service number
+    access_attribute : int
+        Access Attribute
+    """
+
+    def __init__(self, service_number: int, access_attribute: int):
+        """Inits FelicaService
+
+        Parameters
+        ----------
+        service_number : int
+            Service number
+        access_attribute : int
+            Access Attribute
+        """
+        if service_number > 0x3FF:
+            raise OverflowError('service_number is out of range')
+        if access_attribute > 0x3F:
+            raise OverflowError('access_attribute is out of range')
+        self.service_number = service_number
+        self.access_attribute = access_attribute
+
+    def _get_int(self) -> int:
+        """Converts FelicaService to 16-bit integer
+
+        Returns
+        -------
+        int
+            Integer representation of FelicaService
+        """
+        val = (self.service_number << 8) & 0xFF00
+        val |= (self.service_number << 6) & 0xC0
+        val |= self.access_attribute
+        return val
+
+
+class FelicaBlock():
+    """FeliCa Block List Element
+
+    Attributes
+    ----------
+    len : bool
+        Len bit
+    access_mode : int
+        Access Mode
+    service_order : int
+        Service Code List Order
+    block_number : int
+        Block Number
+    """
+
+    def __init__(self, access_mode: int, service_order: int,
+                 block_number: int,
+                 two_byte_block: Optional[bool] = None):
+        """Inits FelicaBlock
+
+        Parameters
+        ----------
+        access_mode : int
+            Access Mode
+        service_order : int
+            Service Code List Order
+        block_number : int
+            Block Number
+        two_byte_block : bool, optional
+            True if Block List Element is two-byte long,
+            None to use three-byte only if required by Block Number
+        """
+        if access_mode > 0x07:
+            raise OverflowError('access_mode is out of range')
+        if service_order > 0x0F:
+            raise OverflowError('service_order is out of range')
+        if block_number > 0xFFFF:
+            raise OverflowError('block_number is out of range')
+        if two_byte_block is None:
+            self.two_byte_block = block_number < 0x100
+        else:
+            if two_byte_block and block_number > 0xFF:
+                raise OverflowError('two-byte block_number is out of range')
+            self.two_byte_block = two_byte_block
+        self.access_mode = access_mode
+        self.service_order = service_order
+        self.block_number = block_number
+
+    def _get_int(self) -> int:
+        """Converts FelicaBlock to 32-bit integer
+
+        Returns
+        -------
+        int
+            Integer representation of FelicaBlock
+        """
+        val = (self.access_mode & 0x07) << 4
+        val |= self.service_order & 0x0F
+        if self.two_byte_block:
+            val |= 0x80
+            val |= (self.block_number & 0xFF) << 8
+        else:
+            val |= (self.block_number >> 8) << 16
+            val |= (self.block_number & 0xFF) << 8
+        return val
+
+
+@overload
+def MPC_FelicaCheck(idm: bytes, service_codes: List[FelicaService],
+                    blocks: List[FelicaBlock]) -> Dict[str,
+                                                       Union[bytes,
+                                                             int,
+                                                             List[bytes]]]:
+    ...
+
+
+@overload
+def MPC_FelicaCheck(idm: bytes, service_codes: List[int],
+                    blocks: List[int]) -> Dict[str, Union[bytes,
+                                                          int,
+                                                          List[bytes]]]:
+    ...
+
+
+def MPC_FelicaCheck(idm,  # type: ignore[no-untyped-def]
+                    service_codes, blocks):
+    """Reads FeliCa memory blocks
 
     Parameters
     ----------
     idm : bytes
         8-byte manufacturer identifier
-    service_codes : list(int)
+    service_codes : list(FelicaService) or list(int)
         Services list
-    blocks : list(int)
+    blocks : list(FelicaBlock) or list(int)
         Blocks list
 
     Returns
     -------
     dict
-        'idm2' (bytes): Answered manufacturer identifier
+        'idm2' (bytes): Answered manufacturer 8-byte identifier
         'status1' (int): Status flag 1
         'status2' (int): Status flag 2
-        'data' (list(int)): Read blocks
+        'data' (list(bytes)): Read 16-byte blocks
     """
     if not isinstance(idm, bytes) or len(idm) != 8:
         raise TypeError('idm must be an instance of 8 bytes')
-    if not isinstance(service_codes, list) or \
-            any(not isinstance(i, int) for i in service_codes):
-        raise TypeError('service_codes must be an instance of integers list')
+    if not isinstance(service_codes, list):
+        raise TypeError('service_codes must be an instance of '
+                        'FelicaService list or int list')
     _check_limits(c_uint8, len(service_codes), 'service_codes')
+    if not isinstance(blocks, list):
+        raise TypeError('blocks must be an instance of '
+                        'FelicaBlock list or int list')
+    _check_limits(c_uint8, len(blocks), 'blocks')
+
     services_list = (c_uint16 * len(service_codes))()
     for i in range(len(service_codes)):
-        _check_limits(c_uint16, service_codes[i], 'service_codes')
-        services_list[i] = c_uint16(service_codes[i])
-    if not isinstance(blocks, list) or \
-            any(not isinstance(i, int) for i in blocks):
-        raise TypeError('blocks must be an instance of integers list')
-    _check_limits(c_uint8, len(blocks), 'blocks')
+        if isinstance(service_codes[i], FelicaService):
+            services_list[i] = c_uint16(service_codes[i]._get_int())
+        elif isinstance(service_codes[i], int):
+            _check_limits(c_uint16, service_codes[i], 'service_codes')
+            services_list[i] = c_uint16(service_codes[i])
+        else:
+            raise TypeError('service_codes must be an instance of '
+                            'FelicaService list or int list')
     blocks_list = (c_uint32 * len(blocks))()
     for i in range(len(blocks)):
-        _check_limits(c_uint32, blocks[i], 'blocks')
-        blocks_list[i] = c_uint32(blocks[i])
-    data = bytes(512)
+        if isinstance(blocks[i], FelicaBlock):
+            blocks_list[i] = c_uint32(blocks[i]._get_int())
+        elif isinstance(blocks[i], int):
+            _check_limits(c_uint32, blocks[i], 'blocks')
+            blocks_list[i] = c_uint32(blocks[i])
+        else:
+            raise TypeError('blocks must be an instance of '
+                            'FelicaBlock list or int list')
+
+    data = bytes(16 * len(blocks))
     idm2 = bytes(8)
     length = c_uint8()
     status1 = c_uint8()
     status2 = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_FELICA_Read_Without_Encryption(
+    ret = CTS3ErrorCode(_MPuLib.MPC_FelicaCheck(
         c_uint8(0),
         idm,
         c_uint8(len(service_codes)),
@@ -1340,74 +1503,121 @@ def MPC_FELICA_Read_Without_Encryption(idm: bytes, service_codes: List[int],
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
     data_list = []
-    for i in range(0, length.value, 2):
-        data_list.append((int(data[i]) << 8) + int(data[i + 1]))
+    for i in range(0, length.value, 16):
+        data_list.append(data[i:i+16])
     return {'idm2': idm2,
             'status1': status1.value,
             'status2': status2.value,
             'data': data_list}
 
 
-def MPC_FELICA_Write_Without_Encryption(idm: bytes, service_codes: List[int],
-                                        blocks: List[int],
-                                        blocks_data: List[int]) \
-                                        -> Dict[str, Union[bytes, int]]:
-    """Writes memory blocks
+def MPC_FELICA_Read_Without_Encryption(idm: bytes, service_codes: List[int],
+                                       blocks: List[int]) \
+        -> Dict[str, Union[bytes, int, List[bytes]]]:
+    """Reads FeliCa memory blocks
 
     Parameters
     ----------
     idm : bytes
         8-byte manufacturer identifier
-    service_codes : list(int)
+    service_codes : list(FelicaService) or list(int)
         Services list
-    blocks : list(int)
+    blocks : list(FelicaBlock) or list(int)
         Blocks list
-    blocks_data : list(int)
-        Data to write
 
     Returns
     -------
     dict
-        'idm2' (bytes): Answered manufacturer identifier
+        'idm2' (bytes): Answered manufacturer 8-byte identifier
+        'status1' (int): Status flag 1
+        'status2' (int): Status flag 2
+        'data' (list(bytes)): Read 16-byte blocks
+    """
+    warn("replaced by MPC_FelicaCheck", DeprecationWarning)
+    return MPC_FelicaCheck(idm, service_codes, blocks)
+
+
+@overload
+def MPC_FelicaUpdate(idm: bytes, service_codes: List[FelicaService],
+                     blocks: List[FelicaBlock],
+                     data: List[bytes]) -> Dict[str, Union[bytes, int]]:
+    ...
+
+
+@overload
+def MPC_FelicaUpdate(idm: bytes, service_codes: List[int], blocks: List[int],
+                     data: List[bytes]) -> Dict[str, Union[bytes, int]]:
+    ...
+
+
+def MPC_FelicaUpdate(idm,  # type: ignore[no-untyped-def]
+                     service_codes, blocks, data):
+    """Writes FeliCa memory blocks
+
+    Parameters
+    ----------
+    idm : bytes
+        8-byte manufacturer identifier
+    service_codes : list(FelicaService) or list(int)
+        Services list
+    blocks : list(FelicaBlock) or list(int)
+        Blocks list
+    data : list(bytes)
+        16-byte blocks to write
+
+    Returns
+    -------
+    dict
+        'idm2' (bytes): Answered manufacturer 8-byte identifier
         'status1' (int): Status flag 1
         'status2' (int): Status flag 2
     """
     if not isinstance(idm, bytes) or len(idm) != 8:
         raise TypeError('idm must be an instance of 8 bytes')
-    if not isinstance(service_codes, list) or \
-            any(not isinstance(i, int) for i in service_codes):
-        raise TypeError('service_codes must be an instance of integers list')
+    if not isinstance(service_codes, list):
+        raise TypeError('service_codes must be an instance of '
+                        'FelicaService list or int list')
     _check_limits(c_uint8, len(service_codes), 'service_codes')
+    if not isinstance(blocks, list):
+        raise TypeError('blocks must be an instance of '
+                        'FelicaBlock list or int list')
+    _check_limits(c_uint8, len(blocks), 'blocks')
+    if not isinstance(data, list) or \
+            any(not isinstance(i, bytes) or len(i) != 16 for i in data):
+        raise TypeError('blocks_data must be an instance of 16-byte list')
+
     services_list = (c_uint16 * len(service_codes))()
     for i in range(len(service_codes)):
-        _check_limits(c_uint16, service_codes[i], 'service_codes')
-        services_list[i] = c_uint16(service_codes[i])
-    if not isinstance(blocks, list) or \
-            any(not isinstance(i, int) for i in blocks):
-        raise TypeError('blocks must be an instance of integers list')
-    _check_limits(c_uint8, len(blocks), 'blocks')
+        if isinstance(service_codes[i], FelicaService):
+            services_list[i] = c_uint16(service_codes[i]._get_int())
+        elif isinstance(service_codes[i], int):
+            _check_limits(c_uint16, service_codes[i], 'service_codes')
+            services_list[i] = c_uint16(service_codes[i])
+        else:
+            raise TypeError('service_codes must be an instance of '
+                            'FelicaService list or int list')
     blocks_list = (c_uint32 * len(blocks))()
     for i in range(len(blocks)):
-        _check_limits(c_uint32, blocks[i], 'blocks')
-        blocks_list[i] = c_uint32(blocks[i])
-    if not isinstance(blocks_data, list) or \
-            any(not isinstance(i, int) for i in blocks_data):
-        raise TypeError('blocks_data must be an instance of integers list')
-    blocks_data_list = (c_uint16 * len(blocks_data))()
-    for i in range(len(blocks_data)):
-        blocks_data_list[i] = c_uint16(blocks_data[i])
+        if isinstance(blocks[i], FelicaBlock):
+            blocks_list[i] = c_uint32(blocks[i]._get_int())
+        elif isinstance(blocks[i], int):
+            _check_limits(c_uint32, blocks[i], 'blocks')
+            blocks_list[i] = c_uint32(blocks[i])
+        else:
+            raise TypeError('blocks must be an instance of '
+                            'FelicaBlock list or int list')
 
     idm2 = bytes(8)
     status1 = c_uint8()
     status2 = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_FELICA_Write_Without_Encryption(
+    ret = CTS3ErrorCode(_MPuLib.MPC_FelicaUpdate(
         c_uint8(0),
         idm,
         c_uint8(len(service_codes)),
         services_list,
         c_uint8(len(blocks)),
         blocks_list,
-        blocks_data_list,
+        b''.join(data),
         idm2,
         byref(status1),
         byref(status2)))
@@ -1416,6 +1626,35 @@ def MPC_FELICA_Write_Without_Encryption(idm: bytes, service_codes: List[int],
     return {'idm2': idm2,
             'status1': status1.value,
             'status2': status2.value}
+
+
+def MPC_FELICA_Write_Without_Encryption(idm: bytes,
+                                        service_codes: List[int],
+                                        blocks: List[int],
+                                        data: List[bytes]) \
+        -> Dict[str, Union[bytes, int]]:
+    """Writes FeliCa memory blocks
+
+    Parameters
+    ----------
+    idm : bytes
+        8-byte manufacturer identifier
+    service_codes : list(FelicaService) or list(int)
+        Services list
+    blocks : list(FelicaBlock) or list(int)
+        Blocks list
+    data : list(bytes)
+        16-byte blocks to write
+
+    Returns
+    -------
+    dict
+        'idm2' (bytes): Answered manufacturer 8-byte identifier
+        'status1' (int): Status flag 1
+        'status2' (int): Status flag 2
+    """
+    warn("replaced by MPC_FelicaUpdate", DeprecationWarning)
+    return MPC_FelicaUpdate(idm, service_codes, blocks, data)
 
 # endregion
 

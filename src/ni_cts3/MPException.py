@@ -3,14 +3,20 @@ from .MPStatus import CTS3ErrorCode, MifareErrorCode
 
 
 class CTS3Exception(Exception):
-    """CTS3 exception"""
+    """CTS3 exception
+
+    Attributes
+    ----------
+    ErrorCode : CTS3ErrorCode
+        Error code
+    """
 
     def __init__(self, err_code: CTS3ErrorCode):
-        """Contructor
+        """Inits CTS3Exception
 
         Parameters
         ----------
-        err_code: CTS3ErrorCode
+        err_code : CTS3ErrorCode
             Error code
         """
         Exception.__init__(self, GetErrorMessageFromCode(err_code.value))
@@ -18,14 +24,20 @@ class CTS3Exception(Exception):
 
 
 class CTS3MifareException(Exception):
-    """CTS3 MIFARE exception"""
+    """CTS3 MIFARE exception
+
+    Attributes
+    ----------
+    ErrorCode : MifareErrorCode
+        Error code
+    """
 
     def __init__(self, err_code: MifareErrorCode):
-        """Contructor
+        """Inits CTS3MifareException
 
         Parameters
         ----------
-        err_code: MifareErrorCode
+        err_code : MifareErrorCode
             Error code
         """
         Exception.__init__(self, GetMifareErrorMessageFromCode(err_code.value))

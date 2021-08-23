@@ -1512,11 +1512,20 @@ def MPS_GetLastError() -> CTS3ErrorCode:
 
 
 class IoClCrcFilter_index():
-    """CRC filter by index"""
-    def __init__(self, crc: Union[int, bytes], index: int):
-        """Inits IoClCrcFilter_index class
+    """CRC filter by index
 
-        Attributes
+    Attributes
+    ----------
+    crc : int or bytes
+        2-byte CRC
+    index : int
+        Frame index
+    """
+
+    def __init__(self, crc: Union[int, bytes], index: int):
+        """Inits IoClCrcFilter_index
+
+        Parameters
         ----------
         crc : int or bytes
             2-byte CRC
@@ -1539,13 +1548,24 @@ class IoClCrcFilter_index():
 
 
 class IoClCrcFilter_pattern():
-    """CRC filter by pattern"""
+    """CRC filter by pattern
+
+    Attributes
+    ----------
+    crc : int or bytes
+        2-byte CRC
+    pattern : bytes
+        Frame pattern
+    mask : bytes, optional
+        Frame pattern mask
+    """
+
     def __init__(self, crc: Union[int, bytes],
                  pattern: bytes,
                  mask: Optional[bytes] = None):
-        """Inits IoClCrcFilter_pattern class
+        """Inits IoClCrcFilter_pattern
 
-        Attributes
+        Parameters
         ----------
         crc : int or bytes
             2-byte CRC
@@ -1579,11 +1599,17 @@ class IoClCrcFilter_pattern():
 
 
 class IoClFrameSuppFilter_index():
-    """Frame suppression filter by index"""
-    def __init__(self, index: int):
-        """Inits IoClFrameSuppFilter_index class
+    """Frame suppression filter by index
 
-        Attributes
+    Attributes
+    ----------
+    index : int
+        Frame index
+    """
+    def __init__(self, index: int):
+        """Inits IoClFrameSuppFilter_index
+
+        Parameters
         ----------
         index : int
             Frame index
@@ -1592,12 +1618,21 @@ class IoClFrameSuppFilter_index():
 
 
 class IoClFrameSuppFilter_pattern():
-    """Frame suppression filter by pattern"""
+    """Frame suppression filter by pattern
+
+    Attributes
+    ----------
+    pattern : bytes
+        Frame pattern
+    mask : bytes, optional
+        Frame pattern mask
+    """
+
     def __init__(self, pattern: bytes,
                  mask: Optional[bytes] = None):
-        """Inits IoClFrameSuppFilter_pattern class
+        """Inits IoClFrameSuppFilter_pattern
 
-        Attributes
+        Parameters
         ----------
         pattern : bytes
             Frame pattern
@@ -1734,12 +1769,21 @@ class _ActionConditionDataPattern(Structure):
 
 
 class ActionConditionDataPattern():
-    """Simulation rule pattern condition"""
+    """Simulation rule pattern condition
+
+    Attributes
+    ----------
+    pattern : bytes
+        Frame pattern
+    mask : bytes, optional
+        Frame pattern mask
+    """
+
     def __init__(self, pattern: bytes,
                  mask: Optional[bytes] = None):
-        """Inits ActionConditionDataPattern class
+        """Inits ActionConditionDataPattern
 
-        Attributes
+        Parameters
         ----------
         pattern : bytes
             Frame pattern
