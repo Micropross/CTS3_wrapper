@@ -14,16 +14,14 @@ from datetime import datetime
 from ctypes import c_char_p, c_uint8, c_int16, c_uint16
 from ctypes import c_int32, c_uint32, c_double, sizeof
 from ctypes import c_void_p, byref, create_string_buffer
-from ctypes import CDLL, Structure
+from ctypes import CDLL, Structure, CFUNCTYPE
 
 if sys.version_info < (3, 6):
     raise Exception('Requires Python ≥ 3.6')
 if sys.version_info > (3, 8):
     from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 if sys.platform == 'win32':
-    from ctypes import WinDLL, WINFUNCTYPE
-else:
-    from ctypes import CFUNCTYPE
+    from ctypes import WinDLL
 
 
 __version__ = '21.1.1'
@@ -564,10 +562,7 @@ def UpdateFirmware(path: str, partIndex: int,
     """
     _check_limits(c_uint8, partIndex, 'partIndex')
     if call_back:
-        if sys.platform == 'win32':
-            cmp_func = WINFUNCTYPE(c_int32, c_int32)
-        else:
-            cmp_func = CFUNCTYPE(c_int32, c_int32)
+        cmp_func = CFUNCTYPE(c_int32, c_int32)
 
         ret = CTS3ErrorCode(_MPuLib.UpdateFirmware(
             path.encode('ascii'),
@@ -1417,10 +1412,7 @@ def LaunchEmbeddedScript(script_command: str,
                         'EmbeddedScriptMode IntFlag')
     retCode = c_uint8(0)
     if call_back:
-        if sys.platform == 'win32':
-            cmp_func = WINFUNCTYPE(c_int32, c_char_p)
-        else:
-            cmp_func = CFUNCTYPE(c_int32, c_char_p)
+        cmp_func = CFUNCTYPE(c_int32, c_char_p)
     ret = CTS3ErrorCode(_MPuLib.LaunchEmbeddedScript(
         script_command.encode('ascii'),
         c_uint32(option),
@@ -1447,10 +1439,7 @@ def StartEmbeddedApplication(application_path: str, args: str,
         Program callback function
     """
     if call_back:
-        if sys.platform == 'win32':
-            cmp_func = WINFUNCTYPE(c_int32, c_char_p)
-        else:
-            cmp_func = CFUNCTYPE(c_int32, c_char_p)
+        cmp_func = CFUNCTYPE(c_int32, c_char_p)
     ret = CTS3ErrorCode(_MPuLib.StartEmbeddedApplication(
         application_path.encode('ascii'),
         args.encode('ascii') if args else None,

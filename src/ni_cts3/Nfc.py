@@ -1,4 +1,3 @@
-import sys
 from warnings import warn
 from typing import Dict, Union, Optional, List, Tuple, Callable, overload
 from enum import IntEnum, IntFlag, unique
@@ -7,10 +6,7 @@ from .MPStatus import CTS3ErrorCode, MifareErrorCode
 from .MPException import CTS3Exception, CTS3MifareException
 from ctypes import c_uint8, c_int16, c_uint16, c_int32, c_uint32
 from ctypes import byref, POINTER, c_char_p, c_int, c_double
-if sys.platform == 'win32':
-    from ctypes import WINFUNCTYPE
-else:
-    from ctypes import CFUNCTYPE
+from ctypes import CFUNCTYPE
 
 
 _callback: Optional[Callable[[int,
@@ -4132,7 +4128,7 @@ def MPC_LoadDisturbanceWaveshape(operation: DisturbanceOperation,
 
 def MPC_SetDisturbanceTrigger(operation: DisturbanceOperation,
                               trigger: NfcTrigger, delay: float = 0,
-                              repeat_count: int = 0) -> None:
+                              count: int = 1) -> None:
     """Selects the trigger condition starting the disturbance
 
     Parameters
@@ -4143,8 +4139,8 @@ def MPC_SetDisturbanceTrigger(operation: DisturbanceOperation,
         Trigger condition
     delay : float, optional
         Delay after trigger in s
-    repeat_count : int, optional
-        Number of times the disturbance is replayed
+    count : int, optional
+        Number of times the disturbance should be applied
     """
     if not isinstance(operation, DisturbanceOperation):
         raise TypeError('operation must be an instance of '
@@ -4153,13 +4149,13 @@ def MPC_SetDisturbanceTrigger(operation: DisturbanceOperation,
         raise TypeError('trigger must be an instance of NfcTrigger IntEnum')
     delay_ns = round(delay * 1e9)
     _check_limits(c_uint32, delay_ns, 'delay')
-    _check_limits(c_uint16, repeat_count, 'repeat_count')
+    _check_limits(c_uint16, count, 'repeat_count')
     ret = CTS3ErrorCode(_MPuLib.MPC_SetDisturbanceTrigger(
         c_uint8(0),
         c_uint8(operation),
         c_uint32(trigger),
         c_uint32(delay_ns),
-        c_uint16(repeat_count)))
+        c_uint16(count)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
@@ -5060,12 +5056,7 @@ def BeginDownload(call_back: Callable[[int,
         Events callback
     """
     global _callback
-    if sys.platform == 'win32':
-        cmp_func = WINFUNCTYPE(c_int32, c_uint32, c_uint32, POINTER(c_uint8),
-                               c_int)
-    else:
-        cmp_func = CFUNCTYPE(c_int32, c_uint32, c_uint32, POINTER(c_uint8),
-                             c_int)
+    cmp_func = CFUNCTYPE(c_int32, c_uint32, c_uint32, POINTER(c_uint8), c_int)
     _callback = cmp_func(call_back)
     ret = CTS3ErrorCode(_MPuLib.BeginDownload(
         c_uint8(0),
