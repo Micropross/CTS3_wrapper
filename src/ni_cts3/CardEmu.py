@@ -1,3 +1,4 @@
+from warnings import warn
 from ctypes import c_uint8, c_uint16, c_int32, c_uint32, byref, c_double
 from typing import Dict, Union, Optional
 from enum import IntEnum, unique
@@ -522,9 +523,9 @@ def MPS_SimSetFdt(fdt1_clk: int, fdt2_clk: int) -> None:
 # region IQ Load Modulation
 
 
-def MPC_IQLoadModulationInit() -> None:
+def MPC_IQLMInit() -> None:
     """Initializes IQ load modulation"""
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLoadModulationInit(
+    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMInit(
         c_uint8(0)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
@@ -537,7 +538,7 @@ class IqlmMode(IntEnum):
     IQLM_MODE_SETUP = 1
 
 
-def MPC_IQLoadModulationStart(mode: IqlmMode) -> None:
+def MPC_IQLMStart(mode: IqlmMode) -> None:
     """Starts IQ load modulation regulation
 
     Parameters
@@ -547,9 +548,37 @@ def MPC_IQLoadModulationStart(mode: IqlmMode) -> None:
     """
     if not isinstance(mode, IqlmMode):
         raise TypeError('mode must be an instance of IqlmMode IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLoadModulationStart(
+    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMStart(
         c_uint8(0),
         c_uint8(mode)))
+    if ret != CTS3ErrorCode.RET_OK:
+        raise CTS3Exception(ret)
+
+
+def MPC_IQLoadModulationStart(mode: IqlmMode) -> None:
+    """Starts IQ load modulation regulation
+
+    Parameters
+    ----------
+    mode : IqlmMode
+        Regulation mode
+    """
+    warn("replaced by MPC_IQLMStart", DeprecationWarning)
+    return MPC_IQLMStart(mode)
+
+
+def MPC_IQLMSuspendControlLoop(suspend: bool) -> None:
+    """Suspends IQ load modulation regulation
+
+    Parameters
+    ----------
+    suspend : bool
+        True to suspend the regulation
+    """
+    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMSuspendControlLoop(
+        c_uint8(0),
+        c_uint8(1) if suspend else c_uint8(0),
+        c_uint32(0)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
@@ -562,18 +591,43 @@ def MPC_IQLoadModulationSuspendControlLoop(suspend: bool) -> None:
     suspend : bool
         True to suspend the regulation
     """
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLoadModulationSuspendControlLoop(
-        c_uint8(0),
-        c_uint8(1) if suspend else c_uint8(0),
-        c_uint32(0)))
+    warn("replaced by MPC_IQLMSuspendControlLoop", DeprecationWarning)
+    return MPC_IQLMSuspendControlLoop(suspend)
+
+
+def MPC_IQLMStop() -> None:
+    """Stops IQ load modulation regulation"""
+    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMStop(
+        c_uint8(0)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
 
 def MPC_IQLoadModulationStop() -> None:
     """Stops IQ load modulation regulation"""
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLoadModulationStop(
-        c_uint8(0)))
+    warn("replaced by MPC_IQLMStop", DeprecationWarning)
+    return MPC_IQLMStop()
+
+
+def MPC_IQLMSetHR(amplitude: float, phase: float) -> None:
+    """Sets loading effect
+
+    Parameters
+    ----------
+    amplitude : float
+        Loading effect amplitude in Vpp
+    phase : float
+        Loading effect phase in °
+    """
+    amplitude_mV = round(amplitude * 1e3)
+    _check_limits(c_uint32, amplitude_mV, 'amplitude')
+    phase_cdeg = round(phase * 1e2)
+    _check_limits(c_int32, phase_cdeg, 'phase')
+    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMSetHR(
+        c_uint8(0),
+        c_uint32(amplitude_mV),
+        c_int32(phase_cdeg),
+        c_uint32(0)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
@@ -588,22 +642,13 @@ def MPC_IQLoadModulationSetHR(amplitude: float, phase: float) -> None:
     phase : float
         Loading effect phase in °
     """
-    amplitude_mV = round(amplitude * 1e3)
-    _check_limits(c_uint32, amplitude_mV, 'amplitude')
-    phase_cdeg = round(phase * 1e2)
-    _check_limits(c_int32, phase_cdeg, 'phase')
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLoadModulationSetHR(
-        c_uint8(0),
-        c_uint32(amplitude_mV),
-        c_int32(phase_cdeg),
-        c_uint32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+    warn("replaced by MPC_IQLMSetHR", DeprecationWarning)
+    return MPC_IQLMSetHR(amplitude, phase)
 
 
-def MPC_IQLoadModulationSidebands(amplitude_sb1: float, phase_sb1: float,
-                                  amplitude_sb2: float, phase_sb2: float,
-                                  offset: float) -> None:
+def MPC_IQLMSidebands(amplitude_sb1: float, phase_sb1: float,
+                      amplitude_sb2: float, phase_sb2: float,
+                      offset: float) -> None:
     """Sets side bands
 
     Parameters
@@ -629,7 +674,7 @@ def MPC_IQLoadModulationSidebands(amplitude_sb1: float, phase_sb1: float,
     _check_limits(c_int32, phase_sb2_cdeg, 'phase_sb2')
     offset_mV = round(offset * 1e3)
     _check_limits(c_int32, offset_mV, 'offset')
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLoadModulationSidebands(
+    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMSidebands(
         c_uint8(0),
         c_uint32(amplitude_sb1_mV),
         c_int32(phase_sb1_cdeg),
@@ -638,6 +683,29 @@ def MPC_IQLoadModulationSidebands(amplitude_sb1: float, phase_sb1: float,
         c_int32(offset_mV)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
+
+
+def MPC_IQLoadModulationSidebands(amplitude_sb1: float, phase_sb1: float,
+                                  amplitude_sb2: float, phase_sb2: float,
+                                  offset: float) -> None:
+    """Sets side bands
+
+    Parameters
+    ----------
+    amplitude_sb1 : float
+        First side band amplitude in Vpp
+    phase_sb1 : float
+        First side band phase in °
+    amplitude_sb2 : float
+        Second side band amplitude in Vpp
+    phase_sb2 : float
+        Second side band phase in °
+    offset : float
+        Modulation offset in Vpp
+    """
+    warn("replaced by MPC_IQLMSidebands", DeprecationWarning)
+    return MPC_IQLMSidebands(amplitude_sb1, phase_sb1,
+                             amplitude_sb2, phase_sb2, offset)
 
 
 @unique
@@ -650,8 +718,8 @@ class IqlmParameter(IntEnum):
     CP_IQLM_MODULATION_INHIBIT = 7
 
 
-def MPC_IQLoadModulationChangeParameters(parameter: IqlmParameter,
-                                         value: Union[float, bool]) -> None:
+def MPC_IQLMChangeParameters(parameter: IqlmParameter,
+                             value: Union[float, bool]) -> None:
     """Changes IQ load modulation regulation parameter
 
     Parameters
@@ -669,13 +737,28 @@ def MPC_IQLoadModulationChangeParameters(parameter: IqlmParameter,
         _check_limits(c_int32, val, 'value')
     else:  # boolean
         val = 1 if value else 0
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLoadModulationChangeParameters(
+    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMChangeParameters(
         c_uint8(0),
         c_uint8(parameter),
         c_int32(val),
         c_uint32(0)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
+
+
+def MPC_IQLoadModulationChangeParameters(parameter: IqlmParameter,
+                                         value: Union[float, bool]) -> None:
+    """Changes IQ load modulation regulation parameter
+
+    Parameters
+    ----------
+    parameter : IqlmParameter
+        Parameter type
+    value : float or bool
+        Parameter value
+    """
+    warn("replaced by MPC_IQLMChangeParameters", DeprecationWarning)
+    return MPC_IQLMChangeParameters(parameter, value)
 
 
 @unique
@@ -690,9 +773,8 @@ class IqlmCondition(IntEnum):
     IQLM_PHASE_DRIFT_CONDITION_B2 = 6
 
 
-def MPC_IQLoadModulationPhaseDrift(frequency_drift: float,
-                                   condition: IqlmCondition,
-                                   data_rate: DataRate) -> None:
+def MPC_IQLMPhaseDrift(frequency_drift: float, condition: IqlmCondition,
+                       data_rate: DataRate) -> None:
     """Selects phase drift
 
     Parameters
@@ -711,13 +793,31 @@ def MPC_IQLoadModulationPhaseDrift(frequency_drift: float,
                         'IqlmCondition IntEnum')
     if not isinstance(data_rate, DataRate):
         raise TypeError('data_rate must be an instance of DataRate IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLoadModulationPhaseDrift(
+    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMPhaseDrift(
         c_uint8(0),
         c_uint32(frequency_drift_Hz),
         c_int32(condition),
         data_rate))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
+
+
+def MPC_IQLoadModulationPhaseDrift(frequency_drift: float,
+                                   condition: IqlmCondition,
+                                   data_rate: DataRate) -> None:
+    """Selects phase drift
+
+    Parameters
+    ----------
+    frequency_drift : float
+        Frequency drift in Hz
+    condition : IqlmCondition
+        Phase drift condition
+    data_rate : DataRate
+        Phase drift data rate
+    """
+    warn("replaced by MPC_IQLMPhaseDrift", DeprecationWarning)
+    return MPC_IQLMPhaseDrift(frequency_drift, condition, data_rate)
 
 
 @unique
@@ -729,8 +829,7 @@ class IqlmPhaseStatus(IntEnum):
     IQLM_PHASE_LOCKED = 3
 
 
-def MPC_IQLoadModulationGetStatus() -> Dict[str,
-                                            Union[IqlmPhaseStatus, float]]:
+def MPC_IQLMGetStatus() -> Dict[str, Union[IqlmPhaseStatus, float]]:
     """Gets IQ load modulation regulation status
 
     Returns
@@ -741,7 +840,7 @@ def MPC_IQLoadModulationGetStatus() -> Dict[str,
     """
     status = c_uint8()
     freq = c_double()
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLoadModulationGetStatus(
+    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMGetStatus(
         c_uint8(0),
         byref(status),
         byref(freq)))
@@ -749,5 +848,19 @@ def MPC_IQLoadModulationGetStatus() -> Dict[str,
         raise CTS3Exception(ret)
     return {'status': IqlmPhaseStatus(status.value),
             'frequency': freq.value}
+
+
+def MPC_IQLoadModulationGetStatus() \
+        -> Dict[str, Union[IqlmPhaseStatus, float]]:
+    """Gets IQ load modulation regulation status
+
+    Returns
+    -------
+    dict
+        'status' (IqlmPhaseStatus): Regulation loop status
+        'frequency' (float): Regulation frequency in Hz
+    """
+    warn("replaced by MPC_IQLMGetStatus", DeprecationWarning)
+    return MPC_IQLMGetStatus()
 
 # endregion

@@ -106,10 +106,10 @@ class _S_EMD(Structure):
 @unique
 class S_EMD_pattern(IntEnum):
     """EMD pattern"""
-    high_state = 0
-    rising_edge = 1
-    falling_edge = 2
-    low_state = 3
+    high_state = 0    # ‾‾‾
+    rising_edge = 1   # _|‾
+    falling_edge = 2  # ‾|_
+    low_state = 3     # ___
 
 
 class S_EMD():
