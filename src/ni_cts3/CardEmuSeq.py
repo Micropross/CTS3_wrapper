@@ -240,8 +240,8 @@ def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
 
 @overload
 def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         synchro: bool, pcd_frame: bytes,
-                         picc_frame: bytes) -> None:
+                         synchro: bool, pcd_frame: str,
+                         picc_frame: str) -> None:
     # TSCN_DO_EXCHANGE_RAW_TYPEA
     ...
 
@@ -616,18 +616,18 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         if len(args) != 3:
             raise TypeError(f'MPC_AddToScenarioPcd({action.name}) takes '
                             f'exactly five arguments ({len(args) + 2} given)')
-        if not isinstance(args[1], bytes):
-            raise TypeError('pcd_frame must be an instance of bytes')
-        if not isinstance(args[2], bytes):
-            raise TypeError('picc_frame must be an instance of bytes')
+        if not isinstance(args[1], str):
+            raise TypeError('pcd_frame must be an instance of str')
+        if not isinstance(args[2], str):
+            raise TypeError('picc_frame must be an instance of str')
         ret = CTS3ErrorCode(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
             c_uint32(TechnologyType.TYPE_A),  # PcdFrameType
             c_uint32(1) if args[0] else c_uint32(0),  # Synchro
-            args[1].hex().encode('ascii'),  # pExpectedPcdFrame
-            args[2].hex().encode('ascii')))  # pPiccResponse
+            args[1].encode('ascii'),  # pExpectedPcdFrame
+            args[2].encode('ascii')))  # pPiccResponse
     elif action == CardEmuSeqAction.TSCN_DO_WAIT_VC_SEND_SOF_ONLY:
         if len(args) != 3:
             raise TypeError(f'MPC_AddToScenarioPcd({action.name}) takes '
