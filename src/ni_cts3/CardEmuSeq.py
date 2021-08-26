@@ -728,8 +728,8 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                 c_uint32(action),
                 c_uint32(2) if args[0] else c_uint32(1),  # PcdCrc
                 c_uint32(2) if args[1] else c_uint32(1),  # PiccCrc
-                c_uint32(args[1]),  # PcdFrameType
-                c_uint32(1) if args[2] else c_uint32(0),  # Synchro
+                c_uint32(args[2]),  # PcdFrameType
+                c_uint32(1) if args[3] else c_uint32(0),  # Synchro
                 c_uint32(pcd_length),  # PcdFrameLength
                 pcd_data,  # pExpectedPcdFrame
                 c_uint32(picc_length),  # PiccFrameLength
@@ -968,8 +968,8 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                 c_uint32(args[2]),  # FrameOptionPcdToPicc
                 c_uint32(args[3]),  # FrameOptionPiccToPcd
                 c_uint32(1),  # PcdCrc
-                c_uint32(2) if args[5] else c_uint32(1),  # PiccCrc
-                c_uint32(args[6]),  # PcdFrameType
+                c_uint32(2) if args[4] else c_uint32(1),  # PiccCrc
+                c_uint32(args[5]),  # PcdFrameType
                 c_uint32(1) if args[6] else c_uint32(0),  # Synchro
                 c_uint32(0),  # PcdFrameLength
                 bytes(),  # pExpectedPcdFrame
