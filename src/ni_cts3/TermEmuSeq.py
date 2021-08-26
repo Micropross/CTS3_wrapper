@@ -174,16 +174,17 @@ def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
 
 @overload
 def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          pcd_crc: bool, tx_bits: int, tx_frame: bytes,
-                          wait: SequencerDataFlag) -> None:
+                          pcd_crc: bool, tx_bits: Optional[int],
+                          tx_frame: bytes, wait: SequencerDataFlag) -> None:
     # TSCN_DO_EXCHANGE, TSCN_DO_EXCHANGE_ACTIVE_INITIATOR
     ...
 
 
 @overload
 def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          pcd_crc: bool, tx_bits: int, tx_frame: bytes,
-                          wait: SequencerDataFlag, timeout: float) -> None:
+                          pcd_crc: bool, tx_bits: Optional[int],
+                          tx_frame: bytes, wait: SequencerDataFlag,
+                          timeout: float) -> None:
     # TSCN_DO_EXCHANGE, TSCN_DO_EXCHANGE_ACTIVE_INITIATOR
     ...
 
@@ -191,7 +192,7 @@ def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
 @overload
 def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
                           ask: int, time_1: float, time_2: float,
-                          tx_bits: int, tx_frame: bytes) -> None:
+                          tx_bits: Optional[int], tx_frame: bytes) -> None:
     # TSCN_DO_RF_RESET_CMD
     ...
 
@@ -199,7 +200,7 @@ def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
 @overload
 def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
                           trigger: int, delay: float, pcd_crc: bool,
-                          tx_bits: int, tx_frame: bytes,
+                          tx_bits: Optional[int], tx_frame: bytes,
                           wait: SequencerDataFlag) -> None:
     # TSCN_DO_TON_EXCHANGE_AFTER_DELAY_TOFF
     ...
@@ -208,7 +209,7 @@ def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
 @overload
 def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
                           trigger: int, delay: float, pcd_crc: bool,
-                          tx_bits: int, tx_frame: bytes,
+                          tx_bits: Optional[int], tx_frame: bytes,
                           wait: SequencerDataFlag, timeout: float) -> None:
     # TSCN_DO_TON_EXCHANGE_AFTER_DELAY_TOFF
     ...
@@ -237,8 +238,9 @@ def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
 
 @overload
 def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          pcd_crc_1: bool, tx_bits_1: int, tx_frame_1: bytes,
-                          pcd_crc_2: bool, tx_bits_2: int, tx_frame_2: bytes,
+                          pcd_crc_1: bool, tx_bits_1: Optional[int],
+                          tx_frame_1: bytes, pcd_crc_2: bool,
+                          tx_bits_2: Optional[int], tx_frame_2: bytes,
                           delay: int, wait: SequencerDataFlag) -> None:
     # TSCN_DO_SEND_TWO_FRAMES
     ...
@@ -246,8 +248,9 @@ def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
 
 @overload
 def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          pcd_crc_1: bool, tx_bits_1: int, tx_frame_1: bytes,
-                          pcd_crc_2: bool, tx_bits_2: int, tx_frame_2: bytes,
+                          pcd_crc_1: bool, tx_bits_1: Optional[int],
+                          tx_frame_1: bytes, pcd_crc_2: bool,
+                          tx_bits_2: Optional[int], tx_frame_2: bytes,
                           delay: int, wait: SequencerDataFlag,
                           timeout: float) -> None:
     # TSCN_DO_SEND_TWO_FRAMES
@@ -257,9 +260,9 @@ def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
 @overload
 def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
                           first_frame_delay: float, next_frames_delay: float,
-                          type_odd: TechnologyType, tx_bits_odd: int,
+                          type_odd: TechnologyType, tx_bits_odd: Optional[int],
                           tx_frame_odd: bytes, type_even: TechnologyType,
-                          tx_bits_even: int, tx_frame_even: bytes,
+                          tx_bits_even: Optional[int], tx_frame_even: bytes,
                           timeout: float) -> None:
     # TSCN_DO_EMV_POLLING
     ...
@@ -598,11 +601,15 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         if len(args) < 4:
             raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                             f'six or seven arguments ({len(args) + 2} given)')
-        if not isinstance(args[1], int):
-            raise TypeError('tx_bits must be an instance of int')
-        _check_limits(c_uint32, args[1], 'tx_bits')
         if args[2] and not isinstance(args[2], bytes):
             raise TypeError('tx_frame must be an instance of bytes')
+        if args[1] is None:
+            tx_bits = 0 if args[2] is None else 8 * len(args[2])
+        elif not isinstance(args[1], int):
+            raise TypeError('tx_bits must be an instance of int')
+        else:
+            tx_bits = args[1]
+        _check_limits(c_uint32, tx_bits, 'tx_bits')
         if not isinstance(args[3], SequencerDataFlag):
             raise TypeError('wait must be an instance of '
                             'SequencerDataFlag IntEnum')
@@ -617,7 +624,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 c_uint32(scenario_id),
                 c_uint32(action),
                 c_uint32(2) if args[0] else c_uint32(1),  # PcdCrc
-                c_uint32(args[1]),  # BitsNumber
+                c_uint32(tx_bits),  # BitsNumber
                 args[2],  # pPcdFrame
                 c_uint32(args[3])))  # EXCHANGE_WAIT_RX
         else:
@@ -634,7 +641,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 c_uint32(scenario_id),
                 c_uint32(action),
                 c_uint32(2) if args[0] else c_uint32(1),  # PcdCrc
-                c_uint32(args[1]),  # BitsNumber
+                c_uint32(tx_bits),  # BitsNumber
                 args[2],  # pPcdFrame
                 c_uint32(args[3]),
                 c_uint32(timeout_us)))  # RxTimeout_us
@@ -654,11 +661,15 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('time_2 must be an instance of float')
         time2_us = round(args[2] * 1e6)
         _check_limits(c_uint32, time2_us, 'time_2')
-        if not isinstance(args[3], int):
-            raise TypeError('tx_bits must be an instance of int')
-        _check_limits(c_uint32, args[3], 'tx_bits')
         if not isinstance(args[4], bytes):
             raise TypeError('tx_frame must be an instance of bytes')
+        if args[3] is None:
+            tx_bits = 8 * len(args[4])
+        elif not isinstance(args[3], int):
+            raise TypeError('tx_bits must be an instance of int')
+        else:
+            tx_bits = args[3]
+        _check_limits(c_uint32, tx_bits, 'tx_bits')
         ret = CTS3ErrorCode(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
@@ -666,7 +677,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             c_uint32(args[0]),  # Ask_pm
             c_uint32(time1_us),  # Time1_us
             c_uint32(time2_us),  # Time2_us
-            c_uint32(args[3]),  # TxBits
+            c_uint32(tx_bits),  # TxBits
             args[4]))  # pTxFrame
 
     elif action == TermEmuSeqAction.TSCN_DO_TON_EXCHANGE_AFTER_DELAY_TOFF:
@@ -680,11 +691,15 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('delay must be an instance of float')
         delay_us = round(args[1] * 1e6)
         _check_limits(c_uint32, delay_us, 'delay')
-        if not isinstance(args[3], int):
-            raise TypeError('tx_bits must be an instance of int')
-        _check_limits(c_uint32, args[3], 'tx_bits')
         if not isinstance(args[4], bytes):
             raise TypeError('tx_frame must be an instance of bytes')
+        if args[3] is None:
+            tx_bits = 8 * len(args[4])
+        elif not isinstance(args[3], int):
+            raise TypeError('tx_bits must be an instance of int')
+        else:
+            tx_bits = args[3]
+        _check_limits(c_uint32, tx_bits, 'tx_bits')
         if not isinstance(args[5], SequencerDataFlag):
             raise TypeError('wait must be an instance of '
                             'SequencerDataFlag IntEnum')
@@ -700,7 +715,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 c_uint32(args[0]),  # TrigNum
                 c_uint32(delay_us),  # Delay_us
                 c_uint32(2) if args[2] else c_uint32(1),  # PcdCrc
-                c_uint32(args[3]),  # BitsNumber
+                c_uint32(tx_bits),  # BitsNumber
                 args[4],  # pPcdFrame
                 c_uint32(args[5])))  # EXCHANGE_WAIT_RX
         else:
@@ -719,7 +734,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 c_uint32(args[0]),  # TrigNum
                 c_uint32(round(args[1] * 1e6)),  # Delay_us
                 c_uint32(2) if args[2] else c_uint32(1),  # PcdCrc
-                c_uint32(args[3]),  # BitsNumbe
+                c_uint32(tx_bits),  # BitsNumber
                 args[4],  # pPcdFrame
                 c_uint32(args[5]),
                 c_uint32(timeout_us)))  # RxTimeout_us
@@ -761,16 +776,24 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         if len(args) < 8:
             raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                             f'ten or eleven arguments ({len(args) + 2} given)')
-        if not isinstance(args[1], int):
-            raise TypeError('tx_bits_1 must be an instance of int')
-        _check_limits(c_uint32, args[1], 'tx_bits_1')
         if not isinstance(args[2], bytes):
             raise TypeError('tx_frame_1 must be an instance of bytes')
-        if not isinstance(args[4], int):
-            raise TypeError('tx_bits_2 must be an instance of int')
-        _check_limits(c_uint32, args[4], 'tx_bits_2')
+        if args[1] is None:
+            tx_frame_1 = 8 * len(args[2])
+        elif not isinstance(args[1], int):
+            raise TypeError('tx_bits_1 must be an instance of int')
+        else:
+            tx_frame_1 = args[1]
+        _check_limits(c_uint32, tx_frame_1, 'tx_bits_1')
         if not isinstance(args[5], bytes):
             raise TypeError('tx_frame_2 must be an instance of bytes')
+        if args[4] is None:
+            tx_bits_2 = 8 * len(args[5])
+        elif not isinstance(args[4], int):
+            raise TypeError('tx_bits_2 must be an instance of int')
+        else:
+            tx_bits_2 = args[4]
+        _check_limits(c_uint32, tx_bits_2, 'tx_bits_2')
         if not isinstance(args[6], int):
             raise TypeError('delay must be an instance of int')
         _check_limits(c_uint32, args[6], 'delay')
@@ -787,10 +810,10 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 c_uint32(scenario_id),
                 c_uint32(action),
                 c_uint32(2) if args[0] else c_uint32(1),  # PcdCrc_f1
-                c_uint32(args[1]),  # BitsNumber_f1
+                c_uint32(tx_frame_1),  # BitsNumber_f1
                 args[2],  # pPcdFrame_f1
                 c_uint32(2) if args[3] else c_uint32(1),  # PcdCrc_f2
-                c_uint32(args[4]),  # BitsNumber_f2
+                c_uint32(tx_bits_2),  # BitsNumber_f2
                 args[5],  # pPcdFrame_f2
                 c_uint32(0),  # Rfu
                 c_uint32(args[6]),  # Delay_clk
@@ -809,10 +832,10 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 c_uint32(scenario_id),
                 c_uint32(action),
                 c_uint32(2) if args[0] else c_uint32(1),  # PcdCrc_f1
-                c_uint32(args[1]),  # BitsNumber_f1
+                c_uint32(tx_frame_1),  # BitsNumber_f1
                 args[2],  # pPcdFrame_f1
                 c_uint32(2) if args[3] else c_uint32(1),  # PcdCrc_f2
-                c_uint32(args[4]),  # BitsNumber_f2
+                c_uint32(tx_bits_2),  # BitsNumber_f2
                 args[5],  # pPcdFrame_f2
                 c_uint32(0),  # Rfu
                 c_uint32(args[6]),  # Delay_clk
@@ -835,19 +858,27 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[2], TechnologyType):
             raise TypeError('type_odd must be an instance of '
                             'TechnologyType IntEnum')
-        if not isinstance(args[3], int):
-            raise TypeError('tx_bits_odd must be an instance of int')
-        _check_limits(c_uint32, args[3], 'tx_bits_odd')
         if not isinstance(args[4], bytes):
             raise TypeError('tx_frame_odd must be an instance of bytes')
+        if args[3] is None:
+            tx_bits_odd = 8 * len(args[4])
+        elif not isinstance(args[3], int):
+            raise TypeError('tx_bits_odd must be an instance of int')
+        else:
+            tx_bits_odd = args[3]
+        _check_limits(c_uint32, tx_bits_odd, 'tx_bits_odd')
         if not isinstance(args[5], TechnologyType):
             raise TypeError('type_even must be an instance of '
                             'TechnologyType IntEnum')
-        if not isinstance(args[6], int):
-            raise TypeError('tx_bits_even must be an instance of int')
-        _check_limits(c_uint32, args[6], 'tx_bits_even')
         if not isinstance(args[7], bytes):
             raise TypeError('tx_frame_even must be an instance of bytes')
+        if args[6] is None:
+            tx_bits_even = 8 * len(args[7])
+        elif not isinstance(args[6], int):
+            raise TypeError('tx_bits_even must be an instance of int')
+        else:
+            tx_bits_even = args[6]
+        _check_limits(c_uint32, tx_bits_even, 'tx_bits_even')
         if not isinstance(args[8], float) and not isinstance(args[8], int):
             raise TypeError('timeout must be an instance of float')
         timeout_ms = round(args[8] * 1e3)
@@ -859,10 +890,10 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             c_uint32(first_delay_us),  # FirstFrameDelay_us
             c_uint32(frames_delay_us),  # NextFramesDelay_us
             c_uint32(args[2]),  # OddFramesType
-            c_uint32(args[3]),  # OddFramesBitsNumber
+            c_uint32(tx_bits_odd),  # OddFramesBitsNumber
             args[4],  # pPcdOddFrames
             c_uint32(args[5]),  # EvenFramesType
-            c_uint32(args[6]), args[7],  # EvenFramesBitsNumber
+            c_uint32(tx_bits_even), args[7],  # EvenFramesBitsNumber
             c_uint32(timeout_ms)))  # Timeout_ms
 
     elif action == TermEmuSeqAction.TSCN_DO_SEND_RAW_A106_FRAME:
