@@ -1337,9 +1337,9 @@ class FelicaService():
         int
             Integer representation of FelicaService
         """
-        val = (self.service_number << 8) & 0xFF00
-        val |= (self.service_number << 6) & 0xC0
-        val |= self.access_attribute
+        val = (self.service_number >> 2) & 0xFF
+        val |= (self.service_number << 14) & 0xC000
+        val |= self.access_attribute << 8
         return val
 
 
@@ -1499,7 +1499,7 @@ def MPC_FelicaCheck(idm,  # type: ignore[no-untyped-def]
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
     data_list = []
-    for i in range(0, length.value, 16):
+    for i in range(0, length.value * 16, 16):
         data_list.append(data[i:i+16])
     return {'idm2': idm2,
             'status1': status1.value,
