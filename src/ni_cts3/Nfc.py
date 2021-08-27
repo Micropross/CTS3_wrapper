@@ -1297,7 +1297,7 @@ def MPC_FELICA_Polling(system_code: Union[bytes, int],
     bytes
         PICC answer
     """
-    warn("replaced by MPC_FelicaPolling", DeprecationWarning)
+    warn('renamed as MPC_FelicaPolling', FutureWarning)
     return MPC_FelicaPolling(system_code, request_code, time_slot)
 
 
@@ -1529,7 +1529,7 @@ def MPC_FELICA_Read_Without_Encryption(idm: bytes, service_codes: List[int],
         'status2' (int): Status flag 2
         'data' (list(bytes)): Read 16-byte blocks
     """
-    warn("replaced by MPC_FelicaCheck", DeprecationWarning)
+    warn('renamed as MPC_FelicaCheck', FutureWarning)
     return MPC_FelicaCheck(idm, service_codes, blocks)
 
 
@@ -1649,7 +1649,7 @@ def MPC_FELICA_Write_Without_Encryption(idm: bytes,
         'status1' (int): Status flag 1
         'status2' (int): Status flag 2
     """
-    warn("replaced by MPC_FelicaUpdate", DeprecationWarning)
+    warn('renamed as MPC_FelicaUpdate', FutureWarning)
     return MPC_FelicaUpdate(idm, service_codes, blocks, data)
 
 # endregion

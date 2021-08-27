@@ -520,7 +520,7 @@ def MPC_GetRFFrequency(resolution=None,  # type: ignore[no-untyped-def]
         Measured frequency in Hz
     """
     if resolution is not None or timeout is not None:
-        warn("deprecated parameters", DeprecationWarning)
+        warn('deprecated parameters', FutureWarning)
     freq = c_uint32()
     ret = CTS3ErrorCode(_MPuLib.MPC_GetRFFrequency(
         c_uint8(0),
@@ -537,7 +537,7 @@ def MPC_GetRFFrequency(resolution=None,  # type: ignore[no-untyped-def]
 
 
 def MPC_GetDatarate(card_type: TechnologyType) -> int:
-    """Measures the current data rate
+    """Measures the last received frame data rate
 
     Parameters
     ----------
