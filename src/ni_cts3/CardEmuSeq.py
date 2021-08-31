@@ -777,7 +777,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                 c_uint32(1) if args[3] else c_uint32(0),  # Synchro
                 c_uint32(len(args[4])),  # PcdFrameLength
                 args[4],  # pExpectedPcdFrame
-                c_uint32(0),  # PiccFrameLength
+                c_uint32(1000010),  # PiccFrameLength
                 bytes()))  # pPiccResponse
         else:
             if args[5] and not isinstance(args[5], bytes):
