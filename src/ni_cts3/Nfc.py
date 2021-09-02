@@ -5088,7 +5088,8 @@ def MPS_EndDownload() -> None:
     ret = CTS3ErrorCode(_MPuLib.MPS_EndDownload(
         c_uint8(0)))
     _callback = None
-    if ret != CTS3ErrorCode.RET_OK:
+    if ret != CTS3ErrorCode.RET_OK and \
+            ret != CTS3ErrorCode.CRET_NO_DOWNLOAD_RUNNING:
         raise CTS3Exception(ret)
 
 # endregion
