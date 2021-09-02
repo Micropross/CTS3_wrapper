@@ -4958,7 +4958,8 @@ def MPS_CloseLog() -> None:
     """Stops the events acquisition"""
     ret = CTS3ErrorCode(_MPuLib.MPS_CloseLog(
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
+    if ret != CTS3ErrorCode.RET_OK and \
+            ret != CTS3ErrorCode.CRET_NO_DOWNLOAD_RUNNING:
         raise CTS3Exception(ret)
 
 
