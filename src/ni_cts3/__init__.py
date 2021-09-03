@@ -598,6 +598,7 @@ class CpuAutotestId(IntEnum):
     TEST_RAM = 1
     TEST_TIMER = 2
     TEST_FLASH = 3
+    TEST_CPU_LOAD = 4
 
 
 def MPS_CPUAutoTest(test_id: CpuAutotestId,
