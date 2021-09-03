@@ -18,7 +18,7 @@ from ctypes import CDLL, Structure, CFUNCTYPE
 
 if sys.version_info < (3, 6):
     raise Exception('Requires Python ≥ 3.6')
-if sys.version_info > (3, 8):
+if sys.version_info >= (3, 9):
     from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 if sys.platform == 'win32':
     from ctypes import WinDLL
@@ -933,7 +933,7 @@ def MPS_GetTime() -> datetime:
     local_time = datetime(date.Year + 1900, date.Month, date.DayOfMonth,
                           time.Hours, time.Minutes, time.Seconds)
 
-    if sys.version_info > (3, 8):
+    if sys.version_info >= (3, 9):
         try:
             tz = ZoneInfo(MPS_GetTimeZone())
             local_time = local_time.replace(tzinfo=tz)
@@ -951,7 +951,7 @@ def MPS_SetTime(time: datetime = datetime.now().astimezone()) -> None:
     time : datetime, optional
         Time to set
     """
-    if sys.version_info > (3, 8):
+    if sys.version_info >= (3, 9):
         try:
             if sys.platform == 'win32':
                 try:
