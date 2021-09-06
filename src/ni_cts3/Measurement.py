@@ -368,7 +368,8 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
         ptr = c_cast(measurements, POINTER(c_int32 * measurement_count.value))
         values = [i for i in ptr.contents]
         if measurement_type == MeasurementType.SCINFC_MEASTYPE_PCD_WAVEFORM:
-            if card_type == TechnologyType.TYPE_A and data_rate == 106:
+            if card_type == TechnologyType.TYPE_A and \
+                    data_rate == DataRate.DATARATE_106KB:
                 t5 = []
                 for i in range(16, 16 + values[15]):
                     t5 += [values[i] / 1e9]
@@ -390,7 +391,8 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
                         't5': t5,
                         'modulation_index': values[16 + len(t5)] / 1e6,
                         'modulation_depth': values[17 + len(t5)] / 1e6}
-            elif card_type == TechnologyType.TYPE_A and data_rate > 106:
+            elif card_type == TechnologyType.TYPE_A and \
+                    data_rate > DataRate.DATARATE_106KB:
                 return {'t1': values[0] / 1e9,
                         't5': values[1] / 1e9,
                         't6': values[2] / 1e9,
