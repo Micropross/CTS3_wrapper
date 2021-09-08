@@ -9,7 +9,7 @@ from threading import Thread, Event
 from ipaddress import IPv4Address, IPv4Interface
 from typing import List, Dict, Type, Union, Optional, Callable, cast
 from enum import IntEnum, IntFlag, unique
-from xml.dom import minidom
+from xml.dom.minidom import parseString
 from datetime import datetime
 from ctypes import c_char_p, c_uint8, c_int16, c_uint16
 from ctypes import c_int32, c_uint32, c_double, sizeof
@@ -417,9 +417,8 @@ def MPS_GetVersion2() -> str:
         message))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
-    print(type(message.value))
     info = message.value.decode('ascii').strip()
-    return cast(str, minidom.parseString(info).toprettyxml())
+    return cast(str, parseString(info).toprettyxml())
 
 
 @unique
@@ -759,9 +758,8 @@ def MPS_ProbeTemperature(sensor: TemperatureSensor) -> float:
         raise TypeError('sensor must be an instance of '
                         'TemperatureSensor IntEnum')
     _MPuLib.MPS_ProbeTemperature.restype = c_double
-    temp = _MPuLib.MPS_ProbeTemperature(
-        c_uint8(sensor))
-    return cast(float, temp)
+    return cast(float, _MPuLib.MPS_ProbeTemperature(
+        c_uint8(sensor)))
 
 
 def MPS_Beep(duration: float) -> None:

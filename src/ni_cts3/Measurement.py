@@ -1,7 +1,6 @@
 from ctypes import c_uint8, c_uint16, c_int32, c_uint32, c_double, byref
-from ctypes import c_void_p, POINTER, create_string_buffer
+from ctypes import c_void_p, POINTER, create_string_buffer, cast as c_cast
 from typing import List, Optional, Dict, Union, overload
-from ctypes import cast as c_cast
 from enum import IntEnum, IntFlag, unique
 from . import _MPuLib, _check_limits
 from .MPStatus import CTS3ErrorCode
