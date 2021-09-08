@@ -425,6 +425,7 @@ def MPS_GetVersion2() -> str:
 class EEConfig(IntEnum):
     """Configuration type"""
     EEC_AUTO_BOOT = 1
+    EEC_DEBUG_PORT = 4
 
 
 def MPS_EESetConfig(config: EEConfig, value: bool) -> None:
