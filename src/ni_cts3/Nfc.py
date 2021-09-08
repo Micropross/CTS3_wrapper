@@ -4567,7 +4567,8 @@ def MPC_PollReq(system_code: Union[bytes, int], rc: Union[bytes, int],
         byref(rd)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
-    return {'nfc_id2': nfc_id2, 'pad': pad, 'rd': bytes([rd.value])}
+    return {'nfc_id2': nfc_id2, 'pad': pad, 'rd': bytes([rd.value >> 8,
+                                                         rd.value & 0xFF])}
 
 
 def MPC_AtrReq(atr_req: bytes) -> bytes:
