@@ -83,6 +83,7 @@ class TermEmuSeqAction(IntEnum):
     TSCN_PARAM_NFC_ACTIVE_TIMINGS = 78
     TSCN_DO_EXCHANGE_ACTIVE_INITIATOR = 79
     TSCN_PARAM_ACTIVE_FDT_MODE = 80
+    TSCN_DO_EXCHANGE_PATTERN = 81
 
 
 @unique
@@ -177,6 +178,15 @@ def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
                           pcd_crc: bool, tx_bits: Optional[int],
                           tx_frame: bytes, wait: SequencerDataFlag) -> None:
     # TSCN_DO_EXCHANGE, TSCN_DO_EXCHANGE_ACTIVE_INITIATOR
+    ...
+
+
+@overload
+def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
+                          pcd_crc: bool, tx_bits: Optional[int],
+                          tx_frame: bytes, rx_pattern: bytes,
+                          rx_mask: Optional[bytes] = None) -> None:
+    # TSCN_DO_EXCHANGE_PATTERN
     ...
 
 
@@ -645,6 +655,42 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 args[2],  # pPcdFrame
                 c_uint32(args[3]),
                 c_uint32(timeout_us)))  # RxTimeout_us
+
+    elif action == TermEmuSeqAction.TSCN_DO_EXCHANGE_PATTERN:
+        if len(args) != 4 and len(args) != 5:
+            raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
+                            f'six or seven arguments ({len(args) + 2} given)')
+        if args[2] and not isinstance(args[2], bytes):
+            raise TypeError('tx_frame must be an instance of bytes')
+        if args[1] is None:
+            tx_bits = 0 if args[2] is None else 8 * len(args[2])
+        elif not isinstance(args[1], int):
+            raise TypeError('tx_bits must be an instance of int')
+        else:
+            tx_bits = args[1]
+        _check_limits(c_uint32, tx_bits, 'tx_bits')
+        if not isinstance(args[3], bytes):
+            raise TypeError('rx_pattern must be an instance of bytes')
+        _check_limits(c_uint32, len(args[3]), 'rx_pattern')
+        if len(args) == 5:
+            if args[4] is not None:
+                if not isinstance(args[4], bytes):
+                    raise TypeError('rx_mask must be an instance of bytes')
+                mask = args[4]
+            else:
+                mask = b'\xFF' * len(args[3])
+        else:
+            mask = b'\xFF' * len(args[3])
+        ret = CTS3ErrorCode(func_pointer(
+            c_uint8(0),
+            c_uint32(scenario_id),
+            c_uint32(action),
+            c_uint32(2) if args[0] else c_uint32(1),  # PcdCrc
+            c_uint32(tx_bits),  # BitsNumber
+            args[2],  # pPcdFrame
+            c_uint32(len(args[3])),  # RxPatternLength
+            args[3],  # pRxPattern
+            mask))
 
     elif action == TermEmuSeqAction.TSCN_DO_RF_RESET_CMD:
         if len(args) != 5:
