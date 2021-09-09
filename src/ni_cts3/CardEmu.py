@@ -156,24 +156,27 @@ class SubcarrierFrequency(IntEnum):
     SubCarrier6780 = 6780
 
 
-def MPC_SetUpReferencePICC(lma_generation: bool,
-                           subcarrier: SubcarrierFrequency) -> None:
+def MPC_SetUpReferencePICC(subcarrier: Optional[SubcarrierFrequency]) -> None:
     """Generates a sub-carrier frequency
 
     Parameters
     ----------
-    lma_generation : bool
-        True to enable generation
     subcarrier : SubcarrierFrequency
-        Sub-carrier frequency
+        Sub-carrier frequency, or None to disable generation
     """
-    if not isinstance(subcarrier, SubcarrierFrequency):
-        raise TypeError('subcarrier must be an instance of '
-                        'SubcarrierFrequency IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetUpReferencePICC(
-        c_uint8(0),
-        c_uint8(1) if lma_generation else c_uint8(0),
-        c_uint32(subcarrier)))
+    if subcarrier is None:
+        ret = CTS3ErrorCode(_MPuLib.MPC_SetUpReferencePICC(
+            c_uint8(0),
+            c_uint8(0),
+            c_uint32(0)))
+    else:
+        if not isinstance(subcarrier, SubcarrierFrequency):
+            raise TypeError('subcarrier must be an instance of '
+                            'SubcarrierFrequency IntEnum')
+        ret = CTS3ErrorCode(_MPuLib.MPC_SetUpReferencePICC(
+            c_uint8(0),
+            c_uint8(1),
+            c_uint32(subcarrier)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
