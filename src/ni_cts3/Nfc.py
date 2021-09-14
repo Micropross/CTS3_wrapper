@@ -28,8 +28,8 @@ class NfcUnit(IntEnum):
     UNIT_SAMPLES = 8
 
 
-def _unit_autoselect(unit: NfcUnit, values: List[float]) -> Tuple[NfcUnit,
-                                                                  List[int]]:
+def _unit_autoselect(unit: NfcUnit, values: List[float]) \
+        -> Tuple[NfcUnit, List[int]]:
     """Converts float values to best interger values and unit
 
     Parameters
@@ -152,7 +152,7 @@ def MPC_SelectFieldStrength(unit: FieldUnit, value: float,
     unit : FieldUnit
         Field strength unit
     value : float
-        Field strength in mV, dBm, % or ‰
+        Field strength in mVpp, dBm, % or ‰
         (ignored if unit is APPLY_DEFAULT_VALUE)
     max_duration : float, optional
         Maximum duration of the field in s, or None to let the field applied
@@ -202,9 +202,8 @@ def MPC_SelectFieldStrength(unit: FieldUnit, value: float,
         raise CTS3Exception(ret)
 
 
-def MPC_SetupFindFieldStrength(expected_voltage: float) -> Dict[str,
-                                                                Union[float,
-                                                                      int]]:
+def MPC_SetupFindFieldStrength(expected_voltage: float) \
+        -> Dict[str, Union[float, int]]:
     """Reaches Vov by adjusting RF field strength
 
     Parameters
@@ -304,7 +303,7 @@ def MPC_PiccResetSlow(falling_time: float, low_time: float,
                       rising_time: float, delay: float,
                       tx_frame: bytes,
                       tx_bits_number: Optional[int] = None) \
-                      -> Dict[str, Union[int, bytes]]:
+        -> Dict[str, Union[int, bytes]]:
     """Performs an RF field reset and then exchanges command
 
     Parameters
@@ -320,7 +319,7 @@ def MPC_PiccResetSlow(falling_time: float, low_time: float,
     tx_frame : bytes
         Frame to send
     tx_bits_number : int, optional
-        Number of bits to send (8 × tx_frame length if ignored)
+        Number of bits to send (8 × tx_frame length if None)
 
     Returns
     -------
@@ -458,8 +457,8 @@ def MPC_SelectDataRate(tx_data_rate: DataRate,
 
 
 def MPC_ExchangeCmd(tx_frame: bytes,
-                    tx_bits_number: Optional[int] = None
-                    ) -> Dict[str, Union[bytes, int]]:
+                    tx_bits_number: Optional[int] = None) \
+        -> Dict[str, Union[bytes, int]]:
     """Exchanges a low level command
 
     Parameters
@@ -467,7 +466,7 @@ def MPC_ExchangeCmd(tx_frame: bytes,
     tx_frame : bytes
         Frame to transmit
     tx_bits_number : int, optional
-        Number of bits to transmit (8 × tx_frame length if ignored)
+        Number of bits to transmit (8 × tx_frame length if None)
 
     Returns
     -------
@@ -840,7 +839,7 @@ def MPC_SendRATS(rats: Optional[bytes] = None) -> bytes:
     Parameters
     ----------
     rats : bytes, optional
-        RATS command (default RATS sent if None)
+        RATS command (default RATS if None)
 
     Returns
     -------
@@ -920,7 +919,7 @@ def MPC_SendPPS(cid: Union[int, bytes], dri: Union[int, bytes],
 
 def MPC_ExchangeCmdRawA(tx_frame: bytes,
                         tx_bits_number: Optional[int] = None) \
-                        -> Dict[str, Union[bytes, int]]:
+        -> Dict[str, Union[bytes, int]]:
     """Exchanges 106 kb/s sequences
 
     Parameters
@@ -928,7 +927,7 @@ def MPC_ExchangeCmdRawA(tx_frame: bytes,
     tx_frame : bytes
         Frame to send
     tx_bits_number : int, optional
-        Number of bits to send
+        Number of bits to send (8 × tx_frame length if None)
 
     Returns
     -------
@@ -960,7 +959,7 @@ def MPC_ExchangeCmdRawA(tx_frame: bytes,
 
 def MPC_PowerOnGetFrameFromSpecialTagA(unit: FieldUnit, value: int,
                                        timeout: float, nb_id_to_get: int) \
-                                       -> Dict[str, Union[bytes, int]]:
+        -> Dict[str, Union[bytes, int]]:
     """Switches the RF field on and gets the data transmitted
     by an NFC tag in read-only TTF mode
 
@@ -1045,7 +1044,7 @@ def MPC_RequestB(slots_number: int) -> bytes:
     Parameters
     ----------
     slots_number : int
-        Number of slots (1, 2, 4, 8 or 16)
+        Number of slots
 
     Returns
     -------
@@ -1412,18 +1411,15 @@ class FelicaBlock():
 
 @overload
 def MPC_FelicaCheck(idm: bytes, service_codes: List[FelicaService],
-                    blocks: List[FelicaBlock]) -> Dict[str,
-                                                       Union[bytes,
-                                                             int,
-                                                             List[bytes]]]:
+                    blocks: List[FelicaBlock]) \
+        -> Dict[str, Union[bytes, int, List[bytes]]]:
     ...
 
 
 @overload
 def MPC_FelicaCheck(idm: bytes, service_codes: List[int],
-                    blocks: List[int]) -> Dict[str, Union[bytes,
-                                                          int,
-                                                          List[bytes]]]:
+                    blocks: List[int]) \
+        -> Dict[str, Union[bytes, int, List[bytes]]]:
     ...
 
 
@@ -2157,7 +2153,7 @@ def MPC_VcInventory(slot: int, afi: Optional[Union[bytes, int]],
     slot : int
         Number of slots
     afi : bytes or int
-        Application family identifier byte
+        Application family identifier byte (None not to send AFI)
     mask : bytes
         Mask value
 
@@ -2312,7 +2308,7 @@ def MPC_VcGenericCommand(timeout: float, flag: VicinityFlag,
 
 
 def MPC_VcReadSingleBlock(flag: VicinityFlag, block_number: int) \
-                          -> Dict[str, Union[bytes, int]]:
+        -> Dict[str, Union[bytes, int]]:
     """Sends a Read Single Block command
 
     Parameters
@@ -2353,7 +2349,7 @@ def MPC_VcReadSingleBlock(flag: VicinityFlag, block_number: int) \
 
 
 def MPC_VcExtendedReadSingleBlock(flag: VicinityFlag, block_number: int) \
-                                  -> Dict[str, Union[bytes, int]]:
+        -> Dict[str, Union[bytes, int]]:
     """Sends an Extended Read Single Block command
 
     Parameters
@@ -2395,7 +2391,7 @@ def MPC_VcExtendedReadSingleBlock(flag: VicinityFlag, block_number: int) \
 
 def MPC_VcReadMultipleBlock(flag: VicinityFlag, first_block_number: int,
                             blocks_number: int) \
-                            -> Dict[str, Union[bytes, int, List[int]]]:
+        -> Dict[str, Union[bytes, int, List[int]]]:
     """Sends a Read Multiple blocks command
 
     Parameters
@@ -2444,7 +2440,7 @@ def MPC_VcReadMultipleBlock(flag: VicinityFlag, first_block_number: int,
 def MPC_VcExtendedReadMultipleBlock(flag: VicinityFlag,
                                     first_block_number: int,
                                     blocks_number: int) \
-                                    -> Dict[str, Union[bytes, int, List[int]]]:
+        -> Dict[str, Union[bytes, int, List[int]]]:
     """Sends an Extended Read Multiple Blocks command
 
     Parameters
@@ -2594,7 +2590,7 @@ def MPC_VcLockSingleBlock(flag: VicinityFlag, block_number: int) -> int:
 
 
 def MPC_VcExtendedLockSingleBlock(flag: VicinityFlag, block_number: int) \
-                                  -> int:
+        -> int:
     """Sends an Extended Lock Single Block command
 
     Parameters
@@ -2931,7 +2927,7 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
                                  parameter_value: Union[int, float, bool,
                                                         List[int],
                                                         List[float]]) \
-                                 -> None:
+        -> None:
     """Changes a protocol parameter
 
     Parameters
@@ -3132,8 +3128,7 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
 
 
 def MPC_GetProtocolParameters(parameter_type: ProtocolParameters) \
-                              -> Union[int, float, bool,
-                                       List[int], List[float]]:
+        -> Union[int, float, bool, List[int], List[float]]:
     """Gets a protocol parameter
 
     Parameters
@@ -3807,7 +3802,7 @@ class ResponseTimeAction(IntEnum):
 
 
 def MPC_PiccResponseTime2(param: ResponseTimeAction, unit: NfcUnit) \
-                          -> List[int]:
+        -> List[int]:
     """Performs PICC timings measurement
 
     Parameters
@@ -4161,7 +4156,7 @@ def MPC_SetDisturbanceTrigger(operation: DisturbanceOperation,
 
 
 def MPC_ResetDisturbance(operation: Optional[DisturbanceOperation] = None) \
-                        -> None:
+        -> None:
     """Resets a previously loaded RF disturbance
 
     Parameters
@@ -4204,12 +4199,13 @@ class CplAutotestId(IntEnum):
     TEST_RFOUT_CHANNEL = 105
 
 
-def MPS_CPLAutoTest(test_id: CplAutotestId) -> List[List[str]]:
+def MPS_CPLAutoTest(test_id: CplAutotestId = CplAutotestId.TEST_CPL_ALL) \
+        -> List[List[str]]:
     """Performs NFC self-test
 
     Parameters
     ----------
-    test_id : CplAutotestId
+    test_id : CplAutotestId, optional
         Self-test identifier
 
     Returns

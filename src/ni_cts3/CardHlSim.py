@@ -144,7 +144,16 @@ def MPC_Set14443AInitParameters(atqa: bytes, uid: bytes,
         sak_value = sak
     else:
         raise TypeError('sak must be an instance of int or 1 byte')
-    if ats is not None:
+    if ats is None:
+        ret = CTS3ErrorCode(_MPuLib.MPC_Set14443AInitParameters(
+            c_uint8(0),
+            atqa,
+            c_uint32(len(uid)),
+            uid,
+            byref(c_uint8(sak_value)),
+            c_uint32(0),
+            None))
+    else:
         if not isinstance(ats, bytes):
             raise TypeError('ats must be an instance of bytes')
         _check_limits(c_uint32, len(ats), 'ats')
@@ -156,15 +165,6 @@ def MPC_Set14443AInitParameters(atqa: bytes, uid: bytes,
             byref(c_uint8(sak_value)),
             c_uint32(len(ats)),
             ats))
-    else:
-        ret = CTS3ErrorCode(_MPuLib.MPC_Set14443AInitParameters(
-            c_uint8(0),
-            atqa,
-            c_uint32(len(uid)),
-            uid,
-            byref(c_uint8(sak_value)),
-            c_uint32(0),
-            None))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
@@ -491,8 +491,8 @@ def MPC_GetSParam() -> Optional[bytes]:
     return s_param[:length.value]
 
 
-def MPC_GetBufferedRawFrame() -> Optional[Dict[str,
-                                               Union[bytes, TechnologyType]]]:
+def MPC_GetBufferedRawFrame() -> \
+        Optional[Dict[str, Union[bytes, TechnologyType]]]:
     """Gets received frame
 
     Returns
@@ -1399,7 +1399,7 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
 
 
 def MPS_GetSimParameters(parameter_type: SimulatorParameter) \
-                        -> Union[int, bytes, bool, IsoSimulatorEvent, None]:
+        -> Union[int, bytes, bool, IsoSimulatorEvent, None]:
     """Changes simulator parameter
 
     Parameters
@@ -1676,7 +1676,8 @@ class _IoClFrameSuppFilter(Structure):
                 ('pattern', c_uint8 * 256)]
 
 
-def MPS_AddFilter(filter: Union[IoClCrcFilter_index, IoClCrcFilter_pattern,
+def MPS_AddFilter(filter: Union[IoClCrcFilter_index,
+                                IoClCrcFilter_pattern,
                                 IoClFrameSuppFilter_index,
                                 IoClFrameSuppFilter_pattern]) -> None:
     """Adds a simulation filter

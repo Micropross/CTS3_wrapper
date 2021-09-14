@@ -601,13 +601,13 @@ class CpuAutotestId(IntEnum):
     TEST_CPU_LOAD = 4
 
 
-def MPS_CPUAutoTest(test_id: CpuAutotestId,
+def MPS_CPUAutoTest(test_id: CpuAutotestId = CpuAutotestId.TEST_CPU_ALL,
                     parameter: int = 0) -> List[List[str]]:
     """Performs CPU self-test
 
     Parameters
     ----------
-    test_id : CpuAutotestId
+    test_id : CpuAutotestId, optional
         Self-test identifier
     parameter : int, optional
         Test-specific parameter
@@ -839,6 +839,10 @@ def Reboot() -> None:
     """Reboots the device"""
     _MPuLib.Reboot.restype = c_int32
     ret = CTS3ErrorCode(_MPuLib.Reboot())
+    try:
+        CloseCommunication()
+    except CTS3Exception:
+        pass
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
@@ -847,6 +851,10 @@ def SoftReboot() -> None:
     """Restarts the device firmware"""
     _MPuLib.SoftReboot.restype = c_int32
     ret = CTS3ErrorCode(_MPuLib.SoftReboot())
+    try:
+        CloseCommunication()
+    except CTS3Exception:
+        pass
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
@@ -855,6 +863,10 @@ def Shutdown() -> None:
     """Powers the device off"""
     _MPuLib.Shutdown.restype = c_int32
     ret = CTS3ErrorCode(_MPuLib.Shutdown())
+    try:
+        CloseCommunication()
+    except CTS3Exception:
+        pass
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
@@ -953,16 +965,9 @@ def MPS_SetTime(time: datetime = datetime.now().astimezone()) -> None:
     """
     if sys.version_info >= (3, 9):
         try:
-            if sys.platform == 'win32':
-                try:
-                    from tzlocal import get_localzone  # noqa: E402
-                    zone = get_localzone()
-                    MPS_SetTimeZone(str(zone))
-                except ModuleNotFoundError:
-                    pass
-            else:
-                MPS_SetTimeZone(str(ZoneInfo('localtime')))
-        except ZoneInfoNotFoundError:
+            # Try to set local time zone
+            MPS_SetTimeZone()
+        except (ZoneInfoNotFoundError, ModuleNotFoundError, ValueError):
             pass
 
     _check_limits(c_uint8, time.year - 1900, 'time')
@@ -995,14 +1000,22 @@ def MPS_GetTimeZone() -> str:
     return time_zone.value.decode('ascii')
 
 
-def MPS_SetTimeZone(time_zone: str) -> None:
+def MPS_SetTimeZone(time_zone: Optional[str] = None) -> None:
     """Sets time zone
 
     Parameters
     ----------
-    time_zone : str
-        Time zone to set
+    time_zone : str, optional
+        Time zone to set (None to set local time zone)
     """
+    if not time_zone and sys.version_info >= (3, 9):
+        if sys.platform == 'win32':
+            from tzlocal import get_localzone  # noqa: E402
+            time_zone = str(get_localzone())
+        else:
+            time_zone = str(ZoneInfo('localtime'))
+    if not time_zone:
+        raise ValueError('unable to get local time zone')
     ret = CTS3ErrorCode(_MPuLib.MPS_SetTimeZone(
         time_zone.encode('ascii')))
     if ret != CTS3ErrorCode.RET_OK:
@@ -1346,16 +1359,15 @@ class AuxRelay(IntEnum):
     RELAY5 = 5
 
 
-def MPC_SetRelay(state: bool,
-                 relay_number: AuxRelay = AuxRelay.RELAY1) -> None:
+def MPC_SetRelay(relay_number: AuxRelay, state: bool) -> None:
     """Drives a CMOS output on the HDMI connector
 
     Parameters
     ----------
+    relay_number : AuxRelay
+        Relay number
     state : bool
         True to output 5V
-    relay_number : AuxRelay, optional
-        Pin number
     """
     if not isinstance(relay_number, AuxRelay):
         raise TypeError('relay_number must be an instance of AuxRelay IntEnum')
@@ -1558,7 +1570,7 @@ def SetDLLDebugMode(path: Optional[str]) -> None:
         Log file path (None to deactivate)
     """
     _MPuLib.SetDLLDebugMode.restype = c_void_p
-    if path is None:
+    if path is None or len(path) == 0:
         _MPuLib.SetDLLDebugMode(
             c_uint8(0), None)
     else:
@@ -1577,7 +1589,7 @@ def SendFrame(command: Optional[str], timeout: int = -1,
         Remote command to send
     timeout : int, optional
         Communication timeout in s (-1 to use default value)
-    asynchronous_tx : bool
+    asynchronous_tx : bool, optional
         True to send command to connected CTS3 without waiting for an answer
 
     Returns
@@ -1651,7 +1663,7 @@ def SetDLLMode(mode: LibraryMode) -> None:
         raise CTS3Exception(ret)
 
 
-def USBEnumerateDevices() -> Optional[List[str]]:
+def USBEnumerateDevices() -> List[str]:
     """Detects Micropross devices over USB link
 
     Returns
@@ -1668,10 +1680,10 @@ def USBEnumerateDevices() -> Optional[List[str]]:
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
     list_string = devices_list.value.decode('ascii')
-    return list_string.splitlines() if len(list_string) else None
+    return list_string.splitlines() if len(list_string) else []
 
 
-def TCPEnumerateDevices() -> Optional[Dict[str, IPv4Address]]:
+def TCPEnumerateDevices() -> Dict[str, IPv4Address]:
     """Detects Micropross devices over Ethernet
 
     Returns
@@ -1695,10 +1707,10 @@ def TCPEnumerateDevices() -> Optional[Dict[str, IPv4Address]]:
         return {list_serial[i]: IPv4Address(list_ip[i])
                 for i in range(len(list_ip))}
     else:
-        return None
+        return {}
 
 
-def USBEnumerateDevices2() -> Optional[List[str]]:
+def USBEnumerateDevices2() -> List[str]:
     """Detects Micropross devices over USB link
 
     Returns

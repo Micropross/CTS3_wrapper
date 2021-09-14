@@ -16,14 +16,15 @@ class VdcRange(IntEnum):
     VDC_RANGE_12V = 1
 
 
-def MPC_GetVDCIn(duration: float, voltmeter_range: VdcRange) -> float:
+def MPC_GetVDCIn(duration: float,
+                 voltmeter_range: VdcRange = VdcRange.VDC_RANGE_24V) -> float:
     """Performs a maximum voltage measurement on the AUX 1 connector
 
     Parameters
     ----------
     duration : float
         Measurement duration in s
-    voltmeter_range : VdcRange
+    voltmeter_range : VdcRange, optional
         Voltage measurement range
 
     Returns
@@ -48,7 +49,7 @@ def MPC_GetVDCIn(duration: float, voltmeter_range: VdcRange) -> float:
 
 
 def MPC_GetVOV(integration_time: float, timeout: float,
-               voltmeter_range: VdcRange) -> float:
+               voltmeter_range: VdcRange = VdcRange.VDC_RANGE_24V) -> float:
     """Performs an integrated voltage measurement on the AUX 1 connector
 
     Parameters
@@ -57,7 +58,7 @@ def MPC_GetVOV(integration_time: float, timeout: float,
         Integration time in s
     timeout : float
         Measurement timeout in s
-    voltmeter_range : VdcRange
+    voltmeter_range : VdcRange, optional
         Voltage measurement range
 
     Returns
@@ -185,7 +186,7 @@ class MeasurementConnector(IntEnum):
 
 
 def MPC_SwitchResonanceFrequencyConnector(connector: MeasurementConnector) \
-                                          -> None:
+        -> None:
     """Changes the connector currently selected to perform a measurement
 
     Parameters
@@ -262,9 +263,7 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
                                       card_type: TechnologyType,
                                       data_rate: DataRate,
                                       path: Optional[str] = None) \
-                                      -> Dict[str, Union[float,
-                                                         bool,
-                                                         List[float]]]:
+        -> Dict[str, Union[float, bool, List[float]]]:
     """Analyzes analog measurements started with MPC_StartRFMeasure2
     and stores the results in a waveform file
 
@@ -619,7 +618,7 @@ def MPC_ImpedanceLoadCable(label: Optional[str]) -> None:
         raise CTS3Exception(ret)
 
 
-def MPC_ImpedanceListCables() -> Optional[List[str]]:
+def MPC_ImpedanceListCables() -> List[str]:
     """Lists available cable compensations information
 
     Returns
@@ -634,7 +633,7 @@ def MPC_ImpedanceListCables() -> Optional[List[str]]:
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
     list_string = cables_list.value.decode('ascii')
-    return list_string.split(';') if len(list_string) else None
+    return list_string.split(';') if len(list_string) else []
 
 
 def MPC_ImpedanceDeleteCable(label: str) -> None:
@@ -652,8 +651,8 @@ def MPC_ImpedanceDeleteCable(label: str) -> None:
         raise CTS3Exception(ret)
 
 
-def MPC_MeasureImpedance(use_cable: bool = True,
-                         average: int = 1) -> Dict[str, Union[float, complex]]:
+def MPC_MeasureImpedance(use_cable: bool = True, average: int = 1) \
+        -> Dict[str, Union[float, complex]]:
     """Performs an impedance measurement
 
     Parameters
@@ -718,7 +717,8 @@ def MPC_ResonanceFrequency(method: ResonanceMethod,
                            step: float,
                            freq_min: float,
                            freq_max: float,
-                           average: int = 1) -> Dict[str, Union[int, float]]:
+                           average: int = 1) \
+        -> Dict[str, Union[int, float]]:
     """Performs a resonance frequency measurement
 
     Parameters

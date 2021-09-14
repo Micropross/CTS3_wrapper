@@ -277,8 +277,8 @@ def MPC_WaitTypeAActiveState(atqa: bytes, uid: bytes,
         raise CTS3Exception(ret)
 
 
-def MPC_WaitAndGetFrame(timeout: float) -> Dict[str,
-                                                Union[bytes, TechnologyType]]:
+def MPC_WaitAndGetFrame(timeout: float) \
+        -> Dict[str, Union[bytes, TechnologyType]]:
     """Waits for an incoming frame
 
     Parameters
@@ -311,9 +311,8 @@ def MPC_WaitAndGetFrame(timeout: float) -> Dict[str,
             'rx_type': TechnologyType(card_type.value)}
 
 
-def MPC_WaitAndGetFrameTypeA106ModeBit(timeout: float) -> Dict[str,
-                                                               Union[bytes,
-                                                                     int]]:
+def MPC_WaitAndGetFrameTypeA106ModeBit(timeout: float) \
+        -> Dict[str, Union[bytes, int]]:
     """Waits for a Type A 106kb/s incoming frame
 
     Parameters
@@ -407,7 +406,7 @@ def MPC_TransmitFrameA(frame: bytes, bits_number: Optional[int] = None,
     frame : bytes
         Frame to transmit
     bits_number : int, optional
-        Number of bits to transmit
+        Number of bits to transmit (8 × frame length if None)
     parity : bool, optional
         True to include parity bit
     """
@@ -425,28 +424,35 @@ def MPC_TransmitFrameA(frame: bytes, bits_number: Optional[int] = None,
         raise CTS3Exception(ret)
 
 
-def MPS_SimSetDesyncPattern(enable: bool, t1_fc: Optional[float] = None,
-                            t2_fc: Optional[float] = None) -> None:
+def MPS_SimSetDesyncPattern(t1_fc: Optional[float],
+                            t2_fc: Optional[float]) -> None:
     """Enables NFC Desync Pattern for following FeliCa frames
 
     Parameters
     ----------
-    enable : bool
-        True to enable Desync Pattern
     t1_fc : float
         t1 pattern duration in carrier periods
+        (None to deactivate Desync Pattern)
     t2_fc : float
         t2 pattern duration in carrier periods
+        (None to deactivate Desync Pattern)
     """
-    t1_10fc = round(t1_fc * 1e1) if t1_fc else 0
-    _check_limits(c_uint32, t1_10fc, 't1_fc')
-    t2_10fc = round(t2_fc * 1e1) if t2_fc else 0
-    _check_limits(c_uint32, t2_10fc, 't2_fc')
-    ret = CTS3ErrorCode(_MPuLib.MPS_SimSetDesyncPattern(
-        c_uint8(0),
-        c_uint8(1) if enable else c_uint8(0),
-        c_uint32(t1_10fc),
-        c_uint32(t2_10fc)))
+    if t1_fc and t2_fc:
+        t1_10fc = round(t1_fc * 1e1)
+        _check_limits(c_uint32, t1_10fc, 't1_fc')
+        t2_10fc = round(t2_fc * 1e1)
+        _check_limits(c_uint32, t2_10fc, 't2_fc')
+        ret = CTS3ErrorCode(_MPuLib.MPS_SimSetDesyncPattern(
+            c_uint8(0),
+            c_uint8(1),
+            c_uint32(t1_10fc),
+            c_uint32(t2_10fc)))
+    else:
+        ret = CTS3ErrorCode(_MPuLib.MPS_SimSetDesyncPattern(
+            c_uint8(0),
+            c_uint8(0),
+            c_uint32(0),
+            c_uint32(0)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
@@ -541,12 +547,12 @@ class IqlmMode(IntEnum):
     IQLM_MODE_SETUP = 1
 
 
-def MPC_IQLMStart(mode: IqlmMode) -> None:
+def MPC_IQLMStart(mode: IqlmMode = IqlmMode.IQLM_MODE_DYNAMIC) -> None:
     """Starts IQ load modulation regulation
 
     Parameters
     ----------
-    mode : IqlmMode
+    mode : IqlmMode, optional
         Regulation mode
     """
     if not isinstance(mode, IqlmMode):
@@ -558,12 +564,13 @@ def MPC_IQLMStart(mode: IqlmMode) -> None:
         raise CTS3Exception(ret)
 
 
-def MPC_IQLoadModulationStart(mode: IqlmMode) -> None:
+def MPC_IQLoadModulationStart(mode: IqlmMode = IqlmMode.IQLM_MODE_DYNAMIC) \
+        -> None:
     """Starts IQ load modulation regulation
 
     Parameters
     ----------
-    mode : IqlmMode
+    mode : IqlmMode, optional
         Regulation mode
     """
     warn('renamed as MPC_IQLMStart', FutureWarning)

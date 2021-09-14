@@ -41,7 +41,7 @@ def Daq_SetChannel(channel: DaqChannel, enabled: bool,
     channel : DaqChannel
         Channel number and connector
     enabled : bool
-        True to enable the channel (regardless of the connector)
+        True to enable the channel
     voltage_range : DaqRange
         Range to use
     nc_term : DaqNCTerm, optional
@@ -49,24 +49,33 @@ def Daq_SetChannel(channel: DaqChannel, enabled: bool,
     """
     if not isinstance(channel, DaqChannel):
         raise TypeError('channel must be an instance of DaqChannel IntEnum')
-    if not isinstance(voltage_range, DaqRange):
-        raise TypeError('voltage_range must be an instance of '
-                        'DaqRange IntEnum')
-    if not isinstance(nc_term, DaqNCTerm):
-        raise TypeError('nc_term must be an instance of DaqNCTerm IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.Daq_SetChannel(
-        c_uint8(channel),
-        c_uint8(1) if enabled else c_uint8(0),
-        c_uint16(voltage_range),
-        c_uint32(0),
-        c_uint32(nc_term),
-        c_uint8(0)))
+    if enabled:
+        if not isinstance(voltage_range, DaqRange):
+            raise TypeError('voltage_range must be an instance of '
+                            'DaqRange IntEnum')
+        if not isinstance(nc_term, DaqNCTerm):
+            raise TypeError('nc_term must be an instance of DaqNCTerm IntEnum')
+        ret = CTS3ErrorCode(_MPuLib.Daq_SetChannel(
+            c_uint8(channel),
+            c_uint8(1),
+            c_uint16(voltage_range),
+            c_uint32(0),
+            c_uint32(nc_term),
+            c_uint8(0)))
+    else:
+        ret = CTS3ErrorCode(_MPuLib.Daq_SetChannel(
+            c_uint8(channel),
+            c_uint8(0),
+            c_uint16(0),
+            c_uint32(0),
+            c_uint32(0),
+            c_uint8(0)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
 
-def Daq_GetChannel(channel: DaqChannel) -> Dict[str, Union[bool, DaqRange,
-                                                           DaqNCTerm, None]]:
+def Daq_GetChannel(channel: DaqChannel) \
+        -> Dict[str, Union[bool, DaqRange, DaqNCTerm, None]]:
     """Gets channel configuration
 
     Parameters
@@ -114,14 +123,14 @@ class DaqSamplingClk(IntEnum):
     SCLK_EXT = 1
 
 
-def Daq_SetTimeBase(sampling_rate: DaqSamplingClk,
+def Daq_SetTimeBase(sampling_rate: DaqSamplingClk = DaqSamplingClk.SCLK_150MHZ,
                     points_number: int = 0x10000000) -> None:
     """Configures the sampling rates and the number of points to acquire
     on the enabled channels
 
     Parameters
     ----------
-    sampling_rate : DaqSamplingClk
+    sampling_rate : DaqSamplingClk, optional
         Sampling clock source
     points_number : int, optional
         Number of points to acquire
@@ -380,7 +389,7 @@ def Daq_LoadProbe(label: Optional[str], channel: int) -> None:
         raise CTS3Exception(ret)
 
 
-def Daq_ListProbes() -> Optional[List[str]]:
+def Daq_ListProbes() -> List[str]:
     """Lists available probe compensations information
 
     Returns
@@ -394,7 +403,7 @@ def Daq_ListProbes() -> Optional[List[str]]:
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
     list_string = cables_list.value.decode('ascii')
-    return list_string.split(';') if len(list_string) else None
+    return list_string.split(';') if len(list_string) else []
 
 
 def Daq_DeleteProbe(label: str) -> None:
@@ -422,12 +431,13 @@ class DaqAutotestId(IntEnum):
     TEST_DAQ_REF = 300
 
 
-def MPS_DaqAutoTest(test_id: DaqAutotestId) -> List[List[str]]:
+def MPS_DaqAutoTest(test_id: DaqAutotestId = DaqAutotestId.TEST_DAQ_ALL) \
+        -> List[List[str]]:
     """Performs DAQ self-test
 
     Parameters
     ----------
-    test_id : DaqAutotestId
+    test_id : DaqAutotestId, optional
         Self-test identifier
 
     Returns
