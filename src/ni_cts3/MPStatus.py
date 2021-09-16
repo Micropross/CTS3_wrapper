@@ -52,6 +52,7 @@ class CTS3ErrorCode(IntEnum):
     """
     File management error codes
     """
+    ERR_MODULE_NOT_FOUND = 0x0135
     ERR_OPEN_FILE_FAILED = 0x0280
     ERR_DOWNLOAD_FILE_FAILED = 0x0281
     ERR_UPLOAD_FILE_FAILED = 0x0282
