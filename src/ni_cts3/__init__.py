@@ -246,33 +246,42 @@ from .MPException import CTS3Exception  # noqa: E402
 _logs_dict: Dict[str, _FirmwareLog] = {}
 
 
-def _log_start() -> None:
-    """Starts firwmare log redirection to stderr"""
-    global _logs_dict
+def _get_connection_string() -> str:
+    """Gets communication channel connection string
+
+    Returns
+    -------
+    str
+        Connection string
+    """
     host_name = create_string_buffer(128)
     ret = CTS3ErrorCode(_MPuLib.GetConnectionString(host_name))
     if ret == CTS3ErrorCode.RET_OK:
-        host = host_name.value.decode('ascii')
-        if host not in _logs_dict:
-            log_started = Event()
-            log_thread = _FirmwareLog(host, log_started)
-            log_thread.start()
-            log_started.wait()
-            if log_thread.running:
-                _logs_dict[host] = log_thread
+        return host_name.value.decode('ascii')
+    return ''
+
+
+def _log_start() -> None:
+    """Starts firwmare log redirection to stderr"""
+    global _logs_dict
+    host = _get_connection_string()
+    if len(host) > 0 and host not in _logs_dict:
+        log_started = Event()
+        log_thread = _FirmwareLog(host, log_started)
+        log_thread.start()
+        log_started.wait()
+        if log_thread.running:
+            _logs_dict[host] = log_thread
 
 
 def _log_stop() -> None:
     """Stops firmware log redirection to stderr"""
     global _logs_dict
-    host_name = create_string_buffer(128)
-    ret = CTS3ErrorCode(_MPuLib.GetConnectionString(host_name))
-    if ret == CTS3ErrorCode.RET_OK:
-        host = host_name.value.decode('ascii')
-        if host in _logs_dict:
-            sleep(0.5)  # Journal flush delay
-            _logs_dict[host].stop()
-            _logs_dict.pop(host)
+    host = _get_connection_string()
+    if len(host) > 0 and host in _logs_dict:
+        sleep(0.5)  # Journal flush delay
+        _logs_dict[host].stop()
+        _logs_dict.pop(host)
 
 
 @register
@@ -617,15 +626,27 @@ def MPS_CPUAutoTest(test_id: CpuAutotestId = CpuAutotestId.TEST_CPU_ALL,
     list(list(str))
         Test result
     """
+    global _logs_dict
     if not isinstance(test_id, CpuAutotestId):
         raise TypeError('test_id must be an instance of CpuAutotestId IntEnum')
     _check_limits(c_uint32, parameter, 'parameter')
+    restore_log = False
+    if test_id == CpuAutotestId.TEST_CPU_ALL or \
+            (test_id == CpuAutotestId.TEST_FLASH and
+                (parameter & 0xF == 0 or parameter & 0xF == 6)):
+        # Close 'default' user connection to allow user data partition analysis
+        host = _get_connection_string()
+        if len(host) > 0 and host in _logs_dict:
+            restore_log = True
+            _log_stop()
     result = c_char_p()
     ret = CTS3ErrorCode(_MPuLib.MPS_CPUAutoTest(
         c_uint32(test_id),
         c_uint8(1),
         c_uint32(parameter),
         byref(result)))
+    if restore_log:
+        _log_start()
     if (ret >= CTS3ErrorCode.RET_FAIL and ret <= CTS3ErrorCode.RET_WARNING) \
             or ret == CTS3ErrorCode.RET_OK:
         if result.value is None:
