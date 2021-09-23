@@ -47,6 +47,12 @@ if sys.platform == 'win32':
         _lib_name = 'MPuLib-win32.dll'
     else:
         _lib_name = 'MPuLib-win64.dll'
+elif sys.platform == 'cygwin':
+    _lib_path = join(_lib_path, 'Windows')
+    if architecture()[0] == '64bit':
+        _lib_name = 'MPuLib-win64.dll'
+    else:
+        raise NotImplementedError('Unsupported cygwin architecture')
 else:
     if sys.platform == 'darwin':
         _lib_path = join(_lib_path, 'macOS')
@@ -284,12 +290,14 @@ def _log_stop() -> None:
         _logs_dict.pop(host)
 
 
-@register
-def _logs_cleanup() -> None:  # type: ignore[misc]
+def _logs_cleanup() -> None:
     """Stops all firmware log redirections"""
     global _logs_dict
     for log in _logs_dict.values():
         log.stop()
+
+
+register(_logs_cleanup)
 
 # region Resource management
 
