@@ -836,7 +836,7 @@ class IqlmPhaseStatus(IntEnum):
     IQLM_PHASE_TRACKING_OFF = 0
     IQLM_COARSE_FREQUENCY_TRACKING = 1
     IQLM_FINE_PHASE_TRACKING = 2
-    IQLM_PHASE_LOCKED = 3
+    IQLM_PHASE_LOCKED = 4
 
 
 def MPC_IQLMGetStatus() -> Dict[str, Union[IqlmPhaseStatus, float]]:
