@@ -656,66 +656,66 @@ def MPC_IQLoadModulationSetHR(amplitude: float, phase: float) -> None:
     return MPC_IQLMSetHR(amplitude, phase)
 
 
-def MPC_IQLMSidebands(amplitude_sb1: float, phase_sb1: float,
-                      amplitude_sb2: float, phase_sb2: float,
+def MPC_IQLMSidebands(lower_amplitude: float, lower_phase: float,
+                      upper_amplitude: float, upper_phase: float,
                       offset: float) -> None:
     """Sets side bands
 
     Parameters
     ----------
-    amplitude_sb1 : float
-        First side band amplitude in Vpp
-    phase_sb1 : float
-        First side band phase in °
-    amplitude_sb2 : float
-        Second side band amplitude in Vpp
-    phase_sb2 : float
-        Second side band phase in °
+    lower_amplitude : float
+        Lower side-band amplitude in Vpp
+    lower_phase : float
+        Lower side-band phase in °
+    upper_amplitude : float
+        Upper side-band amplitude in Vpp
+    upper_phase : float
+        Upper side-band phase in °
     offset : float
         Modulation offset in Vpp
     """
-    amplitude_sb1_mV = round(amplitude_sb1 * 1e3)
-    _check_limits(c_uint32, amplitude_sb1_mV, 'amplitude_sb1')
-    phase_sb1_cdeg = round(phase_sb1 * 1e2)
-    _check_limits(c_int32, phase_sb1_cdeg, 'phase_sb1')
-    amplitude_sb2_mV = round(amplitude_sb2 * 1e3)
-    _check_limits(c_uint32, amplitude_sb2_mV, 'amplitude_sb2')
-    phase_sb2_cdeg = round(phase_sb2 * 1e2)
-    _check_limits(c_int32, phase_sb2_cdeg, 'phase_sb2')
+    lower_amplitude_mV = round(lower_amplitude * 1e3)
+    _check_limits(c_uint32, lower_amplitude_mV, 'lower_amplitude')
+    lower_phase_cdeg = round(lower_phase * 1e2)
+    _check_limits(c_int32, lower_phase_cdeg, 'lower_phase')
+    upper_amplitude_mV = round(upper_amplitude * 1e3)
+    _check_limits(c_uint32, upper_amplitude_mV, 'upper_amplitude')
+    upper_phase_cdeg = round(upper_phase * 1e2)
+    _check_limits(c_int32, upper_phase_cdeg, 'upper_phase')
     offset_mV = round(offset * 1e3)
     _check_limits(c_int32, offset_mV, 'offset')
     ret = CTS3ErrorCode(_MPuLib.MPC_IQLMSidebands(
         c_uint8(0),
-        c_uint32(amplitude_sb1_mV),
-        c_int32(phase_sb1_cdeg),
-        c_uint32(amplitude_sb2_mV),
-        c_int32(phase_sb2_cdeg),
+        c_uint32(lower_amplitude_mV),
+        c_int32(lower_phase_cdeg),
+        c_uint32(upper_amplitude_mV),
+        c_int32(upper_phase_cdeg),
         c_int32(offset_mV)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
 
-def MPC_IQLoadModulationSidebands(amplitude_sb1: float, phase_sb1: float,
-                                  amplitude_sb2: float, phase_sb2: float,
+def MPC_IQLoadModulationSidebands(lower_amplitude: float, lower_phase: float,
+                                  upper_amplitude: float, upper_phase: float,
                                   offset: float) -> None:
     """Sets side bands
 
     Parameters
     ----------
-    amplitude_sb1 : float
-        First side band amplitude in Vpp
-    phase_sb1 : float
-        First side band phase in °
-    amplitude_sb2 : float
-        Second side band amplitude in Vpp
-    phase_sb2 : float
-        Second side band phase in °
+    lower_amplitude : float
+        Lower side-band amplitude in Vpp
+    lower_phase : float
+        Lower side-band phase in °
+    upper_amplitude : float
+        Upper side-band amplitude in Vpp
+    upper_phase : float
+        Upper side-band phase in °
     offset : float
         Modulation offset in Vpp
     """
     warn('renamed as MPC_IQLMSidebands', FutureWarning)
-    return MPC_IQLMSidebands(amplitude_sb1, phase_sb1,
-                             amplitude_sb2, phase_sb2, offset)
+    return MPC_IQLMSidebands(lower_amplitude, lower_phase,
+                             upper_amplitude, upper_phase, offset)
 
 
 @unique
