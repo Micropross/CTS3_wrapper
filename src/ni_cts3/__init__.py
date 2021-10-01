@@ -11,7 +11,7 @@ from typing import List, Dict, Type, Union, Optional, Callable, cast
 from enum import IntEnum, IntFlag, unique
 from xml.dom.minidom import parseString
 from datetime import datetime
-from ctypes import c_char_p, c_uint8, c_int16, c_uint16
+from ctypes import c_char, c_char_p, c_uint8, c_int16, c_uint16
 from ctypes import c_int32, c_uint32, c_double, sizeof
 from ctypes import c_void_p, byref, create_string_buffer
 from ctypes import CDLL, Structure, CFUNCTYPE
@@ -419,6 +419,26 @@ def MPS_GetVersion() -> str:
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
     return message.value.decode('ascii').strip()
+
+
+def MPS_GetHardRev() -> Dict[str, Union[str, int]]:
+    """Gets the product hardware revision
+
+    Returns
+    -------
+    dict
+        'revision' (str): Hardware revision
+        'variant' (int): Hardware variant
+    """
+    rev = c_char()
+    var = c_uint8()
+    ret = CTS3ErrorCode(_MPuLib.MPS_GetHardRev(
+        byref(rev),
+        byref(var)))
+    if ret != CTS3ErrorCode.RET_OK:
+        raise CTS3Exception(ret)
+    return {'revision': rev.value.decode('ascii'),
+            'variant': var.value}
 
 
 def MPS_GetVersion2() -> str:
