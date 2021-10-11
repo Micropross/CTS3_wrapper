@@ -87,7 +87,6 @@ class TechnologyType(IntEnum):
     TYPE_MIFARE = 3
     TYPE_VICINITY = 4
     TYPE_FELICA = 5
-    TYPE_NFC_TAG_TYPE_1 = 6
     TYPE_FELICA_424 = 7
     TYPE_FELICA_212 = 8
 
