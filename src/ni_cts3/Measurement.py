@@ -101,6 +101,7 @@ class MeasureSource(IntEnum):
     MEAS_SOURCE_DEMODULATED = 2
     MEAS_SOURCE_VDC_12V = 3
     MEAS_SOURCE_VDC_24V = 4
+    MEAS_SOURCE_PHASE = 5
 
 
 def MPC_StartRFMeasure2(settings: MeasureTriggerSetting, source: MeasureSource,
