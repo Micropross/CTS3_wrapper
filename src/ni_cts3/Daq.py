@@ -1,10 +1,141 @@
 from enum import IntEnum, unique
-from ctypes import c_uint8, c_int16, c_uint16, c_int32, c_uint32
-from ctypes import byref, create_string_buffer, c_char_p
+from ctypes import c_uint8, c_int16, c_uint16, c_int32, c_uint32, c_uint64
+from ctypes import byref, create_string_buffer, sizeof, Structure
+from ctypes import c_char, c_char_p, c_float, c_double
 from typing import Optional, Dict, Union, List
 from . import _MPuLib, _MPuLib_variadic, _check_limits
 from .MPStatus import CTS3ErrorCode
 from .MPException import CTS3Exception
+from struct import iter_unpack
+from math import sqrt
+
+
+class ChannelConfig(Structure):
+    """Channel configuration"""
+    _pack_ = 1
+    _fields_ = [('config', c_uint32),
+                ('range', c_uint32),
+                ('impedance', c_uint32),
+                ('term', c_uint32),
+                ('slope', c_double),
+                ('offset', c_double),
+                ('rms_noise', c_double),
+                ('demod_noise', c_double)]
+
+
+class DaqHeader(Structure):
+    """Acquisition file header"""
+    _pack_ = 1
+    _fields_ = [('id', c_uint32),
+                ('version', c_uint16),
+                ('header_size', c_uint16),
+                ('measurements_count', c_uint32),
+                ('timestamp', c_uint32),
+                ('device_id', c_char * 32),
+                ('device_version', c_char * 32),
+                ('bits_per_sample', c_uint8),
+                ('channels', c_uint8),
+                ('source', c_uint8),
+                ('channel_size', c_uint8),
+                ('sampling', c_uint32),
+                ('trig_date', c_uint64),
+                ('ch1', ChannelConfig),
+                ('ch2', ChannelConfig),
+                ('rfu1', c_uint8 * 96),
+                ('normalization', c_float),
+                ('demod_delay', c_int32),
+                ('probe_id_ch1', c_char * 16),
+                ('probe_id_ch2', c_char * 16),
+                ('rfu2', c_uint8 * 56)]
+
+
+class DaqFooter(Structure):
+    """Acquisition file footer"""
+    _pack_ = 1
+    _fields_ = [('id', c_uint32),
+                ('version', c_uint16),
+                ('footer_size', c_uint16),
+                ('metadata_size', c_uint16)]
+
+
+def load_signal(file_path: str) -> List[List[float]]:
+    """Loads DAQ signals from an acquisition file (single mode)
+
+    Parameters
+    ----------
+    file_path : str
+        Acquisition file
+
+    Returns
+    -------
+    list(list(float))
+        List of signals loaded from acquisition file (in V, ° or dimensionless)
+    """
+    with open(file_path, 'rb') as f:
+        header = DaqHeader.from_buffer_copy(f.read(sizeof(DaqHeader)))
+        if header.version != 2:
+            raise Exception(f'Unsupported DAQ file version ({header.version})')
+        data_width = int(header.bits_per_sample / 8)
+        data_length = header.measurements_count
+        channels = header.channels
+        file_content = f.read(channels * data_length * data_width)
+        footer = DaqFooter.from_buffer_copy(f.read(sizeof(DaqFooter)))
+        if footer.metadata_size:
+            f.read(footer.metadata_size)
+
+        if data_width == 2:
+            if channels == 1:
+                if header.source == 6:
+                    # Phase
+                    signal = [180.0 * x[0] / 8192.0
+                              for x in iter_unpack('<h', file_content)]
+                elif header.source == 5:
+                    # Vdc
+                    offset = header.ch1.offset
+                    slope = header.ch1.slope
+                    quadratic = header.ch1.rms_noise
+                    cubic = header.ch1.demod_noise
+                    signal = [offset + slope * x[0] +
+                              quadratic * x[0] ** 2 + cubic * x[0] ** 3
+                              for x in iter_unpack('<h', file_content)]
+                else:
+                    # Modulated signal
+                    if header.ch1.config & 1:
+                        offset = header.ch1.offset
+                        slope = header.ch1.slope
+                    else:
+                        offset = header.ch2.offset
+                        slope = header.ch2.slope
+                    signal = [slope * (x[0] + offset)
+                              for x in iter_unpack('<h', file_content)]
+                return [signal]
+
+            else:
+                # CH1 and CH2 data interleaved
+                offset = header.ch1.offset
+                slope = header.ch1.slope
+                signal_1 = [slope * (x[0] + offset)
+                            for x in iter_unpack('<h', file_content)][0::2]
+                offset = header.ch2.offset
+                slope = header.ch2.slope
+                signal_2 = [slope * (x[0] + offset)
+                            for x in iter_unpack('<h', file_content)][1::2]
+                return [signal_1, signal_2]
+
+        elif data_width == 4:
+            # Demodulated signal
+            if header.ch1.config & 1:
+                slope = header.ch1.slope
+                noise = header.ch1.demod_noise
+            else:
+                slope = header.ch2.slope
+                noise = header.ch2.demod_noise
+            slope *= header.normalization
+            signal = [slope * sqrt(x[0] - noise) if x[0] > noise else 0
+                      for x in iter_unpack('<L', file_content)]
+            return [signal]
+
+    return [[]]
 
 
 @unique
