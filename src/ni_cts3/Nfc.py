@@ -4,9 +4,10 @@ from enum import IntEnum, IntFlag, unique
 from . import _MPuLib, _MPuLib_variadic, _check_limits
 from .MPStatus import CTS3ErrorCode, MifareErrorCode
 from .MPException import CTS3Exception, CTS3MifareException
-from ctypes import c_uint8, c_int16, c_uint16, c_int32, c_uint32
-from ctypes import byref, POINTER, c_char_p, c_int, c_double
-from ctypes import CFUNCTYPE
+from ctypes import c_uint8, c_int16, c_uint16, c_int32, c_uint32, c_uint64
+from ctypes import c_char, c_char_p, c_int, c_float, c_double
+from ctypes import byref, POINTER, CFUNCTYPE, Structure
+from ctypes import Union as C_Union
 
 
 _callback: Optional[Callable[[int,
@@ -14,6 +15,64 @@ _callback: Optional[Callable[[int,
                               POINTER(c_uint8),  # type: ignore[misc]
                               int],
                              int]] = None
+
+
+class EventHeader(Structure):
+    """Protocol analyzer event header structure definition"""
+    _pack_ = 1
+    _fields_ = [('identifier', c_char * 4),
+                ('data_format', c_uint16),
+                ('file_version', c_uint16),
+                ('device_id', c_char * 32),
+                ('device_version', c_char * 32),
+                ('time_base_ns', c_uint16),
+                ('rfu1', c_uint32),
+                ('trace_type', c_uint8),
+                ('rfu2', c_uint8),
+                ('event_number', c_uint32),
+                ('rfu3', c_uint16),
+                ('event_mask', c_uint32),
+                ('rfu4', c_uint8 * 38)]
+
+
+class AnalogHeader(Structure):
+    """Protocol analyzer analog Measurement header structure definition"""
+    _pack_ = 1
+    _fields_ = [('identifier', c_char * 4),
+                ('data_format', c_uint16),
+                ('file_version', c_uint16),
+                ('device_id', c_char * 16),
+                ('probe_id', c_char * 16),
+                ('device_version', c_char * 32),
+                ('time_base_ns', c_uint16),
+                ('normalization', c_float),
+                ('trace_type', c_uint8),
+                ('source', c_uint8),
+                ('event_number', c_uint32),
+                ('rfu', c_uint8 * 6),
+                ('range_mV', c_uint16),
+                ('frequency_kHz', c_uint32),
+                ('delay_ns', c_int32),
+                ('date_ns', c_uint64),
+                ('impedance_ohm', c_uint32),
+                ('offset', c_double),
+                ('slope', c_double)]
+
+
+class Header(C_Union):
+    """Protocol analyzer header structure definition"""
+    _fields_ = [('events', EventHeader),
+                ('analog', AnalogHeader)]
+
+    def get_bytes(self) -> bytes:
+        """Converts header into bytes
+
+        Returns
+        -------
+        bytes
+            Bytes representation of header
+        """
+        return bytearray(self)
 
 
 @unique
