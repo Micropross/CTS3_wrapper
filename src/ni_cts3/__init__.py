@@ -1059,8 +1059,11 @@ def MPS_SetTimeZone(time_zone: Optional[str] = None) -> None:
     """
     if not time_zone and sys.version_info >= (3, 9):
         if sys.platform == 'win32':
-            from tzlocal import get_localzone  # noqa: E402
-            time_zone = str(get_localzone())
+            try:
+                from tzlocal import get_localzone  # noqa: E402
+                time_zone = str(get_localzone())
+            except ModuleNotFoundError:
+                pass
         else:
             time_zone = str(ZoneInfo('localtime'))
     if not time_zone:
