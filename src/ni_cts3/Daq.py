@@ -83,13 +83,16 @@ def load_signal(file_path: str) -> List[List[float]]:
         if footer.metadata_size:
             f.read(footer.metadata_size)
 
-        if data_width == 2:
+        if data_width == sizeof(c_int16):
+            SOURCE_PHASE = 6
+            SOURCE_VDC = 5
             if channels == 1:
-                if header.source == 6:
+                if header.source == SOURCE_PHASE:
                     # Phase
-                    signal = [180.0 * x[0] / 8192.0
+                    signal = [float('nan') if x[0] > 8192
+                              else 180.0 * x[0] / 8192.0
                               for x in iter_unpack('<h', file_content)]
-                elif header.source == 5:
+                elif header.source == SOURCE_VDC:
                     # Vdc
                     offset = header.ch1.offset
                     slope = header.ch1.slope
@@ -122,7 +125,7 @@ def load_signal(file_path: str) -> List[List[float]]:
                             for x in iter_unpack('<h', file_content)][1::2]
                 return [signal_1, signal_2]
 
-        elif data_width == 4:
+        elif data_width == sizeof(c_uint32):
             # Demodulated signal
             if header.ch1.config & 1:
                 slope = header.ch1.slope
