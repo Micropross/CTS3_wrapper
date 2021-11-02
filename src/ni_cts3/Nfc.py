@@ -4146,7 +4146,7 @@ def MPC_GenerateDisturbance(operation: DisturbanceOperation,
 
 
 def MPC_LoadDisturbanceWaveshape(operation: DisturbanceOperation,
-                                 timebase: int, data: List[int]) -> None:
+                                 timebase: int, data: List[float]) -> None:
     """Loads a disturbance signal
 
     Parameters
@@ -4155,8 +4155,8 @@ def MPC_LoadDisturbanceWaveshape(operation: DisturbanceOperation,
         Disturbance operation to be loaded
     timebase : int
         Signal time base in 1 ⁄ (150MHz)
-    data : list(int)
-        Disturbing signal
+    data : list(float)
+        Disturbing signal in %
     """
     if not isinstance(operation, DisturbanceOperation):
         raise TypeError('operation must be an instance of '
@@ -4167,8 +4167,9 @@ def MPC_LoadDisturbanceWaveshape(operation: DisturbanceOperation,
     _check_limits(c_uint32, len(data), 'data')
     data_array = (c_int16 * len(data))()
     for i in range(len(data)):
-        _check_limits(c_int16, data[i], 'data')
-        data_array[i] = c_int16(data[i])
+        value_pm = round(data[i] * 10)
+        _check_limits(c_int16, value_pm, 'data')
+        data_array[i] = c_int16(value_pm)
     ret = CTS3ErrorCode(_MPuLib.MPC_LoadDisturbanceWaveshape(
         c_uint8(0),
         c_uint8(operation),
