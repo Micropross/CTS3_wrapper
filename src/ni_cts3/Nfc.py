@@ -4099,7 +4099,7 @@ class DisturbanceType(IntEnum):
 def MPC_GenerateDisturbance(operation: DisturbanceOperation,
                             disturbance_type: DisturbanceType,
                             amplitude: float, offset: float, duration: float,
-                            maintain_level: Optional[bool] = False) -> None:
+                            param: Union[None, bool, int] = None) -> None:
     """Programs an RF disturbance
 
     Parameters
@@ -4114,9 +4114,12 @@ def MPC_GenerateDisturbance(operation: DisturbanceOperation,
         Disturbance offset in %
     duration : float
         Disturbance duration in s
-    maintain_level : bool, optional
-        True to maintain final field level (if operation is SIGNAL_CARRIER_MUL
-        and disturbance_type is DISTURBANCE_RAMP)
+    param : bool or int, optional
+        - True to maintain final field level
+          (if disturbance_type is DISTURBANCE_RAMP)
+        - Number of signal periods
+          (if disturbance_type is DISTURBANCE_SQUARE, DISTURBANCE_SINE
+          or DISTURBANCE_SINE2)
     """
     if not isinstance(operation, DisturbanceOperation):
         raise TypeError('operation must be an instance of '
@@ -4130,17 +4133,50 @@ def MPC_GenerateDisturbance(operation: DisturbanceOperation,
     _check_limits(c_int16, offset_pm, 'offset')
     duration_ns = round(duration * 1e9)
     _check_limits(c_uint32, duration_ns, 'duration')
-    ret = CTS3ErrorCode(_MPuLib.MPC_GenerateDisturbance(
-        c_uint8(0),
-        c_uint8(operation),
-        c_uint8(disturbance_type),
-        c_int32(amplitude_pm),
-        c_int16(offset_pm),
-        c_uint32(duration_ns),
-        c_uint32(1) if maintain_level else c_uint32(0),
-        c_uint32(0),
-        c_uint32(0),
-        c_uint32(0)))
+    if disturbance_type == DisturbanceType.DISTURBANCE_RAMP:
+        ret = CTS3ErrorCode(_MPuLib.MPC_GenerateDisturbance(
+            c_uint8(0),
+            c_uint8(operation),
+            c_uint8(disturbance_type),
+            c_int32(amplitude_pm),
+            c_int16(offset_pm),
+            c_uint32(duration_ns),
+            c_uint32(1) if param else c_uint32(0),
+            c_uint32(0),
+            c_uint32(0),
+            c_uint32(0)))
+    elif disturbance_type == DisturbanceType.DISTURBANCE_SQUARE or \
+            disturbance_type == DisturbanceType.DISTURBANCE_SINE or \
+            disturbance_type == DisturbanceType.DISTURBANCE_SINE2:
+        periods_number = c_uint32(1)
+        if param is not None:
+            if not isinstance(param, int):
+                raise TypeError('param must be an instance of int')
+            _check_limits(c_uint32, param, 'param')
+            periods_number = c_uint32(param)
+        ret = CTS3ErrorCode(_MPuLib.MPC_GenerateDisturbance(
+            c_uint8(0),
+            c_uint8(operation),
+            c_uint8(disturbance_type),
+            c_int32(amplitude_pm),
+            c_int16(offset_pm),
+            c_uint32(duration_ns),
+            periods_number,
+            c_uint32(0),
+            c_uint32(0),
+            c_uint32(0)))
+    else:
+        ret = CTS3ErrorCode(_MPuLib.MPC_GenerateDisturbance(
+            c_uint8(0),
+            c_uint8(operation),
+            c_uint8(disturbance_type),
+            c_int32(amplitude_pm),
+            c_int16(offset_pm),
+            c_uint32(duration_ns),
+            c_uint32(0),
+            c_uint32(0),
+            c_uint32(0),
+            c_uint32(0)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
@@ -4194,7 +4230,7 @@ def MPC_SetDisturbanceTrigger(operation: DisturbanceOperation,
     delay : float, optional
         Delay after trigger in s
     count : int, optional
-        Number of times the disturbance should be applied
+        Number of times the trigger condition will generate the disturbance
     """
     if not isinstance(operation, DisturbanceOperation):
         raise TypeError('operation must be an instance of '
@@ -4214,31 +4250,11 @@ def MPC_SetDisturbanceTrigger(operation: DisturbanceOperation,
         raise CTS3Exception(ret)
 
 
-def MPC_ResetDisturbance(operation: Optional[DisturbanceOperation] = None) \
-        -> None:
-    """Resets a previously loaded RF disturbance
-
-    Parameters
-    ----------
-    operation : DisturbanceOperation, optional
-        Disturbance operation to be reset (None to reset all operations)
-    """
-    if operation is None:
-        ret = CTS3ErrorCode(_MPuLib.MPC_ResetDisturbance(
-            c_uint8(0),
-            c_uint8(DisturbanceOperation.SIGNAL_CARRIER_ADD)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
-        ret = CTS3ErrorCode(_MPuLib.MPC_ResetDisturbance(
-            c_uint8(0),
-            c_uint8(DisturbanceOperation.SIGNAL_CARRIER_MUL)))
-    else:
-        if not isinstance(operation, DisturbanceOperation):
-            raise TypeError('operation must be an instance of '
-                            'DisturbanceOperation IntEnum')
-        ret = CTS3ErrorCode(_MPuLib.MPC_ResetDisturbance(
-            c_uint8(0),
-            c_uint8(operation)))
+def MPC_ResetDisturbance() -> None:
+    """Resets previously loaded RF disturbances"""
+    ret = CTS3ErrorCode(_MPuLib.MPC_ResetDisturbance(
+        c_uint8(0),
+        c_uint8(0)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
