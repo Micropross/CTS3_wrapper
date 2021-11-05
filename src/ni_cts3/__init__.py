@@ -334,16 +334,22 @@ def MPOS_OpenResource(resource_id: Union[int, ResourceType, None] = None,
                         'ResourceBlockingMode IntEnum')
     if resource_id is None:
         # Open both resources
-        ret = CTS3ErrorCode(_MPuLib.MPOS_OpenResource(
+        ret_code = _MPuLib.MPOS_OpenResource(
             c_uint32(ResourceType.CTS3_DAQ_RESOURCE_ID),
             c_uint8(0),
-            c_uint32(blocking_mode)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
-        ret = CTS3ErrorCode(_MPuLib.MPOS_OpenResource(
-            c_uint32(ResourceType.CTS3_NFC_RESOURCE_ID),
+            c_uint32(blocking_mode))
+        if ret_code != 27:  # For compatiblity with MP500
+            ret = CTS3ErrorCode(ret_code)
+            if ret != CTS3ErrorCode.RET_OK:
+                raise CTS3Exception(ret)
+        ret_code = _MPuLib.MPOS_OpenResource(
+            c_uint32(MPOS_GetResourceID()),
             c_uint8(0),
-            c_uint32(blocking_mode)))
+            c_uint32(blocking_mode))
+        if ret_code == 3901:  # For compatiblity with MP500
+            ret = CTS3ErrorCode.RET_RESOURCE_ALREADY_OPEN
+        else:
+            ret = CTS3ErrorCode(ret_code)
     else:
         _check_limits(c_uint32, resource_id, 'resource_id')
         ret = CTS3ErrorCode(_MPuLib.MPOS_OpenResource(
@@ -366,7 +372,7 @@ def MPOS_CloseResource(resource_id: Union[int, ResourceType, None] =
     if resource_id is None:
         # Close both resources
         ret = CTS3ErrorCode(_MPuLib.MPOS_CloseResource(
-            c_uint32(ResourceType.CTS3_NFC_RESOURCE_ID),
+            c_uint32(MPOS_GetResourceID()),
             c_uint8(0)))
         if ret != CTS3ErrorCode.RET_OK and \
                 ret != CTS3ErrorCode.RET_RESOURCE_NOT_OPEN:
@@ -374,14 +380,18 @@ def MPOS_CloseResource(resource_id: Union[int, ResourceType, None] =
         ret = CTS3ErrorCode(_MPuLib.MPOS_CloseResource(
             c_uint32(ResourceType.CTS3_DAQ_RESOURCE_ID),
             c_uint8(0)))
+        if ret != CTS3ErrorCode.RET_OK and \
+                ret != CTS3ErrorCode.RET_RESOURCE_INVALID_ID and \
+                ret != CTS3ErrorCode.RET_RESOURCE_NOT_OPEN:
+            raise CTS3Exception(ret)
     else:
         _check_limits(c_uint32, resource_id, 'resource_id')
         ret = CTS3ErrorCode(_MPuLib.MPOS_CloseResource(
             c_uint32(resource_id),
             c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK and \
-            ret != CTS3ErrorCode.RET_RESOURCE_NOT_OPEN:
-        raise CTS3Exception(ret)
+        if ret != CTS3ErrorCode.RET_OK and \
+                ret != CTS3ErrorCode.RET_RESOURCE_NOT_OPEN:
+            raise CTS3Exception(ret)
 
 
 def MPOS_GetResourceID() -> int:

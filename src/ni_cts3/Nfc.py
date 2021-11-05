@@ -5136,6 +5136,13 @@ def BeginDownload(call_back: Callable[[int,
         _callback,
         c_uint32(0),
         c_int(0)))
+    if ret == CTS3ErrorCode.RET_UNKNOWN_COMMAND:
+        # For compatibility with MP500
+        ret = CTS3ErrorCode(_MPuLib.StartDownload(
+            c_uint8(0),
+            _callback,
+            c_uint32(0),
+            c_int(0)))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
@@ -5151,6 +5158,11 @@ def BeginDownloadTo(path: str) -> None:
     ret = CTS3ErrorCode(_MPuLib.BeginDownloadTo(
         c_uint8(0),
         path.encode('ascii')))
+    if ret == CTS3ErrorCode.RET_UNKNOWN_COMMAND:
+        # For compatibility with MP500
+        ret = CTS3ErrorCode(_MPuLib.StartDownloadTo(
+            c_uint8(0),
+            path.encode('ascii')))
     if ret != CTS3ErrorCode.RET_OK:
         raise CTS3Exception(ret)
 
@@ -5178,12 +5190,12 @@ class DefaultParameterType(IntEnum):
     DP_MODULATION_ASK = 3
     DP_FIELD_STRENGTH = 4
     DP_FIELD_RISE_TIME = 5
-    # Default parameters definition for type A
+    # Default parameters definition for Type A
     DP_PAUSE_WIDTH_106 = 6
     DP_PAUSE_WIDTH_212 = 7
     DP_PAUSE_WIDTH_424 = 8
     DP_PAUSE_WIDTH_848 = 9
-    # Default parameters definition for type B card
+    # Default parameters definition for Type B card
     DP_SOF1_106 = 10
     DP_SOF2_106 = 11
     DP_START_BIT_106 = 12
