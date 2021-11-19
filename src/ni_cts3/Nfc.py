@@ -2950,6 +2950,7 @@ class ProtocolParameters(IntEnum):
     CPP_CURRENT_BLOCK_NUMBER = 18
     CPP_ANTI_EMD = 20
     CPP_CONFIG_ANTI_EMD = 21
+    CPP_VERIFY_PICC_14443_TIMING = 24
     CPP_MSK_RFU_TO_ADD_TO_PCB_IBLOCK = 25
     CPP_EXTRA_FWT_ETU = 26
     CPP_SFGT = 27
@@ -3113,6 +3114,8 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
             parameter_type == ProtocolParameters.CPP_RX_PARITY or \
             parameter_type == ProtocolParameters.CPP_ANTI_EMD or \
             parameter_type == ProtocolParameters.CPP_CONFIG_ANTI_EMD or \
+            parameter_type == ProtocolParameters.\
+            CPP_VERIFY_PICC_14443_TIMING or \
             parameter_type == ProtocolParameters.CPP_SFGT or \
             parameter_type == ProtocolParameters.CPP_CE_REVERSE_POLARITY or \
             parameter_type == ProtocolParameters.\
@@ -3284,6 +3287,8 @@ def MPC_GetProtocolParameters(parameter_type: ProtocolParameters) \
             parameter_type == ProtocolParameters.CPP_RX_PARITY or \
             parameter_type == ProtocolParameters.CPP_ANTI_EMD or \
             parameter_type == ProtocolParameters.CPP_CONFIG_ANTI_EMD or \
+            parameter_type == ProtocolParameters.\
+            CPP_VERIFY_PICC_14443_TIMING or \
             parameter_type == ProtocolParameters.CPP_SFGT or \
             parameter_type == ProtocolParameters.CPP_CE_REVERSE_POLARITY or \
             parameter_type == ProtocolParameters.\
