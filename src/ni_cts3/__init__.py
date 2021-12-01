@@ -156,8 +156,6 @@ class _FirmwareLog(Thread):
                 # Read last log entry to ensure link is established
                 if self.log.stdout is not None:
                     self.log.stdout.readline()
-            except Exception as e:
-                raise e
             finally:
                 self.started.set()
             while self.running:
@@ -856,38 +854,29 @@ def GetLastSystemErrorMessageEx() -> str:
 
 def Reboot() -> None:
     """Reboots the device"""
-    _MPuLib.Reboot.restype = c_int32
-    ret = CTS3ErrorCode(_MPuLib.Reboot())
     try:
+        _MPuLib.Reboot.restype = c_int32
+        CTS3Exception._check_error(_MPuLib.Reboot())
+    finally:
         CloseCommunication()
-    except CTS3Exception:
-        pass
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def SoftReboot() -> None:
     """Restarts the device firmware"""
-    _MPuLib.SoftReboot.restype = c_int32
-    ret = CTS3ErrorCode(_MPuLib.SoftReboot())
     try:
+        _MPuLib.SoftReboot.restype = c_int32
+        CTS3Exception._check_error(_MPuLib.SoftReboot())
+    finally:
         CloseCommunication()
-    except CTS3Exception:
-        pass
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def Shutdown() -> None:
     """Powers the device off"""
-    _MPuLib.Shutdown.restype = c_int32
-    ret = CTS3ErrorCode(_MPuLib.Shutdown())
     try:
+        _MPuLib.Shutdown.restype = c_int32
+        CTS3Exception._check_error(_MPuLib.Shutdown())
+    finally:
         CloseCommunication()
-    except CTS3Exception:
-        pass
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
@@ -1473,7 +1462,7 @@ def CloseCommunication() -> None:
     """Closes the communication channel"""
     _log_stop()
     _MPuLib.CloseCommunication.restype = c_int32
-    CTS3Exception._check_error(_MPuLib.CloseCommunication())
+    _MPuLib.CloseCommunication()
 
 
 @unique

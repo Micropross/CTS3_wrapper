@@ -488,7 +488,8 @@ def MPC_GetRFFrequency(resolution=None,  # type: ignore[no-untyped-def]
         Measured frequency in Hz
     """
     if resolution is not None or timeout is not None:
-        warn('deprecated parameters', FutureWarning)
+        warn("deprecated 'resolution' or 'timeout' parameter",
+             FutureWarning, 2)
     freq = c_uint32()
     CTS3Exception._check_error(_MPuLib.MPC_GetRFFrequency(
         c_uint8(0),
@@ -875,7 +876,7 @@ def MPC_GetS11(frequency: float = 0.0) -> Dict[str, Union[float, complex]]:
     real_at_frequency = c_double()
     imaginary_at_frequency = c_double()
     module_at_frequency = c_double()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetS11(
+    ret = _MPuLib.MPC_GetS11(
         c_uint8(0),
         c_uint32(freq_Hz),
         byref(dbm_at_min),
@@ -886,15 +887,14 @@ def MPC_GetS11(frequency: float = 0.0) -> Dict[str, Union[float, complex]]:
         byref(dbm_at_frequency),
         byref(real_at_frequency),
         byref(imaginary_at_frequency),
-        byref(module_at_frequency)))
-    if ret == CTS3ErrorCode.ERR_RESONANCE_FREQUENCY_MEASUREMENT and \
+        byref(module_at_frequency))
+    if ret == CTS3ErrorCode.ERR_RESONANCE_FREQUENCY_MEASUREMENT.value and \
             frequency > 0.0:
         return {'dbm_at_frequency': dbm_at_frequency.value,
                 'impedance_at_frequency': complex(real_at_frequency.value,
                                                   imaginary_at_frequency.value)
                 }
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+    CTS3Exception._check_error(ret)
     if frequency > 0.0:
         return {'dbm_at_min': dbm_at_min.value,
                 'frequency_at_min': frequency_at_min.value,

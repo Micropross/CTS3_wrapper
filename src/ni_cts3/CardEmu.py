@@ -528,7 +528,8 @@ def MPC_IQLoadModulationStart(mode: IqlmMode = IqlmMode.IQLM_MODE_DYNAMIC) \
     mode : IqlmMode, optional
         Regulation mode
     """
-    warn('renamed as MPC_IQLMStart', FutureWarning)
+    warn('MPC_IQLoadModulationStart renamed as MPC_IQLMStart',
+         FutureWarning, 2)
     return MPC_IQLMStart(mode)
 
 
@@ -554,7 +555,9 @@ def MPC_IQLoadModulationSuspendControlLoop(suspend: bool) -> None:
     suspend : bool
         True to suspend the regulation
     """
-    warn('renamed as MPC_IQLMSuspendControlLoop', FutureWarning)
+    warn('MPC_IQLoadModulationSuspendControlLoop renamed as '
+         'MPC_IQLMSuspendControlLoop',
+         FutureWarning, 2)
     return MPC_IQLMSuspendControlLoop(suspend)
 
 
@@ -566,7 +569,8 @@ def MPC_IQLMStop() -> None:
 
 def MPC_IQLoadModulationStop() -> None:
     """Stops IQ load modulation regulation"""
-    warn('renamed as MPC_IQLMStop', FutureWarning)
+    warn('MPC_IQLoadModulationStop renamed as MPC_IQLMStop',
+         FutureWarning, 2)
     return MPC_IQLMStop()
 
 
@@ -601,7 +605,8 @@ def MPC_IQLoadModulationSetHR(amplitude: float, phase: float) -> None:
     phase : float
         Loading effect phase in °
     """
-    warn('renamed as MPC_IQLMSetHR', FutureWarning)
+    warn('MPC_IQLoadModulationSetHR renamed as MPC_IQLMSetHR',
+         FutureWarning, 2)
     return MPC_IQLMSetHR(amplitude, phase)
 
 
@@ -660,7 +665,8 @@ def MPC_IQLoadModulationSidebands(lower_amplitude: float, lower_phase: float,
     offset : float
         Modulation offset in Vpp
     """
-    warn('renamed as MPC_IQLMSidebands', FutureWarning)
+    warn('MPC_IQLoadModulationSidebands renamed as MPC_IQLMSidebands',
+         FutureWarning, 2)
     return MPC_IQLMSidebands(lower_amplitude, lower_phase,
                              upper_amplitude, upper_phase, offset)
 
@@ -712,7 +718,9 @@ def MPC_IQLoadModulationChangeParameters(parameter: IqlmParameter,
     value : float or bool
         Parameter value
     """
-    warn('renamed as MPC_IQLMChangeParameters', FutureWarning)
+    warn('MPC_IQLoadModulationChangeParameters renamed as '
+         'MPC_IQLMChangeParameters',
+         FutureWarning, 2)
     return MPC_IQLMChangeParameters(parameter, value)
 
 
@@ -769,8 +777,9 @@ def MPC_IQLoadModulationPhaseDrift(frequency_drift: float,
     data_rate : DataRate
         Phase drift data rate
     """
-    warn('renamed as MPC_IQLMPhaseDrift', FutureWarning)
-    return MPC_IQLMPhaseDrift(frequency_drift, condition, data_rate)
+    warn('MPC_IQLoadModulationPhaseDrift renamed as MPC_IQLMPhaseDrift',
+         FutureWarning, 2)
+    return MPC_IQLMPhaseDrift(frequency_drift, condition, data_rate,)
 
 
 @unique
@@ -811,7 +820,8 @@ def MPC_IQLoadModulationGetStatus() \
         'status' (IqlmPhaseStatus) : Regulation loop status
         'frequency' (float) : Regulation frequency in Hz
     """
-    warn('renamed as MPC_IQLMGetStatus', FutureWarning)
+    warn('MPC_IQLoadModulationGetStatus renamed as MPC_IQLMGetStatus',
+         FutureWarning, 2)
     return MPC_IQLMGetStatus()
 
 # endregion

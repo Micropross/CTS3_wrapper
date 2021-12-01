@@ -1,6 +1,7 @@
 from . import _MPuLib, GetErrorMessageFromCode, GetMifareErrorMessageFromCode
 from .MPStatus import CTS3ErrorCode, MifareErrorCode
 from ctypes import c_int32, c_uint8, byref
+from warnings import warn
 
 
 class CTS3Exception(Exception):
@@ -33,7 +34,13 @@ class CTS3Exception(Exception):
             CTS3 status
         """
         ret = CTS3ErrorCode(status)
-        if ret != CTS3ErrorCode.RET_OK:
+        if ret == CTS3ErrorCode.ERR_TIME_FDT_MAX or \
+                ret == CTS3ErrorCode.ERR_TIME_FDT_MIN or \
+                ret == CTS3ErrorCode.ERR_TIME_TR1_MAX or \
+                ret == CTS3ErrorCode.ERR_TIME_TR1_MIN or\
+                ret == CTS3ErrorCode.ERR_PHASE_DRIFT:
+            warn(GetErrorMessageFromCode(status), UserWarning, 3)
+        elif ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
 
 

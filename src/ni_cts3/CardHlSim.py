@@ -427,13 +427,12 @@ def MPC_GetRATS() -> Optional[bytes]:
         Received RATS command
     """
     rats = _TypeARATSStruct()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetRATS(
+    ret = _MPuLib.MPC_GetRATS(
         c_uint8(0),
-        byref(rats)))
-    if ret == CTS3ErrorCode.ERRSIM_NO_RATS_PENDING:
+        byref(rats))
+    if ret == CTS3ErrorCode.ERRSIM_NO_RATS_PENDING.value:
         return None
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+    CTS3Exception._check_error(ret)
     return rats.get_bytes()
 
 
@@ -447,14 +446,13 @@ def MPC_GetATTRIB() -> Optional[bytes]:
     """
     attrib = bytes(256)
     length = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetATTRIB(
+    ret = _MPuLib.MPC_GetATTRIB(
         c_uint8(0),
         attrib,
-        byref(length)))
-    if ret == CTS3ErrorCode.ERRSIM_NO_ATTRIB_PENDING:
+        byref(length))
+    if ret == CTS3ErrorCode.ERRSIM_NO_ATTRIB_PENDING.value:
         return None
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+    CTS3Exception._check_error(ret)
     return attrib[:length.value]
 
 
@@ -468,14 +466,13 @@ def MPC_GetSParam() -> Optional[bytes]:
     """
     s_param = bytes(64)
     length = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetSParam(
+    ret = _MPuLib.MPC_GetSParam(
         c_uint8(0),
         s_param,
-        byref(length)))
-    if ret == CTS3ErrorCode.ERRSIM_NO_SPARAM_AVAILABLE:
+        byref(length))
+    if ret == CTS3ErrorCode.ERRSIM_NO_SPARAM_AVAILABLE.value:
         return None
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+    CTS3Exception._check_error(ret)
     return s_param[:length.value]
 
 
@@ -493,15 +490,14 @@ def MPC_GetBufferedRawFrame() -> \
     data = bytes(max_size)
     rx_size = c_uint32()
     rx_type = c_int32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetBufferedRawFrame(
+    ret = _MPuLib.MPC_GetBufferedRawFrame(
         c_uint8(0),
         byref(rx_type),
         data,
-        byref(rx_size)))
-    if ret == CTS3ErrorCode.ERRSIM_NO_FRAME_AVAILABLE:
+        byref(rx_size))
+    if ret == CTS3ErrorCode.ERRSIM_NO_FRAME_AVAILABLE.value:
         return None
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+    CTS3Exception._check_error(ret)
     return {'rx_frame': data[:rx_size.value],
             'rx_type': TechnologyType(rx_type.value)}
 
@@ -538,16 +534,15 @@ def MPS_GetAPDU2() -> Optional[Dict[str, bytes]]:
     data = bytes(0xFFFF)
     length = c_uint32()
     apdu_len = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPS_GetAPDU2(
+    ret = _MPuLib.MPS_GetAPDU2(
         c_uint8(0),
         byref(header),
         data,
         byref(length),
-        byref(apdu_len)))
-    if ret == CTS3ErrorCode.ERRSIM_NO_APDU_AVAILABLE:
+        byref(apdu_len))
+    if ret == CTS3ErrorCode.ERRSIM_NO_APDU_AVAILABLE.value:
         return None
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+    CTS3Exception._check_error(ret)
     return {'header': header.get_bytes()[:apdu_len.value - length.value],
             'data': data[:length.value]}
 
@@ -584,14 +579,13 @@ def MPC_GetNFC_ATR_REQ() -> Optional[bytes]:
     """
     atr_req = _TypeNFC_ATR_REQ()
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetNFC_ATR_REQ(
+    ret = _MPuLib.MPC_GetNFC_ATR_REQ(
         c_uint8(0),
         byref(length),
-        byref(atr_req)))
-    if ret == CTS3ErrorCode.ERRSIM_NO_ATR_REQ_PENDING:
+        byref(atr_req))
+    if ret == CTS3ErrorCode.ERRSIM_NO_ATR_REQ_PENDING.value:
         return None
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+    CTS3Exception._check_error(ret)
     return atr_req.get_bytes(length.value)
 
 
@@ -621,13 +615,12 @@ def MPC_GetNFC_PSL_REQ() -> Optional[bytes]:
         Received PSL_REQ request
     """
     psl_req = _TypeNFC_PSL_REQ()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetNFC_PSL_REQ(
+    ret = _MPuLib.MPC_GetNFC_PSL_REQ(
         c_uint8(0),
-        byref(psl_req)))
-    if ret == CTS3ErrorCode.ERRSIM_NO_PSL_REQ_PENDING:
+        byref(psl_req))
+    if ret == CTS3ErrorCode.ERRSIM_NO_PSL_REQ_PENDING.value:
         return None
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+    CTS3Exception._check_error(ret)
     return psl_req.get_bytes()
 
 
@@ -657,14 +650,13 @@ def MPC_GetNFC_WUP_REQ() -> Optional[bytes]:
     """
     wup_req = _TypeNFC_WUP_REQ()
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetNFC_WUP_REQ(
+    ret = _MPuLib.MPC_GetNFC_WUP_REQ(
         c_uint8(0),
         byref(length),
-        byref(wup_req)))
-    if ret == CTS3ErrorCode.ERRSIM_NO_WUP_REQ_PENDING:
+        byref(wup_req))
+    if ret == CTS3ErrorCode.ERRSIM_NO_WUP_REQ_PENDING.value:
         return None
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+    CTS3Exception._check_error(ret)
     return wup_req.get_bytes()
 
 
@@ -678,14 +670,13 @@ def MPC_GetNFC_DEP_REQ() -> Optional[bytes]:
     """
     dep_req = bytes(0xFFFF)
     length = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetNFC_DEP_REQ(
+    ret = _MPuLib.MPC_GetNFC_DEP_REQ(
         c_uint8(0),
         byref(length),
-        dep_req))
-    if ret == CTS3ErrorCode.ERRSIM_NO_DEP_REQ_AVAILABLE:
+        dep_req)
+    if ret == CTS3ErrorCode.ERRSIM_NO_DEP_REQ_AVAILABLE.value:
         return None
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+    CTS3Exception._check_error(ret)
     return dep_req[:length.value]
 
 
@@ -699,14 +690,13 @@ def MPC_GetNFC_UserData() -> Optional[bytes]:
     """
     data = bytes(0xFFFF)
     length = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetNFC_UserData(
+    ret = _MPuLib.MPC_GetNFC_UserData(
         c_uint8(0),
         byref(length),
-        data))
-    if ret == CTS3ErrorCode.ERRSIM_NO_NFC_DATA_AVAILABLE:
+        data)
+    if ret == CTS3ErrorCode.ERRSIM_NO_NFC_DATA_AVAILABLE.value:
         return None
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+    CTS3Exception._check_error(ret)
     return data[:length.value]
 
 
@@ -741,13 +731,12 @@ def MPC_GetPPSRequest() -> Optional[bytes]:
         Received PPS request
     """
     pps = _TypeAPPSStruct()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetPPSRequest(
+    ret = _MPuLib.MPC_GetPPSRequest(
         c_uint8(0),
-        byref(pps)))
-    if ret == CTS3ErrorCode.ERRSIM_NO_PPS_REQUEST_PENDING:
+        byref(pps))
+    if ret == CTS3ErrorCode.ERRSIM_NO_PPS_REQUEST_PENDING.value:
         return None
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+    CTS3Exception._check_error(ret)
     return pps.get_bytes()
 
 
@@ -1187,16 +1176,15 @@ def MPS_WaitSimEvent(timeout: float) -> Union[None,
     _check_limits(c_uint32, timeout_ms, 'timeout')
     protocol = c_uint32()
     event = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPS_WaitSimEvent(
+    ret = _MPuLib.MPS_WaitSimEvent(
         c_uint8(0),
         c_uint32(timeout_ms),
         c_uint32(0),
         byref(event),
-        byref(protocol)))
-    if ret == CTS3ErrorCode.CRET_SIM_NO_EVENT:
+        byref(protocol))
+    if ret == CTS3ErrorCode.CRET_SIM_NO_EVENT.value:
         return None
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+    CTS3Exception._check_error(ret)
     if protocol.value == _SimulatorProtocol.CL_14443_SIMULATOR:
         return IsoSimulatorEvent(event.value)
     elif protocol.value == _SimulatorProtocol.CL_FELICA_SIMULATOR:

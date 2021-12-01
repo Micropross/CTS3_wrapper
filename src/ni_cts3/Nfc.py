@@ -1,7 +1,7 @@
 from warnings import warn
 from typing import Dict, Union, Optional, List, Tuple, Callable, overload
 from enum import IntEnum, IntFlag, unique
-from . import _MPuLib, _MPuLib_variadic, _check_limits
+from . import _MPuLib, _MPuLib_variadic, _check_limits, _get_connection_string
 from .MPStatus import CTS3ErrorCode
 from .MPException import CTS3Exception, CTS3MifareException
 from ctypes import c_uint8, c_int16, c_uint16, c_int32, c_uint32, c_uint64
@@ -10,11 +10,10 @@ from ctypes import byref, POINTER, CFUNCTYPE, Structure
 from ctypes import Union as C_Union
 
 
-_callback: Optional[Callable[[int,
-                              int,
-                              POINTER(c_uint8),  # type: ignore[misc]
-                              int],
-                             int]] = None
+_callback_dict: Dict[str, Optional[Callable[[int,
+                                   int,
+                                   POINTER(c_uint8),  # type: ignore[misc]
+                                   int], int]]] = {}
 
 
 class EventHeader(Structure):
@@ -1275,7 +1274,8 @@ def MPC_FELICA_Polling(system_code: Union[bytes, int],
     bytes
         PICC answer
     """
-    warn('renamed as MPC_FelicaPolling', FutureWarning)
+    warn('MPC_FELICA_Polling renamed as MPC_FelicaPolling',
+         FutureWarning, 2)
     return MPC_FelicaPolling(system_code, request_code, time_slot)
 
 
@@ -1502,7 +1502,8 @@ def MPC_FELICA_Read_Without_Encryption(idm: bytes, service_codes: List[int],
         'status2' (int): Status flag 2
         'data' (list(bytes)): Read 16-byte blocks
     """
-    warn('renamed as MPC_FelicaCheck', FutureWarning)
+    warn('MPC_FELICA_Read_Without_Encryption renamed as MPC_FelicaCheck',
+         FutureWarning, 2)
     return MPC_FelicaCheck(idm, service_codes, blocks)
 
 
@@ -1620,7 +1621,8 @@ def MPC_FELICA_Write_Without_Encryption(idm: bytes,
         'status1' (int): Status flag 1
         'status2' (int): Status flag 2
     """
-    warn('renamed as MPC_FelicaUpdate', FutureWarning)
+    warn('MPC_FELICA_Write_Without_Encryption renamed as MPC_FelicaUpdate',
+         FutureWarning, 2)
     return MPC_FelicaUpdate(idm, service_codes, blocks, data)
 
 # endregion
@@ -4748,11 +4750,10 @@ def MPS_OpenLog() -> None:
 
 def MPS_CloseLog() -> None:
     """Stops the events acquisition"""
-    ret = CTS3ErrorCode(_MPuLib.MPS_CloseLog(
-        c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK and \
-            ret != CTS3ErrorCode.CRET_NO_DOWNLOAD_RUNNING:
-        raise CTS3Exception(ret)
+    ret = _MPuLib.MPS_CloseLog(
+        c_uint8(0))
+    if ret != CTS3ErrorCode.CRET_NO_DOWNLOAD_RUNNING.value:
+        CTS3Exception._check_error(ret)
 
 
 def MPS_FlushLog() -> None:
@@ -4831,8 +4832,7 @@ def MPS_SetUserEvent(user_event_number: int) -> None:
 def BeginDownload(call_back: Callable[[int,
                                        int,
                                        POINTER(c_uint8),  # type: ignore[misc]
-                                       int],
-                                      int]) -> None:
+                                       int], int]) -> None:
     """Starts protocol analyzer events download
 
     Parameters
@@ -4840,23 +4840,26 @@ def BeginDownload(call_back: Callable[[int,
     call_back : Callable
         Events callback
     """
-    global _callback
+    global _callback_dict
     cmp_func = CFUNCTYPE(c_int32, c_uint32, c_uint32, POINTER(c_uint8), c_int)
-    _callback = cmp_func(call_back)
-    ret = CTS3ErrorCode(_MPuLib.BeginDownload(
-        c_uint8(0),
-        _callback,
-        c_uint32(0),
-        c_int(0)))
-    if ret == CTS3ErrorCode.RET_UNKNOWN_COMMAND:
-        # For compatibility with MP500
-        ret = CTS3ErrorCode(_MPuLib.StartDownload(
+    host = _get_connection_string()
+    if len(host) > 0:
+        _callback_dict[host] = cmp_func(call_back)
+        ret = _MPuLib.BeginDownload(
             c_uint8(0),
-            _callback,
+            _callback_dict[host],
             c_uint32(0),
-            c_int(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+            c_int(0))
+        if ret == CTS3ErrorCode.RET_UNKNOWN_COMMAND.value:
+            # For compatibility with MP500
+            ret = _MPuLib.StartDownload(
+                c_uint8(0),
+                _callback_dict[host],
+                c_uint32(0),
+                c_int(0))
+        CTS3Exception._check_error(ret)
+    else:
+        raise CTS3Exception(CTS3ErrorCode.DLLCOMERROR)
 
 
 def BeginDownloadTo(path: str) -> None:
@@ -4867,27 +4870,27 @@ def BeginDownloadTo(path: str) -> None:
     path : str
         mplog file path
     """
-    ret = CTS3ErrorCode(_MPuLib.BeginDownloadTo(
+    ret = _MPuLib.BeginDownloadTo(
         c_uint8(0),
-        path.encode('ascii')))
-    if ret == CTS3ErrorCode.RET_UNKNOWN_COMMAND:
+        path.encode('ascii'))
+    if ret == CTS3ErrorCode.RET_UNKNOWN_COMMAND.value:
         # For compatibility with MP500
-        ret = CTS3ErrorCode(_MPuLib.StartDownloadTo(
+        ret = _MPuLib.StartDownloadTo(
             c_uint8(0),
-            path.encode('ascii')))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+            path.encode('ascii'))
+    CTS3Exception._check_error(ret)
 
 
 def MPS_EndDownload() -> None:
     """Ends protocol analyzer events download"""
-    global _callback
-    ret = CTS3ErrorCode(_MPuLib.MPS_EndDownload(
-        c_uint8(0)))
-    _callback = None
-    if ret != CTS3ErrorCode.RET_OK and \
-            ret != CTS3ErrorCode.CRET_NO_DOWNLOAD_RUNNING:
-        raise CTS3Exception(ret)
+    global _callback_dict
+    ret = _MPuLib.MPS_EndDownload(
+        c_uint8(0))
+    host = _get_connection_string()
+    if len(host) > 0 and host in _callback_dict:
+        _callback_dict.pop(host)
+    if ret != CTS3ErrorCode.CRET_NO_DOWNLOAD_RUNNING.value:
+        CTS3Exception._check_error(ret)
 
 # endregion
 
