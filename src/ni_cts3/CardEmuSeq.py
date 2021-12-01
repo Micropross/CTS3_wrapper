@@ -6,7 +6,6 @@ from . import _MPuLib, _MPuLib_variadic, _check_limits
 from .Measurement import VoltmeterRange
 from .Nfc import TechnologyType, NfcTrigger, DataRate
 from .Nfc import VicinityDataRate, VicinitySubCarrier
-from .MPStatus import CTS3ErrorCode
 from .MPException import CTS3Exception
 
 
@@ -19,12 +18,10 @@ def MPC_OpenScenarioPcd() -> int:
         Scenario instance identifier
     """
     scenario_id = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_OpenScenarioPcd(
+    CTS3Exception._check_error(_MPuLib.MPC_OpenScenarioPcd(
         c_uint8(0),
         byref(scenario_id),
         c_uint32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return scenario_id.value
 
 
@@ -343,7 +340,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[0], int):
             raise TypeError('param1 must be an instance of int')
         _check_limits(c_uint32, args[0], 'param1')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -353,7 +350,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         if len(args) != 1:
             raise TypeError(f'MPC_AddToScenarioPcd({action.name}) takes '
                             f'exactly three arguments ({len(args) + 2} given)')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -367,7 +364,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('param1 must be an instance of float')
         tempo_us = round(args[0] * 1e6)
         _check_limits(c_uint32, tempo_us, 'param1')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -383,7 +380,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('param1 must be an instance of float')
         delay_ns = round(args[0] * 1e9)
         _check_limits(c_uint32, delay_ns, 'param1')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -395,7 +392,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[0], EmdSubCarrier):
             raise TypeError('param1 must be an instance of '
                             'EmdSubCarrier IntEnum')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -407,7 +404,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[0], VoltmeterRange):
             raise TypeError('param1 must be an instance of '
                             'VoltmeterRange IntEnum')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -420,7 +417,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[0], int):
             raise TypeError('param1 must be an instance of int')
         _check_limits(c_uint32, args[0], 'param1')  # Trigger
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -439,7 +436,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[1], int):
             raise TypeError('param2 must be an instance of int')
         _check_limits(c_uint32, args[1], 'param2')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -452,7 +449,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[0], int):
             raise TypeError('param1 must be an instance of int')
         _check_limits(c_uint32, args[0], 'param1')  # Trigger
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -468,7 +465,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[1], VicinitySubCarrier):
             raise TypeError('param2 must be an instance of '
                             'VicinitySubCarrier IntEnum')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -482,7 +479,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('param1 must be an instance of DataRate IntEnum')
         if not isinstance(args[1], DataRate):
             raise TypeError('param2 must be an instance of DataRate IntEnum')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -499,7 +496,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('param2 must be an instance of float')
         delay_ns = round(args[1] * 1e9)
         _check_limits(c_int32, delay_ns, 'param2')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -512,7 +509,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[1], int):
             raise TypeError('param2 must be an instance of int')
         _check_limits(c_uint32, args[1], 'param2')  # Sak
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -530,7 +527,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('param2 must be an instance of float')
         high_mV = round(args[1] * 1e3)
         _check_limits(c_int32, high_mV, 'param2')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -546,7 +543,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[1], bytes):
             raise TypeError('mask must be an instance of bytes')
         _check_limits(c_uint32, len(args[1]), 'mask')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -565,7 +562,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[1], NfcTrigger):
             raise TypeError('param2 must be an instance of '
                             'NfcTrigger IntEnum')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -585,7 +582,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[2], SequenceError):
             raise TypeError('param3 must be an instance of '
                             'SequenceError IntEnum')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -605,7 +602,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[2], int):
             raise TypeError('param3 must be an instance of int')
         _check_limits(c_uint32, args[2], 'param3')  # FieldDelay
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -620,7 +617,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('pcd_frame must be an instance of str')
         if not isinstance(args[2], str):
             raise TypeError('picc_frame must be an instance of str')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -635,7 +632,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[2], bytes):
             raise TypeError('vcd_frame must be an instance of bytes')
         _check_limits(c_uint32, len(args[2]), 'vcd_frame')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -656,7 +653,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             if not isinstance(args[2], int):
                 raise TypeError('param3 must be an instance of int')
             _check_limits(c_uint32, args[2], 'param3')  # TimeBeforeTload_clk2
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(0x80000000 + action),
@@ -664,7 +661,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                 c_uint32(args[1]),  # TimeBeforeTload_clk
                 c_uint32(args[2])))  # TimeBeforeTload_clk2
         else:
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -688,7 +685,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             emd[i] = _S_EMD(c_uint16(args[1][i].number),
                             c_uint16(args[1][i].type.value))
         emd[len(args[1])] = _S_EMD(c_uint16(0), c_uint16(0))
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -722,7 +719,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                 _check_limits(c_uint32, len(args[5]), 'picc_frame')
                 picc_length = len(args[5])
                 picc_data = args[5]
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -742,7 +739,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             if not isinstance(args[3], bytes):
                 raise TypeError('picc_frame must be an instance of bytes')
             _check_limits(c_uint32, len(args[3]), 'picc_frame')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -767,7 +764,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('pcd_frame must be an instance of bytes')
         _check_limits(c_uint32, len(args[4]), 'pcd_frame')
         if args[5] is None:
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -783,7 +780,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             if args[5] and not isinstance(args[5], bytes):
                 raise TypeError('picc_frame must be an instance of bytes')
             _check_limits(c_uint32, len(args[5]), 'picc_frame')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -804,7 +801,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             if not isinstance(args[1], bytes):
                 raise TypeError('picc_frame must be an instance of bytes')
             _check_limits(c_uint32, len(args[1]), 'picc_frame')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -813,7 +810,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                 args[1],  # pAnswer
                 c_uint32(0)))  # pRfu
         else:
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -833,7 +830,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             if not isinstance(args[4], bytes):
                 raise TypeError('picc_frame must be an instance of bytes')
             if args[2] is None:
-                ret = CTS3ErrorCode(func_pointer(
+                CTS3Exception._check_error(func_pointer(
                     c_uint8(0),
                     c_uint32(scenario_id),
                     c_uint32(action),
@@ -847,7 +844,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                 if not isinstance(args[2], bytes):
                     raise TypeError('pcd_frame must be an instance of bytes')
                 _check_limits(c_uint32, len(args[2]), 'pcd_frame')
-                ret = CTS3ErrorCode(func_pointer(
+                CTS3Exception._check_error(func_pointer(
                     c_uint8(0),
                     c_uint32(scenario_id),
                     c_uint32(action),
@@ -861,7 +858,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             _check_limits(c_uint32, args[1], 'picc_bits_number')
             if not isinstance(args[2], bytes):
                 raise TypeError('picc_frame must be an instance of bytes')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -873,7 +870,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                 args[2]))  # pPiccResponse
         else:
             if args[2] is None:
-                ret = CTS3ErrorCode(func_pointer(
+                CTS3Exception._check_error(func_pointer(
                     c_uint8(0),
                     c_uint32(scenario_id),
                     c_uint32(action),
@@ -887,7 +884,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                 if not isinstance(args[2], bytes):
                     raise TypeError('pcd_frame must be an instance of bytes')
                 _check_limits(c_uint32, len(args[2]), 'pcd_frame')
-                ret = CTS3ErrorCode(func_pointer(
+                CTS3Exception._check_error(func_pointer(
                     c_uint8(0),
                     c_uint32(scenario_id),
                     c_uint32(action),
@@ -916,7 +913,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                 raise TypeError('pcd_frame must be an instance of bytes')
             _check_limits(c_uint32, len(args[8]), 'pcd_frame')
             if args[9] is None:
-                ret = CTS3ErrorCode(func_pointer(
+                CTS3Exception._check_error(func_pointer(
                     c_uint8(0),
                     c_uint32(scenario_id),
                     c_uint32(action),
@@ -936,7 +933,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                 if not isinstance(args[9], bytes):
                     raise TypeError('picc_frame must be an instance of bytes')
                 _check_limits(c_uint32, len(args[9]), 'picc_frame')
-                ret = CTS3ErrorCode(func_pointer(
+                CTS3Exception._check_error(func_pointer(
                     c_uint8(0),
                     c_uint32(scenario_id),
                     c_uint32(action),
@@ -959,7 +956,7 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             if not isinstance(args[7], bytes):
                 raise TypeError('picc_frame must be an instance of bytes')
             _check_limits(c_uint32, len(args[7]), 'picc_frame')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -976,9 +973,6 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                 c_uint32(len(args[7])),  # PiccFrameLength
                 args[7]))  # pPiccResponse
 
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
-
 
 def MPC_ExecuteScenarioPcd(scenario_id: int, timeout: float) -> None:
     """Runs a scenario instance
@@ -993,12 +987,10 @@ def MPC_ExecuteScenarioPcd(scenario_id: int, timeout: float) -> None:
     _check_limits(c_uint32, scenario_id, 'scenario_id')
     timeout_ms = round(timeout * 1e3)
     _check_limits(c_uint32, timeout_ms, 'timeout')
-    ret = CTS3ErrorCode(_MPuLib.MPC_ExecuteScenarioPcd(
+    CTS3Exception._check_error(_MPuLib.MPC_ExecuteScenarioPcd(
         c_uint8(0),
         c_uint32(scenario_id),
         c_uint32(timeout_ms)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_CloseScenarioPcd(scenario_id: int) -> None:
@@ -1010,8 +1002,6 @@ def MPC_CloseScenarioPcd(scenario_id: int) -> None:
         Scenario instance identifier
     """
     _check_limits(c_uint32, scenario_id, 'scenario_id')
-    ret = CTS3ErrorCode(_MPuLib.MPC_CloseScenarioPcd(
+    CTS3Exception._check_error(_MPuLib.MPC_CloseScenarioPcd(
         c_uint8(0),
         c_uint32(scenario_id)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)

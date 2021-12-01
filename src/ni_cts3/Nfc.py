@@ -2,7 +2,7 @@ from warnings import warn
 from typing import Dict, Union, Optional, List, Tuple, Callable, overload
 from enum import IntEnum, IntFlag, unique
 from . import _MPuLib, _MPuLib_variadic, _check_limits
-from .MPStatus import CTS3ErrorCode, MifareErrorCode
+from .MPStatus import CTS3ErrorCode
 from .MPException import CTS3Exception, CTS3MifareException
 from ctypes import c_uint8, c_int16, c_uint16, c_int32, c_uint32, c_uint64
 from ctypes import c_char, c_char_p, c_int, c_float, c_double
@@ -89,7 +89,7 @@ class NfcUnit(IntEnum):
 
 def _unit_autoselect(unit: NfcUnit, values: List[float]) \
         -> Tuple[NfcUnit, List[int]]:
-    """Converts float values to best interger values and unit
+    """Converts float values to best-fitted 32-bit integer values and unit
 
     Parameters
     ----------
@@ -128,12 +128,11 @@ def _unit_autoselect(unit: NfcUnit, values: List[float]) \
 
     if max(value_ns) <= 0xFFFFFFFF:
         return NfcUnit.UNIT_NS, [i for i in value_ns]
-    elif max(value_us) <= 0xFFFFFFFF:
+    if max(value_us) <= 0xFFFFFFFF:
         return NfcUnit.UNIT_US, [i for i in value_us]
-    elif max(value_ms) <= 0xFFFFFFFF:
+    if max(value_ms) <= 0xFFFFFFFF:
         return NfcUnit.UNIT_MS, [i for i in value_ms]
-    else:
-        return NfcUnit.UNIT_S, [i for i in value_s]
+    return NfcUnit.UNIT_S, [i for i in value_s]
 
 # region All Types
 
@@ -161,11 +160,9 @@ def MPC_SelectType(card_type: TechnologyType) -> None:
     if not isinstance(card_type, TechnologyType):
         raise TypeError('card_type must be an instance of '
                         'TechnologyType IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectType(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectType(
         c_uint8(0),
         c_uint8(card_type)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SelectModulationASK(ask: float) -> None:
@@ -178,11 +175,9 @@ def MPC_SelectModulationASK(ask: float) -> None:
     """
     ask_pm = round(ask * 1e1)
     _check_limits(c_uint16, ask_pm, 'ask')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectModulationASKpt(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectModulationASKpt(
         c_uint8(0),
         c_uint16(ask_pm)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -223,7 +218,7 @@ def MPC_SelectFieldStrength(unit: FieldUnit, value: float,
         _check_limits(c_uint32, max_duration_ms, 'max_duration')
 
     if unit == FieldUnit.APPLY_DEFAULT_VALUE:
-        ret = CTS3ErrorCode(_MPuLib.MPC_SelectFieldStrengthEx(
+        CTS3Exception._check_error(_MPuLib.MPC_SelectFieldStrengthEx(
             c_uint8(0),
             c_uint8(unit),
             c_int16(0),
@@ -231,7 +226,7 @@ def MPC_SelectFieldStrength(unit: FieldUnit, value: float,
     elif unit == FieldUnit.UNIT_PER_CENT:
         value_pm = round(value * 1e1)
         _check_limits(c_int16, value_pm, 'value')
-        ret = CTS3ErrorCode(_MPuLib.MPC_SelectFieldStrengthEx(
+        CTS3Exception._check_error(_MPuLib.MPC_SelectFieldStrengthEx(
             c_uint8(0),
             c_uint8(FieldUnit.UNIT_PER_MILLE),
             c_int16(value_pm),
@@ -243,7 +238,7 @@ def MPC_SelectFieldStrength(unit: FieldUnit, value: float,
             unit == FieldUnit.UNIT_DBM_RANGE_33DBM:
         value_pm = round(value)
         _check_limits(c_int16, value_pm, 'value')
-        ret = CTS3ErrorCode(_MPuLib.MPC_SelectFieldStrengthEx(
+        CTS3Exception._check_error(_MPuLib.MPC_SelectFieldStrengthEx(
             c_uint8(0),
             c_uint8(unit),
             c_int16(value_pm),
@@ -251,13 +246,11 @@ def MPC_SelectFieldStrength(unit: FieldUnit, value: float,
     else:  # mV
         value_mV = round(value)
         _check_limits(c_int16, value_mV, 'value')
-        ret = CTS3ErrorCode(_MPuLib.MPC_SelectFieldStrengthEx(
+        CTS3Exception._check_error(_MPuLib.MPC_SelectFieldStrengthEx(
             c_uint8(0),
             c_uint8(unit),
             c_int16(value_mV),
             c_uint32(max_duration_ms)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SetupFindFieldStrength(expected_voltage: float) \
@@ -279,14 +272,12 @@ def MPC_SetupFindFieldStrength(expected_voltage: float) \
     _check_limits(c_uint32, expected_voltage_mV, 'expected_voltage')
     voltage = c_uint32()
     field = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetupFindFieldStrength(
+    CTS3Exception._check_error(_MPuLib.MPC_SetupFindFieldStrength(
         c_uint8(0),
         c_uint32(0),
         c_uint32(expected_voltage_mV),
         byref(field),
         byref(voltage)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'voltage_reached': voltage.value / 1e3,
             'field_per_mille': field.value}
 
@@ -310,11 +301,9 @@ def MPC_SelectCarrierExt(frequency: float) -> None:
     frequency : float
         Carrier frequency in Hz
     """
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectCarrierExt(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectCarrierExt(
         c_uint8(0),
         c_double(frequency)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SelectFallAndRiseTime(falling_time: float,
@@ -332,12 +321,10 @@ def MPC_SelectFallAndRiseTime(falling_time: float,
     _check_limits(c_uint16, falling_time_ns, 'falling_time')
     rising_time_ns = round(rising_time * 1e9)
     _check_limits(c_uint16, rising_time_ns, 'rising_time')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectFallAndRiseTime(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectFallAndRiseTime(
         c_uint8(0),
         c_uint16(falling_time_ns),
         c_uint16(rising_time_ns)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SelectFieldRiseTime(rising_time: float) -> None:
@@ -350,11 +337,9 @@ def MPC_SelectFieldRiseTime(rising_time: float) -> None:
     """
     rising_time_us = round(rising_time * 1e6)
     _check_limits(c_uint32, rising_time_us, 'rising_time')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectFieldRiseTime(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectFieldRiseTime(
         c_uint8(0),
         c_uint32(rising_time_us)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_PiccResetSlow(falling_time: float, low_time: float,
@@ -401,7 +386,7 @@ def MPC_PiccResetSlow(falling_time: float, low_time: float,
         if tx_bits_number is None:
             tx_bits_number = 8 * len(tx_frame)
         _check_limits(c_uint32, tx_bits_number, 'tx_bits_number')
-        ret = CTS3ErrorCode(_MPuLib.MPC_PiccResetSlow(
+        CTS3Exception._check_error(_MPuLib.MPC_PiccResetSlow(
             c_uint8(0),
             c_uint32(falling_time_ms),
             c_uint32(low_time_us),
@@ -412,7 +397,7 @@ def MPC_PiccResetSlow(falling_time: float, low_time: float,
             data,
             byref(rx_bits)))
     else:
-        ret = CTS3ErrorCode(_MPuLib.MPC_PiccResetSlow(
+        CTS3Exception._check_error(_MPuLib.MPC_PiccResetSlow(
             c_uint8(0),
             c_uint32(falling_time_ms),
             c_uint32(low_time_us),
@@ -422,8 +407,6 @@ def MPC_PiccResetSlow(falling_time: float, low_time: float,
             c_uint32(0),
             data,
             byref(rx_bits)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     bytes_number = int(rx_bits.value / 8)
     if rx_bits.value % 8 > 0:
         bytes_number += 1
@@ -439,11 +422,9 @@ def MPC_ForceModulationASK(activate: bool) -> None:
     activate : bool
         True to set the field to its modulated state
     """
-    ret = CTS3ErrorCode(_MPuLib.MPC_ForceModulationASK(
+    CTS3Exception._check_error(_MPuLib.MPC_ForceModulationASK(
         c_uint8(0),
         c_uint8(1) if activate else c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SetFWTETU(fwt_etu: int) -> None:
@@ -455,11 +436,9 @@ def MPC_SetFWTETU(fwt_etu: int) -> None:
         FWT in etu
     """
     _check_limits(c_uint32, fwt_etu, 'fwt_etu')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetFWTETU(
+    CTS3Exception._check_error(_MPuLib.MPC_SetFWTETU(
         c_uint8(0),
         c_uint32(fwt_etu)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SetFWTus(fwt: float) -> None:
@@ -472,11 +451,9 @@ def MPC_SetFWTus(fwt: float) -> None:
     """
     fwt_us = round(fwt * 1e6)
     _check_limits(c_uint32, fwt_us, 'fwt')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetFWTus(
+    CTS3Exception._check_error(_MPuLib.MPC_SetFWTus(
         c_uint8(0),
         c_uint32(fwt_us)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -506,12 +483,10 @@ def MPC_SelectDataRate(tx_data_rate: DataRate,
         raise TypeError('tx_data_rate must be an instance of DataRate IntEnum')
     if not isinstance(rx_data_rate, DataRate):
         raise TypeError('rx_data_rate must be an instance of DataRate IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectDataRate(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectDataRate(
         c_uint8(0),
         c_uint16(tx_data_rate),
         c_uint16(rx_data_rate)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_ExchangeCmd(tx_frame: bytes,
@@ -540,21 +515,19 @@ def MPC_ExchangeCmd(tx_frame: bytes,
         if tx_bits_number is None:
             tx_bits_number = 8 * len(tx_frame)
         _check_limits(c_uint32, tx_bits_number, 'tx_bits_number')
-        ret = CTS3ErrorCode(_MPuLib.MPC_ExchangeCmd(
+        CTS3Exception._check_error(_MPuLib.MPC_ExchangeCmd(
             c_uint8(0),
             tx_frame,
             c_uint32(tx_bits_number),
             data,
             byref(rx_bits)))
     else:
-        ret = CTS3ErrorCode(_MPuLib.MPC_ExchangeCmd(
+        CTS3Exception._check_error(_MPuLib.MPC_ExchangeCmd(
             c_uint8(0),
             None,
             c_uint32(0),
             data,
             byref(rx_bits)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     bytes_number = int(rx_bits.value / 8)
     if rx_bits.value % 8 > 0:
         bytes_number += 1
@@ -564,10 +537,8 @@ def MPC_ExchangeCmd(tx_frame: bytes,
 
 def MPC_DeselectSequence() -> None:
     """Performs a deselect sequence"""
-    ret = CTS3ErrorCode(_MPuLib.MPC_DeselectSequence(
+    CTS3Exception._check_error(_MPuLib.MPC_DeselectSequence(
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SendFrameProtocol(tx_frame: bytes) -> bytes:
@@ -588,14 +559,12 @@ def MPC_SendFrameProtocol(tx_frame: bytes) -> bytes:
     if not isinstance(tx_frame, bytes):
         raise TypeError('tx_frame must be an instance of bytes')
     _check_limits(c_uint32, len(tx_frame), 'tx_frame')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SendFrameProtocol(
+    CTS3Exception._check_error(_MPuLib.MPC_SendFrameProtocol(
         c_uint8(0),
         tx_frame,
         c_uint32(len(tx_frame)),
         data,
         byref(length)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:length.value]
 
 
@@ -657,7 +626,7 @@ def MPC_SendAPDU(header: Union[bytes, int], lc_field: Optional[bytes] = None,
             computed_le = c_uint32(le)
     else:
         computed_le = c_uint32(0x80000000)  # NO_LE
-    ret = CTS3ErrorCode(_MPuLib.MPC_SendAPDU(
+    CTS3Exception._check_error(_MPuLib.MPC_SendAPDU(
         c_uint8(0),
         c_uint32(header_value),
         lc,
@@ -666,8 +635,6 @@ def MPC_SendAPDU(header: Union[bytes, int], lc_field: Optional[bytes] = None,
         data,
         byref(le_len),
         byref(status_word)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'le_field': data[:le_len.value],
             'status_word': status_word.value}
 
@@ -690,14 +657,12 @@ def MPC_SendSBlockParameters(tx_frame: bytes) -> bytes:
     _check_limits(c_uint16, len(tx_frame), 'tx_frame')
     data = bytes(550)
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_SendSBlockParameters(
+    CTS3Exception._check_error(_MPuLib.MPC_SendSBlockParameters(
         c_uint8(0),
         tx_frame,
         c_uint16(len(tx_frame)),
         data,
         byref(length)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:length.value]
 
 
@@ -722,12 +687,10 @@ def MPC_SelectRxGainExt(gain_type: RxGainType, value: int) -> None:
     if not isinstance(gain_type, RxGainType):
         raise TypeError('gain_type must be an instance of RxGainType IntEnum')
     _check_limits(c_uint32, value, 'value')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectRxGainExt(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectRxGainExt(
         c_uint8(0),
         c_uint32(gain_type),
         c_uint32(value)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SetTxDelay(tx_delay: float, unit: NfcUnit) -> None:
@@ -745,21 +708,17 @@ def MPC_SetTxDelay(tx_delay: float, unit: NfcUnit) -> None:
     # Unit auto-selection
     computed_unit, [computed_delay] = _unit_autoselect(unit, [tx_delay])
     _check_limits(c_uint32, computed_delay, 'tx_delay')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetTxDelay(
+    CTS3Exception._check_error(_MPuLib.MPC_SetTxDelay(
         c_uint8(0),
         c_uint16(0) if tx_delay == 0 else c_uint16(1),
         c_uint32(computed_delay),
         c_uint32(computed_unit)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SendOneModulation() -> None:
     """Sends a single modulation"""
-    ret = CTS3ErrorCode(_MPuLib.MPC_SendOneModulation(
+    CTS3Exception._check_error(_MPuLib.MPC_SendOneModulation(
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
@@ -776,11 +735,9 @@ def MPC_SelectPauseWidth(pause: float) -> None:
     """
     pause_ns = round(pause * 1e9)
     _check_limits(c_uint16, pause_ns, 'pause')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectPauseWidth(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectPauseWidth(
         c_uint8(0),
         c_uint16(pause_ns)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_RequestA() -> bytes:
@@ -792,11 +749,9 @@ def MPC_RequestA() -> bytes:
         Answer to REQA
     """
     atqa = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_RequestA(
+    CTS3Exception._check_error(_MPuLib.MPC_RequestA(
         c_uint8(0),
         byref(atqa)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return bytes([atqa.value & 0xFF, atqa.value >> 8])
 
 
@@ -809,11 +764,9 @@ def MPC_WakeUpA() -> bytes:
         Answer to WUPA
     """
     atqa = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_WakeUpA(
+    CTS3Exception._check_error(_MPuLib.MPC_WakeUpA(
         c_uint8(0),
         byref(atqa)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return bytes([atqa.value & 0xFF, atqa.value >> 8])
 
 
@@ -829,13 +782,11 @@ def MPC_AnticollA() -> Dict[str, bytes]:
     uid = bytes(12)
     sak = c_uint8()
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_AnticollA(
+    CTS3Exception._check_error(_MPuLib.MPC_AnticollA(
         c_uint8(0),
         uid,
         byref(length),
         byref(sak)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'uid': uid[:length.value], 'sak': bytes([sak.value])}
 
 
@@ -856,13 +807,11 @@ def MPC_SelectCardA(uid: bytes) -> bytes:
         raise TypeError('uid must be an instance of bytes')
     _check_limits(c_uint16, len(uid), 'uid')
     sak = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectCardA(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectCardA(
         c_uint8(0),
         uid,
         c_uint16(len(uid)),
         byref(sak)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return bytes([sak.value])
 
 
@@ -875,20 +824,16 @@ def MPC_GetPosColl() -> int:
         Collision position
     """
     position = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetPosColl(
+    CTS3Exception._check_error(_MPuLib.MPC_GetPosColl(
         c_uint8(0),
         byref(position)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return position.value
 
 
 def MPC_HaltA() -> None:
     """Sends a Type A HLT command"""
-    ret = CTS3ErrorCode(_MPuLib.MPC_HaltA(
+    CTS3Exception._check_error(_MPuLib.MPC_HaltA(
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SendRATS(rats: Optional[bytes] = None) -> bytes:
@@ -910,19 +855,17 @@ def MPC_SendRATS(rats: Optional[bytes] = None) -> bytes:
         if not isinstance(rats, bytes):
             raise TypeError('snr must be an instance of bytes')
         _check_limits(c_uint16, len(rats), 'rats')
-        ret = CTS3ErrorCode(_MPuLib.MPC_SendRATSFree(
+        CTS3Exception._check_error(_MPuLib.MPC_SendRATSFree(
             c_uint8(0),
             rats,
             c_uint16(len(rats)),
             data,
             byref(length)))
     else:
-        ret = CTS3ErrorCode(_MPuLib.MPC_SendRATS(
+        CTS3Exception._check_error(_MPuLib.MPC_SendRATS(
             c_uint8(0),
             data,
             byref(length)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:length.value]
 
 
@@ -966,13 +909,11 @@ def MPC_SendPPS(cid: Union[int, bytes], dri: Union[int, bytes],
         dsi_value = dsi
     else:
         raise TypeError('dsi must be an instance of int or 1 byte')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SendPPS(
+    CTS3Exception._check_error(_MPuLib.MPC_SendPPS(
         c_uint8(0),
         c_uint8(cid_value),
         c_uint8(dri_value),
         c_uint8(dsi_value)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_ExchangeCmdRawA(tx_frame: bytes,
@@ -1000,14 +941,12 @@ def MPC_ExchangeCmdRawA(tx_frame: bytes,
     _check_limits(c_uint32, tx_bits_number, 'tx_bits_number')
     data = bytes(1000)
     rx_bits = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_ExchangeCmdRawA(
+    CTS3Exception._check_error(_MPuLib.MPC_ExchangeCmdRawA(
         c_uint8(0),
         tx_frame,
         c_uint32(tx_bits_number),
         data,
         byref(rx_bits)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     bytes_number = int(rx_bits.value / 8)
     if rx_bits.value % 8 > 0:
         bytes_number += 1
@@ -1048,7 +987,7 @@ def MPC_PowerOnGetFrameFromSpecialTagA(unit: FieldUnit, value: int,
     if unit == FieldUnit.UNIT_PER_CENT:
         value_pm = round(value * 1e1)
         _check_limits(c_int16, value_pm, 'value')
-        ret = CTS3ErrorCode(_MPuLib.MPC_PowerOnGetFrameFromSpecialTagA(
+        CTS3Exception._check_error(_MPuLib.MPC_PowerOnGetFrameFromSpecialTagA(
             c_uint8(0),
             c_uint8(FieldUnit.UNIT_PER_MILLE),
             c_int16(value_pm),
@@ -1063,7 +1002,7 @@ def MPC_PowerOnGetFrameFromSpecialTagA(unit: FieldUnit, value: int,
             unit == FieldUnit.UNIT_DBM_RANGE_33DBM:
         value_pm = round(value)
         _check_limits(c_int16, value_pm, 'value')
-        ret = CTS3ErrorCode(_MPuLib.MPC_PowerOnGetFrameFromSpecialTagA(
+        CTS3Exception._check_error(_MPuLib.MPC_PowerOnGetFrameFromSpecialTagA(
             c_uint8(0),
             c_uint8(unit),
             c_int16(value_pm),
@@ -1074,7 +1013,7 @@ def MPC_PowerOnGetFrameFromSpecialTagA(unit: FieldUnit, value: int,
     else:  # mV
         value_mV = round(value)
         _check_limits(c_int16, value_mV, 'value')
-        ret = CTS3ErrorCode(_MPuLib.MPC_PowerOnGetFrameFromSpecialTagA(
+        CTS3Exception._check_error(_MPuLib.MPC_PowerOnGetFrameFromSpecialTagA(
             c_uint8(0),
             c_uint8(unit),
             c_int16(value_mV),
@@ -1083,8 +1022,6 @@ def MPC_PowerOnGetFrameFromSpecialTagA(unit: FieldUnit, value: int,
             data,
             byref(rx_bits)))
 
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     bytes_number = int(rx_bits.value / 8)
     if rx_bits.value % 8 > 0:
         bytes_number += 1
@@ -1112,13 +1049,11 @@ def MPC_RequestB(slots_number: int) -> bytes:
     _check_limits(c_uint8, slots_number, 'slots_number')
     data = bytes(550)
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_RequestB(
+    CTS3Exception._check_error(_MPuLib.MPC_RequestB(
         c_uint8(0),
         c_uint8(slots_number),
         data,
         byref(length)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:length.value]
 
 
@@ -1140,14 +1075,12 @@ def MPC_RequestBFree(reqb: bytes) -> bytes:
     _check_limits(c_uint16, len(reqb), 'reqb')
     data = bytes(550)
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_RequestBFree(
+    CTS3Exception._check_error(_MPuLib.MPC_RequestBFree(
         c_uint8(0),
         reqb,
         c_uint16(len(reqb)),
         data,
         byref(length)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:length.value]
 
 
@@ -1167,13 +1100,11 @@ def MPC_WakeUpB(slots_number: int) -> bytes:
     _check_limits(c_uint8, slots_number, 'slots_number')
     data = bytes(550)
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_WakeUpB(
+    CTS3Exception._check_error(_MPuLib.MPC_WakeUpB(
         c_uint8(0),
         c_uint8(slots_number),
         data,
         byref(length)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:length.value]
 
 
@@ -1193,13 +1124,11 @@ def MPC_SlotMarkerCmd(slot_number: int) -> bytes:
     _check_limits(c_uint8, slot_number, 'slot_number')
     data = bytes(550)
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_SlotMarkerCmd(
+    CTS3Exception._check_error(_MPuLib.MPC_SlotMarkerCmd(
         c_uint8(0),
         c_uint8(slot_number),
         data,
         byref(length)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:length.value]
 
 
@@ -1213,11 +1142,9 @@ def MPC_HaltB(identifier: bytes) -> None:
     """
     if not isinstance(identifier, bytes) or len(identifier) != 4:
         raise TypeError('identifier must be an instance of 4 bytes')
-    ret = CTS3ErrorCode(_MPuLib.MPC_HaltB(
+    CTS3Exception._check_error(_MPuLib.MPC_HaltB(
         c_uint8(0),
         identifier))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SendATTRIB(attrib: bytes) -> bytes:
@@ -1238,14 +1165,12 @@ def MPC_SendATTRIB(attrib: bytes) -> bytes:
     _check_limits(c_uint16, len(attrib), 'attrib')
     data = bytes(512)
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_SendATTRIB(
+    CTS3Exception._check_error(_MPuLib.MPC_SendATTRIB(
         c_uint8(0),
         attrib,
         c_uint16(len(attrib)),
         data,
         byref(length)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:length.value]
 
 
@@ -1261,12 +1186,10 @@ def MPC_SelectETUWidthTX(etu_logic_0: int, etu_logic_1: int) -> None:
     """
     _check_limits(c_uint16, etu_logic_0, 'etu_logic_0')
     _check_limits(c_uint16, etu_logic_1, 'etu_logic_1')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectETUWidthTX(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectETUWidthTX(
         c_uint8(0),
         c_uint16(etu_logic_0),
         c_uint16(etu_logic_1)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
@@ -1323,15 +1246,13 @@ def MPC_FelicaPolling(system_code: Union[bytes, int],
 
     data = bytes(550)
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_FelicaPolling(
+    CTS3Exception._check_error(_MPuLib.MPC_FelicaPolling(
         c_uint8(0),
         c_uint16(sc_value),
         c_uint8(rc_value),
         c_uint8(ts_value),
         data,
         byref(length)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:length.value]
 
 
@@ -1539,7 +1460,7 @@ def MPC_FelicaCheck(idm,  # type: ignore[no-untyped-def]
     length = c_uint8()
     status1 = c_uint8()
     status2 = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_FelicaCheck(
+    CTS3Exception._check_error(_MPuLib.MPC_FelicaCheck(
         c_uint8(0),
         idm,
         c_uint8(len(service_codes)),
@@ -1550,8 +1471,6 @@ def MPC_FelicaCheck(idm,  # type: ignore[no-untyped-def]
         byref(status2),
         byref(length),
         data))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     data_list = []
     for i in range(0, length.value * 16, 16):
         data_list.append(data[i:i+16])
@@ -1660,7 +1579,7 @@ def MPC_FelicaUpdate(idm,  # type: ignore[no-untyped-def]
     idm2 = bytes(8)
     status1 = c_uint8()
     status2 = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_FelicaUpdate(
+    CTS3Exception._check_error(_MPuLib.MPC_FelicaUpdate(
         c_uint8(0),
         idm,
         c_uint8(len(service_codes)),
@@ -1671,8 +1590,6 @@ def MPC_FelicaUpdate(idm,  # type: ignore[no-untyped-def]
         idm2,
         byref(status1),
         byref(status2)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'idm2': idm2,
             'status1': status1.value,
             'status2': status2.value}
@@ -1726,12 +1643,10 @@ def MPC_MFULReadPage(page_number: int) -> bytes:
     """
     _check_limits(c_uint32, page_number, 'page_number')
     data = bytes(16)
-    ret = CTS3ErrorCode(_MPuLib.MPC_MFULReadPage(
+    CTS3Exception._check_error(_MPuLib.MPC_MFULReadPage(
         c_uint8(0),
         c_uint32(page_number),
         data))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data
 
 
@@ -1748,12 +1663,10 @@ def MPC_MFULWritePage(page_number: int, page_content: bytes) -> None:
     _check_limits(c_uint32, page_number, 'page_number')
     if not isinstance(page_content, bytes) or len(page_content) != 4:
         raise TypeError('page_content must be an instance of 4 bytes')
-    ret = CTS3ErrorCode(_MPuLib.MPC_MFULWritePage(
+    CTS3Exception._check_error(_MPuLib.MPC_MFULWritePage(
         c_uint8(0),
         c_uint32(page_number),
         page_content))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_MFULCAuthenticate(key1: bytes, key2: bytes) -> None:
@@ -1770,13 +1683,11 @@ def MPC_MFULCAuthenticate(key1: bytes, key2: bytes) -> None:
         raise TypeError('key1 must be an instance of 8 bytes')
     if not isinstance(key2, bytes) or len(key2) != 8:
         raise TypeError('key2 must be an instance of 8 bytes')
-    ret = CTS3ErrorCode(_MPuLib.MPC_MFULCAuthenticate(
+    CTS3Exception._check_error(_MPuLib.MPC_MFULCAuthenticate(
         c_uint8(0),
         key1,
         key2,
         c_uint32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_MFULCWriteKey(key1: bytes, key2: bytes) -> None:
@@ -1793,40 +1704,14 @@ def MPC_MFULCWriteKey(key1: bytes, key2: bytes) -> None:
         raise TypeError('key1 must be an instance of 8 bytes')
     if not isinstance(key2, bytes) or len(key2) != 8:
         raise TypeError('key2 must be an instance of 8 bytes')
-    ret = CTS3ErrorCode(_MPuLib.MPC_MFULCWriteKey(
+    CTS3Exception._check_error(_MPuLib.MPC_MFULCWriteKey(
         c_uint8(0),
         key1,
         key2))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
 # region MIFARE
-
-
-def _check_mifare_code(status: int) -> None:
-    """Checks MIFARE status
-
-    Parameters
-    ----------
-    status: int
-        MIFARE status
-    """
-    if status == 0:
-        error = c_int32()
-        _MPuLib.CLP_GetLastErrorNumber.restype = c_int32
-        ret = _MPuLib.CLP_GetLastErrorNumber(
-            c_uint8(0),
-            byref(error))
-        if ret == 0:
-            if _MPuLib.GetLastComError() == 0:
-                raise CTS3Exception(CTS3ErrorCode.RET_RESOURCE_NOT_OPEN)
-            else:
-                raise CTS3Exception(CTS3ErrorCode.DLLCOMERROR)
-        raise CTS3MifareException(MifareErrorCode(error.value))
-    if status > 1:
-        raise CTS3Exception(CTS3ErrorCode(status))
 
 
 @unique
@@ -1849,26 +1734,24 @@ def CLP_Authentication_2(key_mode: MifareKey, sector: int,
     key_address : int
         Key block address
     """
-    _MPuLib.CLP_Authentication_2.restype = c_int32
     if not isinstance(key_mode, MifareKey):
         raise TypeError('key_mode must be an instance of '
                         'MifareKey IntEnum')
     _check_limits(c_uint8, sector, 'sector')
     _check_limits(c_uint8, key_address, 'key_address')
-    ret = _MPuLib.CLP_Authentication_2(
+    _MPuLib.CLP_Authentication_2.restype = c_int32
+    CTS3MifareException._check_error(_MPuLib.CLP_Authentication_2(
         c_uint8(0),
         c_uint8(key_mode),
         c_uint8(sector),
-        c_uint8(key_address))
-    _check_mifare_code(ret)
+        c_uint8(key_address)))
 
 
 def CLP_Halt() -> None:
     """Halts MIFARE chip"""
     _MPuLib.CLP_Halt.restype = c_int32
-    ret = _MPuLib.CLP_Halt(
-        c_uint8(0))
-    _check_mifare_code(ret)
+    CTS3MifareException._check_error(_MPuLib.CLP_Halt(
+        c_uint8(0)))
 
 
 def CLP_Read(block_number: int) -> bytes:
@@ -1885,13 +1768,12 @@ def CLP_Read(block_number: int) -> bytes:
         16-byte block content
     """
     _check_limits(c_uint8, block_number, 'block_number')
-    _MPuLib.CLP_Read.restype = c_int32
     data = bytes(16)
-    ret = _MPuLib.CLP_Read(
+    _MPuLib.CLP_Read.restype = c_int32
+    CTS3MifareException._check_error(_MPuLib.CLP_Read(
         c_uint8(0),
         c_uint8(block_number),
-        data)
-    _check_mifare_code(ret)
+        data))
     return data
 
 
@@ -1909,11 +1791,10 @@ def CLP_Write(block_number: int, data: bytes) -> None:
     if not isinstance(data, bytes) or len(data) != 16:
         raise TypeError('data must be an instance of 16 bytes')
     _MPuLib.CLP_Write.restype = c_int32
-    ret = _MPuLib.CLP_Write(
+    CTS3MifareException._check_error(_MPuLib.CLP_Write(
         c_uint8(0),
         c_uint8(block_number),
-        data)
-    _check_mifare_code(ret)
+        data))
 
 
 def CLP_Increment(block_number: int, value: int) -> None:
@@ -1929,11 +1810,10 @@ def CLP_Increment(block_number: int, value: int) -> None:
     _check_limits(c_uint8, block_number, 'block_number')
     _check_limits(c_uint32, value, 'value')
     _MPuLib.CLP_Increment.restype = c_int32
-    ret = _MPuLib.CLP_Increment(
+    CTS3MifareException._check_error(_MPuLib.CLP_Increment(
         c_uint8(0),
         c_uint8(block_number),
-        c_uint32(value))
-    _check_mifare_code(ret)
+        c_uint32(value)))
 
 
 def CLP_Decrement(block_number: int, value: int) -> None:
@@ -1949,11 +1829,10 @@ def CLP_Decrement(block_number: int, value: int) -> None:
     _check_limits(c_uint8, block_number, 'block_number')
     _check_limits(c_uint32, value, 'value')
     _MPuLib.CLP_Decrement.restype = c_int32
-    ret = _MPuLib.CLP_Decrement(
+    CTS3MifareException._check_error(_MPuLib.CLP_Decrement(
         c_uint8(0),
         c_uint8(block_number),
-        c_uint32(value))
-    _check_mifare_code(ret)
+        c_uint32(value)))
 
 
 def CLP_Decrement_Transfer(block_number: int, value: int) -> None:
@@ -1969,11 +1848,10 @@ def CLP_Decrement_Transfer(block_number: int, value: int) -> None:
     _check_limits(c_uint8, block_number, 'block_number')
     _check_limits(c_uint32, value, 'value')
     _MPuLib.CLP_Decrement_Transfer.restype = c_int32
-    ret = _MPuLib.CLP_Decrement_Transfer(
+    CTS3MifareException._check_error(_MPuLib.CLP_Decrement_Transfer(
         c_uint8(0),
         c_uint8(block_number),
-        c_uint32(value))
-    _check_mifare_code(ret)
+        c_uint32(value)))
 
 
 def CLP_Restore(block_number: int) -> None:
@@ -1986,10 +1864,9 @@ def CLP_Restore(block_number: int) -> None:
     """
     _check_limits(c_uint8, block_number, 'block_number')
     _MPuLib.CLP_Restore.restype = c_int32
-    ret = _MPuLib.CLP_Restore(
+    CTS3MifareException._check_error(_MPuLib.CLP_Restore(
         c_uint8(0),
-        c_uint8(block_number))
-    _check_mifare_code(ret)
+        c_uint8(block_number)))
 
 
 def CLP_Transfer(block_number: int) -> None:
@@ -2002,10 +1879,9 @@ def CLP_Transfer(block_number: int) -> None:
     """
     _check_limits(c_uint8, block_number, 'block_number')
     _MPuLib.CLP_Transfer.restype = c_int32
-    ret = _MPuLib.CLP_Transfer(
+    CTS3MifareException._check_error(_MPuLib.CLP_Transfer(
         c_uint8(0),
-        c_uint8(block_number))
-    _check_mifare_code(ret)
+        c_uint8(block_number)))
 
 
 def CLP_LoadKey(key_mode: MifareKey, sector: int, key: bytes) -> None:
@@ -2026,14 +1902,13 @@ def CLP_LoadKey(key_mode: MifareKey, sector: int, key: bytes) -> None:
     _check_limits(c_uint8, sector, 'sector')
     if not isinstance(key, bytes):
         raise TypeError('key must be an instance of 6 bytes')
-    _MPuLib.CLP_LoadKey.restype = c_int32
     str_key = ''.join(map('{:02X}'.format, key[:6]))
-    ret = _MPuLib.CLP_LoadKey(
+    _MPuLib.CLP_LoadKey.restype = c_int32
+    CTS3MifareException._check_error(_MPuLib.CLP_LoadKey(
         c_uint8(0),
         c_uint8(key_mode),
         c_uint8(sector),
-        str_key.encode('ascii'))
-    _check_mifare_code(ret)
+        str_key.encode('ascii')))
 
 
 def CLP_Authentication_3(key_mode: MifareKey, sector: int,
@@ -2058,15 +1933,14 @@ def CLP_Authentication_3(key_mode: MifareKey, sector: int,
     _check_limits(c_uint8, key_address, 'key_address')
     if not isinstance(snr, bytes):
         raise TypeError('snr must be an instance of bytes')
-    _MPuLib.CLP_Authentication_3.restype = c_int32
     snr32 = c_uint32(snr[0] << 24 | snr[1] << 16 | snr[2] << 8 | snr[3])
-    ret = _MPuLib.CLP_Authentication_3(
+    _MPuLib.CLP_Authentication_3.restype = c_int32
+    CTS3MifareException._check_error(_MPuLib.CLP_Authentication_3(
         c_uint8(0),
         c_uint8(key_mode),
         c_uint8(sector),
         c_uint8(key_address),
-        snr32)
-    _check_mifare_code(ret)
+        snr32))
 
 
 @unique
@@ -2086,14 +1960,13 @@ def CLP_PersonalizeUIDUsage(option: MifareUidOption) -> None:
     option : MifareUidOption
         UID usage option
     """
-    _MPuLib.CLP_PersonalizeUIDUsage.restype = c_int32
     if not isinstance(option, MifareUidOption):
         raise TypeError('option must be an instance of '
                         'MifareUidOption IntEnum')
-    ret = _MPuLib.CLP_PersonalizeUIDUsage(
+    _MPuLib.CLP_PersonalizeUIDUsage.restype = c_int32
+    CTS3MifareException._check_error(_MPuLib.CLP_PersonalizeUIDUsage(
         c_uint8(0),
-        c_uint8(option))
-    _check_mifare_code(ret)
+        c_uint8(option)))
 
 # endregion
 
@@ -2147,13 +2020,11 @@ def MPC_SelectVCCommunication(mode: VicinityCodingMode,
     if not isinstance(sub_carrier, VicinitySubCarrier):
         raise TypeError('sub_carrier must be an instance of '
                         'VicinitySubCarrier IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectVCCommunication(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectVCCommunication(
         c_uint8(0),
         c_uint8(mode),
         c_uint8(data_rate),
         c_uint8(sub_carrier)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SelectPauseWidthVicinity(pause: float) -> None:
@@ -2166,11 +2037,9 @@ def MPC_SelectPauseWidthVicinity(pause: float) -> None:
     """
     pause_ns = round(pause * 1e9)
     _check_limits(c_uint16, pause_ns, 'pause')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectPauseWidthVicinity(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectPauseWidthVicinity(
         c_uint8(0),
         c_uint16(pause_ns)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_ExchangeCmdVicinity(tx_frame: bytes) -> bytes:
@@ -2191,14 +2060,12 @@ def MPC_ExchangeCmdVicinity(tx_frame: bytes) -> bytes:
     _check_limits(c_uint16, len(tx_frame), 'tx_frame')
     data = bytes(5000)
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_ExchangeCmdVicinity(
+    CTS3Exception._check_error(_MPuLib.MPC_ExchangeCmdVicinity(
         c_uint8(0),
         tx_frame,
         c_uint16(len(tx_frame)),
         data,
         byref(length)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:length.value]
 
 
@@ -2238,7 +2105,7 @@ def MPC_VcInventory(slot: int, afi: Optional[Union[bytes, int]],
     uid = bytes(8)
     response_flag = c_uint8()
     if afi is None:
-        ret = CTS3ErrorCode(_MPuLib.MPC_VcInventory(
+        CTS3Exception._check_error(_MPuLib.MPC_VcInventory(
             c_uint8(0),
             c_uint8(slot),
             c_uint8(0),
@@ -2248,7 +2115,7 @@ def MPC_VcInventory(slot: int, afi: Optional[Union[bytes, int]],
             uid,
             byref(response_flag)))
     else:
-        ret = CTS3ErrorCode(_MPuLib.MPC_VcInventory(
+        CTS3Exception._check_error(_MPuLib.MPC_VcInventory(
             c_uint8(0),
             c_uint8(slot),
             c_uint8(1),
@@ -2257,17 +2124,13 @@ def MPC_VcInventory(slot: int, afi: Optional[Union[bytes, int]],
             mask,
             uid,
             byref(response_flag)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'uid': uid, 'response_flag': response_flag.value}
 
 
 def MPC_VcStayQuiet() -> None:
     """Sends a Stay Quiet request"""
-    ret = CTS3ErrorCode(_MPuLib.MPC_VcStayQuiet(
+    CTS3Exception._check_error(_MPuLib.MPC_VcStayQuiet(
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_VcSelect() -> int:
@@ -2279,11 +2142,9 @@ def MPC_VcSelect() -> int:
         Response flag
     """
     response_flag = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_VcSelect(
+    CTS3Exception._check_error(_MPuLib.MPC_VcSelect(
         c_uint8(0),
         byref(response_flag)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return response_flag.value
 
 
@@ -2348,7 +2209,7 @@ def MPC_VcGenericCommand(timeout: float, flag: VicinityFlag,
     response_flag = c_uint8()
     data = bytes(256)
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_VcGenericCommand(
+    CTS3Exception._check_error(_MPuLib.MPC_VcGenericCommand(
         c_uint8(0),
         c_uint16(timeout_ms),
         c_uint8(flag),
@@ -2359,8 +2220,6 @@ def MPC_VcGenericCommand(timeout: float, flag: VicinityFlag,
         data,
         byref(length),
         byref(response_flag)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'data': data[:length.value],
             'response_flag': response_flag.value}
 
@@ -2391,7 +2250,7 @@ def MPC_VcReadSingleBlock(flag: VicinityFlag, block_number: int) \
     security = c_uint8()
     data = bytes(256)
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_VcReadSingleBlock(
+    CTS3Exception._check_error(_MPuLib.MPC_VcReadSingleBlock(
         c_uint8(0),
         c_uint8(flag),
         c_uint8(block_number),
@@ -2399,8 +2258,6 @@ def MPC_VcReadSingleBlock(flag: VicinityFlag, block_number: int) \
         data,
         byref(length),
         byref(response_flag)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'block_security_status': security.value,
             'data': data[:length.value],
             'response_flag': response_flag.value}
@@ -2432,7 +2289,7 @@ def MPC_VcExtendedReadSingleBlock(flag: VicinityFlag, block_number: int) \
     security = c_uint8()
     data = bytes(256)
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_VcExtendedReadSingleBlock(
+    CTS3Exception._check_error(_MPuLib.MPC_VcExtendedReadSingleBlock(
         c_uint8(0),
         c_uint8(flag),
         c_uint16(block_number),
@@ -2440,8 +2297,6 @@ def MPC_VcExtendedReadSingleBlock(flag: VicinityFlag, block_number: int) \
         data,
         byref(length),
         byref(response_flag)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'block_security_status': security.value,
             'data': data[:length.value],
             'response_flag': response_flag.value}
@@ -2478,7 +2333,7 @@ def MPC_VcReadMultipleBlock(flag: VicinityFlag, first_block_number: int,
     data = bytes(256)
     block_num = c_uint16()
     block_size = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_VcReadMultipleBlock(
+    CTS3Exception._check_error(_MPuLib.MPC_VcReadMultipleBlock(
         c_uint8(0),
         c_uint8(flag),
         c_uint8(first_block_number),
@@ -2488,8 +2343,6 @@ def MPC_VcReadMultipleBlock(flag: VicinityFlag, first_block_number: int,
         byref(block_num),
         byref(block_size),
         byref(response_flag)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'block_security_status': list(security),
             'data': data[:block_num.value * block_size.value],
             'response_flag': response_flag.value}
@@ -2527,7 +2380,7 @@ def MPC_VcExtendedReadMultipleBlock(flag: VicinityFlag,
     data = bytes(256)
     block_num = c_uint16()
     block_size = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_VcExtendedReadMultipleBlock(
+    CTS3Exception._check_error(_MPuLib.MPC_VcExtendedReadMultipleBlock(
         c_uint8(0),
         c_uint8(flag),
         c_uint16(first_block_number),
@@ -2537,8 +2390,6 @@ def MPC_VcExtendedReadMultipleBlock(flag: VicinityFlag,
         byref(block_num),
         byref(block_size),
         byref(response_flag)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'block_security_status': list(security),
             'data': data[:block_num.value * block_size.value],
             'response_flag': response_flag.value}
@@ -2569,15 +2420,13 @@ def MPC_VcWriteSingleBlock(flag: VicinityFlag, block_number: int,
         raise TypeError('data must be an instance of bytes')
     _check_limits(c_uint16, len(data), 'data')
     response_flag = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_VcWriteSingleBlock(
+    CTS3Exception._check_error(_MPuLib.MPC_VcWriteSingleBlock(
         c_uint8(0),
         c_uint8(flag),
         c_uint16(len(data)),
         c_uint8(block_number),
         data,
         byref(response_flag)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return response_flag.value
 
 
@@ -2606,15 +2455,13 @@ def MPC_VcWriteExtendedSingleBlock(flag: VicinityFlag, block_number: int,
         raise TypeError('data must be an instance of bytes')
     _check_limits(c_uint16, len(data), 'data')
     response_flag = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_VcWriteExtendedSingleBlock(
+    CTS3Exception._check_error(_MPuLib.MPC_VcWriteExtendedSingleBlock(
         c_uint8(0),
         c_uint8(flag),
         c_uint16(len(data)),
         c_uint16(block_number),
         data,
         byref(response_flag)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return response_flag.value
 
 
@@ -2637,13 +2484,11 @@ def MPC_VcLockSingleBlock(flag: VicinityFlag, block_number: int) -> int:
         raise TypeError('flag must be an instance of VicinityFlag IntFlag')
     _check_limits(c_uint8, block_number, 'block_number')
     response_flag = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_VcLockSingleBlock(
+    CTS3Exception._check_error(_MPuLib.MPC_VcLockSingleBlock(
         c_uint8(0),
         c_uint8(flag),
         c_uint8(block_number),
         byref(response_flag)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return response_flag.value
 
 
@@ -2667,13 +2512,11 @@ def MPC_VcExtendedLockSingleBlock(flag: VicinityFlag, block_number: int) \
         raise TypeError('flag must be an instance of VicinityFlag IntFlag')
     _check_limits(c_uint16, block_number, 'block_number')
     response_flag = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_VcExtendedLockSingleBlock(
+    CTS3Exception._check_error(_MPuLib.MPC_VcExtendedLockSingleBlock(
         c_uint8(0),
         c_uint8(flag),
         c_uint16(block_number),
         byref(response_flag)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return response_flag.value
 
 
@@ -2693,12 +2536,10 @@ def MPC_VcResetToReady(flag: VicinityFlag) -> int:
     if not isinstance(flag, VicinityFlag):
         raise TypeError('flag must be an instance of VicinityFlag IntFlag')
     response_flag = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_VcResetToReady(
+    CTS3Exception._check_error(_MPuLib.MPC_VcResetToReady(
         c_uint8(0),
         c_uint8(flag),
         byref(response_flag)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return response_flag.value
 
 
@@ -2711,11 +2552,9 @@ def MPC_VcGetLastErrorCode() -> int:
         Last error code field
     """
     err_code = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_VcGetLastErrorCode(
+    CTS3Exception._check_error(_MPuLib.MPC_VcGetLastErrorCode(
         c_uint8(0),
         byref(err_code)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return err_code.value
 
 
@@ -2729,12 +2568,10 @@ def MPC_VcGetLastAnswer() -> bytes:
     """
     data = bytes(10000)
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_VcGetLastAnswer(
+    CTS3Exception._check_error(_MPuLib.MPC_VcGetLastAnswer(
         c_uint8(0),
         data,
         byref(length)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:length.value]
 
 
@@ -2776,14 +2613,12 @@ def MPC_SetModulationShape(pattern_index: int,
         _check_limits(c_uint16, rising_edge_per_mille[i],
                       'rising_edge_per_mille')
         rising[i] = c_uint16(rising_edge_per_mille[i])
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetModulationShape(
+    CTS3Exception._check_error(_MPuLib.MPC_SetModulationShape(
         c_uint8(pattern_index),
         c_uint32(len(falling_edge_per_mille)),
         falling,
         c_uint32(len(rising_edge_per_mille)),
         rising))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -2808,11 +2643,9 @@ def MPC_SelectModulationGeneration(pattern_index: int,
     if not isinstance(mode, ModulationShapeMode):
         raise TypeError('mode must be an instance of '
                         'ModulationShapeMode IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectModulationGeneration(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectModulationGeneration(
         c_uint8(pattern_index),
         c_uint8(mode)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -2843,13 +2676,11 @@ def MPC_SelectModulationPattern(item_type: ModulationItem, pattern_index: int,
     _check_limits(c_uint8, pattern_index, 'pattern_index')
     _check_limits(c_uint32, start, 'start')
     _check_limits(c_uint32, duration, 'duration')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectModulationPattern(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectModulationPattern(
         c_uint8(item_type),
         c_uint8(pattern_index),
         c_uint32(start),
         c_uint32(duration)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_FastFallingEdge(delay_fc: float, duration_fc: float) -> None:
@@ -2867,12 +2698,10 @@ def MPC_FastFallingEdge(delay_fc: float, duration_fc: float) -> None:
     _check_limits(c_uint32, delay_10fc, 'delay_fc')
     duration_10fc = round(duration_fc * 1e1)
     _check_limits(c_uint32, duration_10fc, 'duration_fc')
-    ret = CTS3ErrorCode(_MPuLib.MPC_FastFallingEdge(
+    CTS3Exception._check_error(_MPuLib.MPC_FastFallingEdge(
         c_uint8(0),
         c_uint32(delay_10fc),
         c_uint32(duration_10fc)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
@@ -2889,11 +2718,9 @@ def MPC_SetDeafTime(deaf_time: float) -> None:
     """
     deaf_time_us = round(deaf_time * 1e6)
     _check_limits(c_uint32, deaf_time_us, 'deaf_time')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetDeafTime(
+    CTS3Exception._check_error(_MPuLib.MPC_SetDeafTime(
         c_uint8(0),
         c_uint32(deaf_time_us)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
@@ -2909,22 +2736,18 @@ def MPS_AntiTearing(clock_count: int) -> None:
         Carrier periods before RF field off
     """
     _check_limits(c_uint32, clock_count, 'clock_count')
-    ret = CTS3ErrorCode(_MPuLib.MPS_AntiTearing(
+    CTS3Exception._check_error(_MPuLib.MPS_AntiTearing(
         c_uint8(0),
         c_uint32(clock_count)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_AntiTearing2() -> None:
     """Deactivates RF field during communication upon
     rising edge on SYNC connector"""
-    ret = CTS3ErrorCode(_MPuLib.MPS_AntiTearing2(
+    CTS3Exception._check_error(_MPuLib.MPS_AntiTearing2(
         c_uint8(0),
         c_uint32(2),
         c_uint32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
@@ -3004,7 +2827,7 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
         if not isinstance(parameter_value, int):
             raise TypeError('parameter_type must be an instance of int')
         int_val = c_uint32(parameter_value)
-        ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(int_val),
@@ -3026,7 +2849,7 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
                                 ' 4-int list')
             _check_limits(c_uint16, item, 'parameter_value')
             list_u16_val[i] = c_uint16(item)
-        ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             list_u16_val,
@@ -3043,7 +2866,7 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
                                 ' 2-int list')
             _check_limits(c_uint16, item, 'parameter_value')
             list_u16_val[i] = c_uint16(item)
-        ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             list_u16_val,
@@ -3060,7 +2883,7 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
                                 ' 14-int list')
             _check_limits(c_uint16, item, 'parameter_value')
             list_u16_val[i] = c_uint16(item)
-        ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             list_u16_val,
@@ -3077,7 +2900,7 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
                                 ' 8-int list')
             _check_limits(c_uint16, item, 'parameter_value')
             list_u16_val[i] = c_uint16(item)
-        ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             list_u16_val,
@@ -3099,7 +2922,7 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
                 _check_limits(c_uint32, round(item * 1e6), 'parameter_value')
                 int_item = round(item * 1e6)
             list_u32_val[i] = c_uint32(int_item)
-        ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             list_u32_val,
@@ -3135,7 +2958,7 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
             parameter_type == ProtocolParameters.CPP_ASK_FILTER_106 or \
             parameter_type == ProtocolParameters.CPP_NFC_MAX_LR_VALUE_NFCFORUM:
         int_val = c_uint32(1) if parameter_value else c_uint32(0)
-        ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(int_val),
@@ -3152,7 +2975,7 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
         value_ms = round(parameter_value * 1e3)
         _check_limits(c_uint32, value_ms, 'parameter_value')
         int_val = c_uint32(value_ms)
-        ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(int_val),
@@ -3166,7 +2989,7 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
         value_us = round(parameter_value * 1e6)
         _check_limits(c_uint32, value_us, 'parameter_value')
         int_val = c_uint32(value_us)
-        ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(int_val),
@@ -3178,14 +3001,11 @@ def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
             raise TypeError('parameter_value must be an instance of int')
         _check_limits(c_uint32, parameter_value, 'parameter_value')
         int_val = c_uint32(parameter_value)
-        ret = CTS3ErrorCode(_MPuLib.MPC_ChangeProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(int_val),
             c_uint32(4)))
-
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_GetProtocolParameters(parameter_type: ProtocolParameters) \
@@ -3209,14 +3029,12 @@ def MPC_GetProtocolParameters(parameter_type: ProtocolParameters) \
     if parameter_type == ProtocolParameters.CPP_CURRENT_CID or \
             parameter_type == ProtocolParameters.CPP_CURRENT_NAD:
         int8_val = c_uint8()
-        ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(int8_val),
             c_uint32(1),
             byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return int8_val.value
 
     # List parameter
@@ -3224,58 +3042,48 @@ def MPC_GetProtocolParameters(parameter_type: ProtocolParameters) \
             parameter_type == ProtocolParameters.CPP_FRAME_FELICA_OPTION or \
             parameter_type == ProtocolParameters.CPP_FRAME_TYPE_F_CLK:
         list_u16_val = (4 * c_uint16)()
-        ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             list_u16_val,
             c_uint32(8),
             byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return [list_u16_val[i] for i in range(4)]
     elif parameter_type == ProtocolParameters.CPP_CHANGE_BIT_BOUNDARY:
         list_u16_val = (2 * c_uint16)()
-        ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             list_u16_val,
             c_uint32(4),
             byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return [list_u16_val[i] for i in range(2)]
     elif parameter_type == ProtocolParameters.CPP_FRAME_TYPE_B_CLK:
         list_u16_val = (14 * c_uint16)()
-        ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             list_u16_val,
             c_uint32(28),
             byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return [list_u16_val[i] for i in range(14)]
     elif parameter_type == ProtocolParameters.CPP_FRAME_WITH_ERROR_CORRECTION:
         list_u16_val = (8 * c_uint16)()
-        ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             list_u16_val,
             c_uint32(16),
             byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return [list_u16_val[i] for i in range(8)]
     elif parameter_type == ProtocolParameters.CPP_POWER_ON_TRIGGER_IN:
         list_u32_val = (3 * c_uint32)()
-        ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             list_u32_val,
             c_uint32(12),
             byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return [float(list_u32_val[i]) / 1e6 for i in range(3)]
 
     # Boolean parameter
@@ -3306,14 +3114,12 @@ def MPC_GetProtocolParameters(parameter_type: ProtocolParameters) \
             parameter_type == ProtocolParameters.CPP_RF_FIELD_LOCK_ANTENNA or \
             parameter_type == ProtocolParameters.CPP_NFC_ACTIVE_FDT_MODE:
         int_val = c_uint32()
-        ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(int_val),
             c_uint32(1),
             byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return int_val.value > 0
 
     # ms/mdB parameter
@@ -3322,40 +3128,34 @@ def MPC_GetProtocolParameters(parameter_type: ProtocolParameters) \
             parameter_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE or \
             parameter_type == ProtocolParameters.CPP_PLI_STEP:
         int_val = c_uint32()
-        ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(int_val),
             c_uint32(1),
             byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return float(int_val.value) / 1e3
 
     # µs parameter
     elif parameter_type == ProtocolParameters.CPP_FRAME_FDT:
         int_val = c_uint32()
-        ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(int_val),
             c_uint32(1),
             byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return float(int_val.value) / 1e6
 
     # c_uint32 parameter
     else:
         int_val = c_uint32()
-        ret = CTS3ErrorCode(_MPuLib.MPC_GetProtocolParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(int_val),
             c_uint32(1),
             byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return int_val.value
 
 # endregion
@@ -3382,11 +3182,9 @@ def MPC_SelectRxChannel(channel: RxChannel) -> None:
     """
     if not isinstance(channel, RxChannel):
         raise TypeError('channel must be an instance of RxChannel IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectRxChannel(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectRxChannel(
         c_uint8(0),
         c_uint16(channel)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_GetRxGainExternalRx() -> int:
@@ -3398,11 +3196,9 @@ def MPC_GetRxGainExternalRx() -> int:
         Reception gain (raw value)
     """
     gain = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetRxGainExternalRx(
+    CTS3Exception._check_error(_MPuLib.MPC_GetRxGainExternalRx(
         c_uint8(0),
         byref(gain)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return gain.value
 
 
@@ -3415,11 +3211,9 @@ def MPC_ForceGainExtRx(gain: int) -> None:
         Reception gain (raw value)
     """
     _check_limits(c_uint32, gain, 'gain')
-    ret = CTS3ErrorCode(_MPuLib.MPC_ForceGainExtRx(
+    CTS3Exception._check_error(_MPuLib.MPC_ForceGainExtRx(
         c_uint8(0),
         c_uint32(gain)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
@@ -3535,14 +3329,12 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
         _check_limits(c_uint32, delay_us, 'delay')
         data = bytes(550)
         length16 = c_uint16()
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(test_type),
             c_uint32(delay_us),  # Delay_us
             data,  # pRxFrame
             byref(length16)))  # pRxBits
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return data[:length16.value]
 
     elif test_type == TestType.TEST_REQB_REQA or \
@@ -3557,13 +3349,11 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
         delay_us = round(args[0] * 1e6)
         _check_limits(c_uint32, delay_us, 'delay')
         atqa = c_uint16()
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(test_type),
             c_uint32(delay_us),  # Delay_us
             byref(atqa)))  # pAtqa
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return bytes([atqa.value & 0xFF, atqa.value >> 8])
 
     elif test_type == TestType.TEST_FDT_PICCPCD_A or \
@@ -3588,7 +3378,7 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
         _check_limits(c_uint32, delay_ns, 'delay')
         data = bytes(0xFFFF)
         rx_bits = c_uint32()
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(test_type),
             c_uint32(args[0]),  # TxBits1
@@ -3598,8 +3388,6 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             c_uint32(delay_ns),  # Delay_ns
             data,  # pRxFrame
             byref(rx_bits)))  # pRxBits
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         bytes_number = int(rx_bits.value / 8)
         if rx_bits.value % 8 > 0:
             bytes_number += 1
@@ -3624,7 +3412,7 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
         _check_limits(c_uint32, time2_us, 'time_2')
         data = bytes(0xFFFF)
         length = c_uint32()
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(test_type),
             c_uint32(reset_us),  # ResetTime_us
@@ -3632,8 +3420,6 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             c_uint32(time2_us),  # Time2_us
             data,  # pRxFrame
             byref(length)))  # pRxBytes
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return data[:length.value]
 
     elif test_type == TestType.TEST_POWER_OFF_ON_CMD:
@@ -3655,7 +3441,7 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             raise TypeError('tx_frame must be an instance of bytes')
         data = bytes(0xFFFF)
         rx_bits = c_uint32()
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(test_type),
             c_uint32(time1_us),  # Time1_us
@@ -3664,8 +3450,6 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             args[3],  # pTxFrame
             data,  # pRxFrame
             byref(rx_bits)))  # pRxBits
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         bytes_number = int(rx_bits.value / 8)
         if rx_bits.value % 8 > 0:
             bytes_number += 1
@@ -3690,7 +3474,7 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             raise TypeError('tx_frame must be an instance of bytes')
         data = bytes(0xFFFF)
         rx_bits = c_uint32()
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(test_type),
             c_uint32(args[0]),  # TrigNum
@@ -3699,8 +3483,6 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             args[3],  # pTxFrame
             data,  # pRxFrame
             byref(rx_bits)))  # pRxBits
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         bytes_number = int(rx_bits.value / 8)
         if rx_bits.value % 8 > 0:
             bytes_number += 1
@@ -3729,7 +3511,7 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             raise TypeError('tx_frame must be an instance of bytes')
         data = bytes(0xFFFF)
         rx_bits = c_uint32()
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(test_type),
             c_uint32(args[0]),  # Ask_pm
@@ -3739,8 +3521,6 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             args[4],  # pTxFrame
             data,  # pRxFrame
             byref(rx_bits)))  # pRxBits
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         bytes_number = int(rx_bits.value / 8)
         if rx_bits.value % 8 > 0:
             bytes_number += 1
@@ -3773,7 +3553,7 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             raise TypeError('tx_frame must be an instance of bytes')
         data = bytes(0xFFFF)
         rx_bits = c_uint32()
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(test_type),
             c_uint32(args[0]),  # Ask_pm
@@ -3784,8 +3564,6 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             args[5],  # pTxFrame
             data,  # pRxFrame
             byref(rx_bits)))  # pRxBits
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         bytes_number = int(rx_bits.value / 8)
         if rx_bits.value % 8 > 0:
             bytes_number += 1
@@ -3828,7 +3606,7 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             raise TypeError('timeout must be an instance of float')
         timeout_ms = round(args[9] * 1e3)
         _check_limits(c_uint32, timeout_ms, 'timeout')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(test_type),
             c_uint32(reset_time_us),  # ResetTiming_us
@@ -3841,8 +3619,6 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             c_uint32(args[7]),  # TxBits2
             args[8],  # pTxFrame2
             c_uint32(timeout_ms)))  # Timeout_ms
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return None
     else:
         raise TypeError('test_type must be an instance of TestType IntEnum')
@@ -3887,14 +3663,12 @@ def MPC_PiccResponseTime2(param: ResponseTimeAction, unit: NfcUnit) \
         raise TypeError('unit must be an instance of NfcUnit IntEnum')
     measurement = (c_uint32 * 10)()
     nb_meas = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_PiccResponseTime2(
+    CTS3Exception._check_error(_MPuLib.MPC_PiccResponseTime2(
         c_uint8(0),
         c_uint32(param),
         c_uint32(unit),
         measurement,
         byref(nb_meas)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     if nb_meas.value:
         return [i for i in measurement][:nb_meas.value]
     else:
@@ -3930,12 +3704,10 @@ def MPC_GetTrigger(trigger: InputTriggerNum) -> bool:
         raise TypeError('trigger must be an instance of '
                         'InputTriggerNum IntEnum')
     status = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetTrigger(
+    CTS3Exception._check_error(_MPuLib.MPC_GetTrigger(
         c_uint8(0),
         c_uint8(trigger),
         byref(status)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return status.value > 0
 
 
@@ -4067,7 +3839,7 @@ def MPC_TriggerConfig(trigger_id: NfcTriggerId, config: NfcTrigger,
     else:
         val = 0
 
-    ret = CTS3ErrorCode(_MPuLib.MPC_TriggerConfig(
+    CTS3Exception._check_error(_MPuLib.MPC_TriggerConfig(
         c_uint8(0),
         c_uint32(trigger_id),
         c_uint32(config),
@@ -4075,8 +3847,6 @@ def MPC_TriggerConfig(trigger_id: NfcTriggerId, config: NfcTrigger,
         c_uint32(0) if frame is None else c_uint32(len(frame)),
         frame,
         mask))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 # endregion
@@ -4139,7 +3909,7 @@ def MPC_GenerateDisturbance(operation: DisturbanceOperation,
     duration_ns = round(duration * 1e9)
     _check_limits(c_uint32, duration_ns, 'duration')
     if disturbance_type == DisturbanceType.DISTURBANCE_RAMP:
-        ret = CTS3ErrorCode(_MPuLib.MPC_GenerateDisturbance(
+        CTS3Exception._check_error(_MPuLib.MPC_GenerateDisturbance(
             c_uint8(0),
             c_uint8(operation),
             c_uint8(disturbance_type),
@@ -4159,7 +3929,7 @@ def MPC_GenerateDisturbance(operation: DisturbanceOperation,
                 raise TypeError('param must be an instance of int')
             _check_limits(c_uint32, param, 'param')
             periods_number = c_uint32(param)
-        ret = CTS3ErrorCode(_MPuLib.MPC_GenerateDisturbance(
+        CTS3Exception._check_error(_MPuLib.MPC_GenerateDisturbance(
             c_uint8(0),
             c_uint8(operation),
             c_uint8(disturbance_type),
@@ -4171,7 +3941,7 @@ def MPC_GenerateDisturbance(operation: DisturbanceOperation,
             c_uint32(0),
             c_uint32(0)))
     else:
-        ret = CTS3ErrorCode(_MPuLib.MPC_GenerateDisturbance(
+        CTS3Exception._check_error(_MPuLib.MPC_GenerateDisturbance(
             c_uint8(0),
             c_uint8(operation),
             c_uint8(disturbance_type),
@@ -4182,8 +3952,6 @@ def MPC_GenerateDisturbance(operation: DisturbanceOperation,
             c_uint32(0),
             c_uint32(0),
             c_uint32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_LoadDisturbanceWaveshape(operation: DisturbanceOperation,
@@ -4211,14 +3979,12 @@ def MPC_LoadDisturbanceWaveshape(operation: DisturbanceOperation,
         value_pm = round(data[i] * 10)
         _check_limits(c_int16, value_pm, 'data')
         data_array[i] = c_int16(value_pm)
-    ret = CTS3ErrorCode(_MPuLib.MPC_LoadDisturbanceWaveshape(
+    CTS3Exception._check_error(_MPuLib.MPC_LoadDisturbanceWaveshape(
         c_uint8(0),
         c_uint8(operation),
         c_uint32(timebase),
         c_uint32(len(data)),
         data_array))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SetDisturbanceTrigger(operation: DisturbanceOperation,
@@ -4245,23 +4011,19 @@ def MPC_SetDisturbanceTrigger(operation: DisturbanceOperation,
     delay_ns = round(delay * 1e9)
     _check_limits(c_uint32, delay_ns, 'delay')
     _check_limits(c_uint16, count, 'repeat_count')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetDisturbanceTrigger(
+    CTS3Exception._check_error(_MPuLib.MPC_SetDisturbanceTrigger(
         c_uint8(0),
         c_uint8(operation),
         c_uint32(trigger),
         c_uint32(delay_ns),
         c_uint16(count)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_ResetDisturbance() -> None:
     """Resets previously loaded RF disturbances"""
-    ret = CTS3ErrorCode(_MPuLib.MPC_ResetDisturbance(
+    CTS3Exception._check_error(_MPuLib.MPC_ResetDisturbance(
         c_uint8(0),
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
@@ -4341,15 +4103,13 @@ def MPC_ComputeCrc(card_type: TechnologyType, frame: bytes) -> bytes:
     _check_limits(c_uint32, len(frame), 'frame')
     crc1 = c_uint8()
     crc2 = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_ComputeCrc(
+    CTS3Exception._check_error(_MPuLib.MPC_ComputeCrc(
         c_uint8(0),
         c_int32(card_type),
         frame,
         c_uint32(len(frame)),
         byref(crc1),
         byref(crc2)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return bytes([crc1.value, crc2.value])
 
 
@@ -4406,11 +4166,9 @@ def MPC_SelectInputImpedanceAnalogIn(impedance: InputImpedance) -> None:
     if not isinstance(impedance, InputImpedance):
         raise TypeError('impedance must be an instance of '
                         'InputImpedance IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectInputImpedanceAnalogIn(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectInputImpedanceAnalogIn(
         c_uint8(0),
         c_uint32(impedance)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -4436,12 +4194,10 @@ def MPS_Counter(command: CounterCommand) -> int:
         raise TypeError('command must be an instance of '
                         'CounterCommand IntEnum')
     counter = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPS_Counter(
+    CTS3Exception._check_error(_MPuLib.MPS_Counter(
         c_uint8(0),
         c_uint32(command),
         byref(counter)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return counter.value
 
 # endregion
@@ -4482,13 +4238,11 @@ def MPC_NfcConfiguration(mode: NfcMode, initiator: bool,
         raise TypeError('mode must be an instance of NfcMode IntEnum')
     if not isinstance(data_rate, NfcDataRate):
         raise TypeError('data_rate must be an instance of NfcDataRate IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_NfcConfiguration(
+    CTS3Exception._check_error(_MPuLib.MPC_NfcConfiguration(
         c_uint8(0),
         c_uint8(mode),
         c_uint8(1) if initiator else c_uint8(2),
         c_uint16(data_rate)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SensReq() -> bytes:
@@ -4500,11 +4254,9 @@ def MPC_SensReq() -> bytes:
         Response to SENS_REQ
     """
     sens_res = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_SensReq(
+    CTS3Exception._check_error(_MPuLib.MPC_SensReq(
         c_uint8(0),
         byref(sens_res)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return bytes([sens_res.value & 0xFF, sens_res.value >> 8])
 
 
@@ -4517,11 +4269,9 @@ def MPC_AllReq() -> bytes:
         Response to ALL_REQ
     """
     sens_res = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_AllReq(
+    CTS3Exception._check_error(_MPuLib.MPC_AllReq(
         c_uint8(0),
         byref(sens_res)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return bytes([sens_res.value & 0xFF, sens_res.value >> 8])
 
 
@@ -4537,13 +4287,11 @@ def MPC_Sdd() -> Dict[str, bytes]:
     data = bytes(12)
     length = c_uint16()
     sel_res = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_Sdd(
+    CTS3Exception._check_error(_MPuLib.MPC_Sdd(
         c_uint8(0),
         data,
         byref(length),
         byref(sel_res)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'sel_res': bytes([sel_res.value]), 'nfc_id1': data[:length.value]}
 
 
@@ -4564,22 +4312,18 @@ def MPC_SelReq(nfc_id1: bytes) -> bytes:
         raise TypeError('nfc_id1 must be an instance of bytes')
     _check_limits(c_uint16, len(nfc_id1), 'nfc_id1')
     sel_res = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelReq(
+    CTS3Exception._check_error(_MPuLib.MPC_SelReq(
         c_uint8(0),
         nfc_id1,
         c_uint16(len(nfc_id1)),
         byref(sel_res)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return bytes([sel_res.value])
 
 
 def MPC_SlpReq() -> None:
     """Sends a SLP_REQ command"""
-    ret = CTS3ErrorCode(_MPuLib.MPC_SlpReq(
+    CTS3Exception._check_error(_MPuLib.MPC_SlpReq(
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_PollReq(system_code: Union[bytes, int], rc: Union[bytes, int],
@@ -4633,7 +4377,7 @@ def MPC_PollReq(system_code: Union[bytes, int], rc: Union[bytes, int],
     nfc_id2 = bytes(8)
     pad = bytes(8)
     rd = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_PollReq(
+    CTS3Exception._check_error(_MPuLib.MPC_PollReq(
         c_uint8(0),
         c_uint16(sc_value),
         c_uint8(rc_value),
@@ -4641,8 +4385,6 @@ def MPC_PollReq(system_code: Union[bytes, int], rc: Union[bytes, int],
         nfc_id2,
         pad,
         byref(rd)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'nfc_id2': nfc_id2, 'pad': pad, 'rd': bytes([rd.value >> 8,
                                                          rd.value & 0xFF])}
 
@@ -4665,14 +4407,12 @@ def MPC_AtrReq(atr_req: bytes) -> bytes:
     _check_limits(c_uint16, len(atr_req), 'atr_req')
     data = bytes(512)
     length = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_AtrReq(
+    CTS3Exception._check_error(_MPuLib.MPC_AtrReq(
         c_uint8(0),
         atr_req,
         c_uint16(len(atr_req)),
         data,
         byref(length)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:length.value]
 
 
@@ -4704,12 +4444,10 @@ def MPC_PslReq(brs: Union[bytes, int], fsl: Union[bytes, int]) -> None:
         fsl_value = fsl
     else:
         raise TypeError('fsl must be an instance of int or 1 byte')
-    ret = CTS3ErrorCode(_MPuLib.MPC_PslReq(
+    CTS3Exception._check_error(_MPuLib.MPC_PslReq(
         c_uint8(0),
         c_uint8(brs_value),
         c_uint8(fsl_value)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_WakeUpReq(nfc_id3: bytes) -> None:
@@ -4722,27 +4460,21 @@ def MPC_WakeUpReq(nfc_id3: bytes) -> None:
     """
     if not isinstance(nfc_id3, bytes) or len(nfc_id3) != 10:
         raise TypeError('nfc_id3 must be an instance of 10 bytes')
-    ret = CTS3ErrorCode(_MPuLib.MPC_WakeUpReq(
+    CTS3Exception._check_error(_MPuLib.MPC_WakeUpReq(
         c_uint8(0),
         nfc_id3))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_DeselectReq() -> None:
     """Sends a DEP_REQ command"""
-    ret = CTS3ErrorCode(_MPuLib.MPC_DeselectReq(
+    CTS3Exception._check_error(_MPuLib.MPC_DeselectReq(
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_ReleaseReq() -> None:
     """Sends a RLS_REQ command"""
-    ret = CTS3ErrorCode(_MPuLib.MPC_ReleaseReq(
+    CTS3Exception._check_error(_MPuLib.MPC_ReleaseReq(
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_ExchangeNFCData(command: bytes) -> bytes:
@@ -4764,21 +4496,19 @@ def MPC_ExchangeNFCData(command: bytes) -> bytes:
     data = bytes(0xFFFF)
     length = c_uint16()
     if command:
-        ret = CTS3ErrorCode(_MPuLib.MPC_ExchangeNFCData(
+        CTS3Exception._check_error(_MPuLib.MPC_ExchangeNFCData(
             c_uint8(0),
             command,
             c_uint16(len(command)),
             data,
             byref(length)))
     else:
-        ret = CTS3ErrorCode(_MPuLib.MPC_ExchangeNFCData(
+        CTS3Exception._check_error(_MPuLib.MPC_ExchangeNFCData(
             c_uint8(0),
             None,
             c_uint16(0),
             data,
             byref(length)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:length.value]
 
 
@@ -4800,14 +4530,12 @@ def MPC_DepReq(command: bytes) -> bytes:
     _check_limits(c_uint32, len(command), 'command')
     data = bytes(0xFFFF)
     length = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_DepReq(
+    CTS3Exception._check_error(_MPuLib.MPC_DepReq(
         c_uint8(0),
         command,
         c_uint32(len(command)),
         data,
         byref(length)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:length.value]
 
 
@@ -4828,14 +4556,12 @@ def MPC_NfcWaitAndGetFrameAsTarget(timeout: float) -> bytes:
     _check_limits(c_uint32, timeout_ms, 'timeout')
     data = bytes(0xFFFF)
     length = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_NfcWaitAndGetFrameAsTarget(
+    CTS3Exception._check_error(_MPuLib.MPC_NfcWaitAndGetFrameAsTarget(
         c_uint8(0),
         c_uint32(timeout_ms),
         data,
         c_uint32(0),
         byref(length)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:length.value]
 
 
@@ -4853,14 +4579,14 @@ def MPC_NfcRFCollisionAvoidance(unit: FieldUnit, value: float) -> None:
     if not isinstance(unit, FieldUnit):
         raise TypeError('unit must be an instance of FieldUnit IntEnum')
     if unit == FieldUnit.APPLY_DEFAULT_VALUE:
-        ret = CTS3ErrorCode(_MPuLib.MPC_NfcRFCollisionAvoidance(
+        CTS3Exception._check_error(_MPuLib.MPC_NfcRFCollisionAvoidance(
             c_uint8(0),
             c_uint8(unit),
             c_int16(0)))
     elif unit == FieldUnit.UNIT_PER_CENT:
         value_pm = round(value * 1e1)
         _check_limits(c_int16, value_pm, 'value')
-        ret = CTS3ErrorCode(_MPuLib.MPC_NfcRFCollisionAvoidance(
+        CTS3Exception._check_error(_MPuLib.MPC_NfcRFCollisionAvoidance(
             c_uint8(0),
             c_uint8(FieldUnit.UNIT_PER_MILLE),
             c_int16(value_pm)))
@@ -4871,19 +4597,17 @@ def MPC_NfcRFCollisionAvoidance(unit: FieldUnit, value: float) -> None:
             unit == FieldUnit.UNIT_DBM_RANGE_33DBM:
         value_pm = round(value)
         _check_limits(c_int16, value_pm, 'value')
-        ret = CTS3ErrorCode(_MPuLib.MPC_NfcRFCollisionAvoidance(
+        CTS3Exception._check_error(_MPuLib.MPC_NfcRFCollisionAvoidance(
             c_uint8(0),
             c_uint8(unit),
             c_int16(value_pm)))
     else:  # mV
         value_mV = round(value)
         _check_limits(c_int16, value_mV, 'value')
-        ret = CTS3ErrorCode(_MPuLib.MPC_NfcRFCollisionAvoidance(
+        CTS3Exception._check_error(_MPuLib.MPC_NfcRFCollisionAvoidance(
             c_uint8(0),
             c_uint8(unit),
             c_int16(value_mV)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_NfcSendFrameAsTarget(tx_frame: bytes, timeout: float = 0) -> None:
@@ -4902,19 +4626,17 @@ def MPC_NfcSendFrameAsTarget(tx_frame: bytes, timeout: float = 0) -> None:
         if not isinstance(tx_frame, bytes):
             raise TypeError('tx_frame must be an instance of bytes')
         _check_limits(c_uint32, len(tx_frame), 'tx_frame')
-        ret = CTS3ErrorCode(_MPuLib.MPC_NfcSendFrameAsTarget(
+        CTS3Exception._check_error(_MPuLib.MPC_NfcSendFrameAsTarget(
             c_uint8(0),
             c_uint32(timeout_us),
             tx_frame,
             c_uint32(len(tx_frame))))
     else:
-        ret = CTS3ErrorCode(_MPuLib.MPC_NfcSendFrameAsTarget(
+        CTS3Exception._check_error(_MPuLib.MPC_NfcSendFrameAsTarget(
             c_uint8(0),
             c_uint32(timeout_us),
             None,
             c_uint32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SetActiveTimings(unit: NfcUnit, t_idt: float = 0, t_irfg: float = 0,
@@ -4958,8 +4680,7 @@ def MPC_SetActiveTimings(unit: NfcUnit, t_idt: float = 0, t_irfg: float = 0,
     _check_limits(c_uint32, computed_tarfg, 't_arfg')
     _check_limits(c_uint32, computed_toff, 't_off')
     _check_limits(c_uint32, computed_tmute, 't_mute')
-
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetActiveTimings(
+    CTS3Exception._check_error(_MPuLib.MPC_SetActiveTimings(
         c_uint8(0),
         c_uint32(computed_unit),
         c_uint32(computed_tidt),
@@ -4968,8 +4689,6 @@ def MPC_SetActiveTimings(unit: NfcUnit, t_idt: float = 0, t_irfg: float = 0,
         c_uint32(computed_tarfg),
         c_uint32(computed_toff),
         c_uint32(computed_tmute)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_GetActiveTimings(unit: NfcUnit) -> Dict[str, int]:
@@ -4998,7 +4717,7 @@ def MPC_GetActiveTimings(unit: NfcUnit) -> Dict[str, int]:
     tarfg = c_uint32()
     toff = c_uint32()
     tmute = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetActiveTimings(
+    CTS3Exception._check_error(_MPuLib.MPC_GetActiveTimings(
         c_uint8(0),
         c_uint32(unit),
         byref(tidt),
@@ -5007,8 +4726,6 @@ def MPC_GetActiveTimings(unit: NfcUnit) -> Dict[str, int]:
         byref(tarfg),
         byref(toff),
         byref(tmute)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'t_idt': tidt.value,
             't_irfg': tirfg.value,
             't_adt': tadt.value,
@@ -5023,12 +4740,10 @@ def MPC_GetActiveTimings(unit: NfcUnit) -> Dict[str, int]:
 
 def MPS_OpenLog() -> None:
     """Starts the events acquisition"""
-    ret = CTS3ErrorCode(_MPuLib.MPS_OpenLog(
+    CTS3Exception._check_error(_MPuLib.MPS_OpenLog(
         c_uint8(0),
         c_uint32(0),
         c_uint32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_CloseLog() -> None:
@@ -5042,10 +4757,8 @@ def MPS_CloseLog() -> None:
 
 def MPS_FlushLog() -> None:
     """Flushes the events acquisition buffer"""
-    ret = CTS3ErrorCode(_MPuLib.MPS_FlushLog(
+    CTS3Exception._check_error(_MPuLib.MPS_FlushLog(
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -5072,12 +4785,10 @@ def MPS_SpyChangeParameters(param: SpyParameter, value: int) -> None:
     if not isinstance(param, SpyParameter):
         raise TypeError('param must be an instance of SpyParameter IntEnum')
     _check_limits(c_uint32, value, 'value')
-    ret = CTS3ErrorCode(_MPuLib.MPS_SpyChangeParameters(
+    CTS3Exception._check_error(_MPuLib.MPS_SpyChangeParameters(
         c_uint8(0),
         c_uint32(param),
         c_uint32(value)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_SpyGetParameters(param: SpyParameter) -> int:
@@ -5096,12 +4807,10 @@ def MPS_SpyGetParameters(param: SpyParameter) -> int:
     if not isinstance(param, SpyParameter):
         raise TypeError('param must be an instance of SpyParameter IntEnum')
     value = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPS_SpyGetParameters(
+    CTS3Exception._check_error(_MPuLib.MPS_SpyGetParameters(
         c_uint8(0),
         c_uint32(param),
         byref(value)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return value.value
 
 
@@ -5114,11 +4823,9 @@ def MPS_SetUserEvent(user_event_number: int) -> None:
         User defined event
     """
     _check_limits(c_uint8, user_event_number, 'user_event_number')
-    ret = CTS3ErrorCode(_MPuLib.MPS_SetUserEvent(
+    CTS3Exception._check_error(_MPuLib.MPS_SetUserEvent(
         c_uint8(0),
         c_uint8(user_event_number)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def BeginDownload(call_back: Callable[[int,
@@ -5297,14 +5004,12 @@ def MPC_SetDefaultParameters(card_type: TechnologyType,
         raise TypeError('param_id must be an instance of '
                         'DefaultParameterType IntEnum')
     _check_limits(c_uint32, param_value, 'param_value')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetDefaultParameters(
+    CTS3Exception._check_error(_MPuLib.MPC_SetDefaultParameters(
         c_uint8(0),
         c_uint8(card_type),
         c_uint32(param_id),
         byref(c_uint32(param_value)),
         c_uint32(4)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_GetDefaultParameters(card_type: TechnologyType,
@@ -5331,14 +5036,12 @@ def MPC_GetDefaultParameters(card_type: TechnologyType,
                         'DefaultParameterType IntEnum')
     param_value = c_uint32()
     size = c_uint32(4)
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetDefaultParameters(
+    CTS3Exception._check_error(_MPuLib.MPC_GetDefaultParameters(
         c_uint8(0),
         c_uint8(card_type),
         c_uint32(param_id),
         byref(param_value),
         byref(size)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return param_value.value
 
 
@@ -5382,13 +5085,66 @@ def MPS_GetInternalParameter(param_type: InternalParameterType) -> int:
         raise TypeError('param_type must be an instance of '
                         'InternalParameterType IntEnum')
     param_value = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPS_GetInternalParameter(
+    CTS3Exception._check_error(_MPuLib.MPS_GetInternalParameter(
         c_uint8(0),
         c_uint32(param_type),
         c_uint32(0),
         byref(param_value)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return param_value.value
+
+# endregion
+
+# region Phase drift monitoring
+
+
+def MPC_SelectPhaseDriftLimits(intra_modulation: float = float('inf'),
+                               inter_modulations: float = float('inf'),
+                               frame: float = float('inf')) -> None:
+    """Selects phase drift monitoring limits
+
+    Parameters
+    ----------
+    intra_modulation : float, optional
+        Phase drift in each modulation upper limit in °
+    inter_modulations : float, optional
+        Phase drift between modulations upper limit in °
+    frame : float, optional
+        Phase drift in whole frame upper limit in °
+    """
+    CTS3Exception._check_error(_MPuLib.MPC_SelectPhaseDriftLimits(
+        c_uint8(0),
+        c_double(intra_modulation),
+        c_double(inter_modulations),
+        c_double(frame)))
+
+
+def MPC_GetPhaseDrifts() -> Dict[str, List[float]]:
+    """Gets PICC phase drift measurements
+
+    Returns
+    -------
+    dict
+        'intra' (list(float)): Phase drifts in each modulation in °
+        'inter' (list(float)): Phase drifts between modulations in °
+        'frame' (list(float)): Phase drifts in whole frame in °
+    """
+    nb_meas = c_uint32()
+    intra = (c_double * 10)()
+    inter = (c_double * 10)()
+    frame = (c_double * 10)()
+    CTS3Exception._check_error(_MPuLib.MPC_GetPhaseDrifts(
+        c_uint8(0),
+        byref(nb_meas),
+        intra,
+        inter,
+        frame))
+    if nb_meas.value:
+        return {'intra': [i for i in intra][:nb_meas.value],
+                'inter': [i for i in inter][:nb_meas.value],
+                'frame': [i for i in frame][:nb_meas.value]}
+    else:
+        return {'intra': [],
+                'inter': [],
+                'frame': []}
 
 # endregion

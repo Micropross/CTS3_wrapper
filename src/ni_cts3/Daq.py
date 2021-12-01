@@ -189,7 +189,7 @@ def Daq_SetChannel(channel: DaqChannel, enabled: bool,
                             'DaqRange IntEnum')
         if not isinstance(nc_term, DaqNCTerm):
             raise TypeError('nc_term must be an instance of DaqNCTerm IntEnum')
-        ret = CTS3ErrorCode(_MPuLib.Daq_SetChannel(
+        CTS3Exception._check_error(_MPuLib.Daq_SetChannel(
             c_uint8(channel),
             c_uint8(1),
             c_uint16(voltage_range),
@@ -197,15 +197,13 @@ def Daq_SetChannel(channel: DaqChannel, enabled: bool,
             c_uint32(nc_term),
             c_uint8(0)))
     else:
-        ret = CTS3ErrorCode(_MPuLib.Daq_SetChannel(
+        CTS3Exception._check_error(_MPuLib.Daq_SetChannel(
             c_uint8(channel),
             c_uint8(0),
             c_uint16(0),
             c_uint32(0),
             c_uint32(0),
             c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def Daq_GetChannel(channel: DaqChannel) \
@@ -220,9 +218,9 @@ def Daq_GetChannel(channel: DaqChannel) \
     Returns
     -------
     dict
-        'enabled' (bool): Channel enabled
-        'voltage_range' (DaqRange): Channel range
-        'nc_term' (DaqNCTerm): Termination impedance on the unused connector
+        'enabled' (bool) : Channel enabled
+        'voltage_range' (DaqRange) : Channel range
+        'nc_term' (DaqNCTerm) : Termination impedance on the unused connector
     """
     if not isinstance(channel, DaqChannel):
         raise TypeError('channel must be an instance of DaqChannel IntEnum')
@@ -231,15 +229,13 @@ def Daq_GetChannel(channel: DaqChannel) \
     impedance = c_uint32()
     term = c_uint32()
     rfu = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.Daq_GetChannel(
+    CTS3Exception._check_error(_MPuLib.Daq_GetChannel(
         c_uint8(channel),
         byref(enabled),
         byref(range_mV),
         byref(impedance),
         byref(term),
         byref(rfu)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     if enabled.value > 0:
         return {'enabled': True,
                 'voltage_range': DaqRange(range_mV.value),
@@ -273,11 +269,9 @@ def Daq_SetTimeBase(sampling_rate: DaqSamplingClk = DaqSamplingClk.SCLK_150MHZ,
         raise TypeError('sampling_rate must be an instance of '
                         'DaqSamplingClk IntEnum')
     _check_limits(c_uint32, points_number, 'points_number')
-    ret = CTS3ErrorCode(_MPuLib.Daq_SetTimeBase(
+    CTS3Exception._check_error(_MPuLib.Daq_SetTimeBase(
         c_uint8(sampling_rate),
         c_uint32(points_number)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -323,13 +317,11 @@ def Daq_SetTrigger(trigger_source: DaqTrigSource, level: float = 0,
     if not isinstance(direction, DaqTrigDir):
         raise TypeError('direction must be an instance of DaqTrigDir IntEnum')
     _check_limits(c_int32, delay, 'delay')
-    ret = CTS3ErrorCode(_MPuLib.Daq_SetTrigger(
+    CTS3Exception._check_error(_MPuLib.Daq_SetTrigger(
         c_uint8(trigger_source),
         c_int16(level_mV),
         c_uint8(direction),
         c_int32(delay)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -385,13 +377,11 @@ def Daq_StartStopAcq(acq_mode: DaqAcqMode,
         func_pointer = _MPuLib.Daq_StartStopAcq
     else:
         func_pointer = _MPuLib_variadic.Daq_StartStopAcq
-    ret = CTS3ErrorCode(func_pointer(
+    CTS3Exception._check_error(func_pointer(
         c_uint32(acq_mode),
         c_uint32(download_mode),
         c_uint32(data_format),
         file_name.encode('ascii')))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -416,10 +406,8 @@ def Daq_GetStatus() -> DaqStatus:
         Current trigger status
     """
     status = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.Daq_GetStatus(
+    CTS3Exception._check_error(_MPuLib.Daq_GetStatus(
         byref(status)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return DaqStatus(status.value)
 
 
@@ -435,13 +423,11 @@ def Daq_GetInfo() -> str:
     version = c_uint8()
     revision = c_uint8()
     rfu = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.Daq_GetInfo(
+    CTS3Exception._check_error(_MPuLib.Daq_GetInfo(
         byref(year),
         byref(version),
         byref(revision),
         byref(rfu)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return str(year.value) + '.' + str(version.value) + '.' + \
         str(revision.value)
 
@@ -465,11 +451,9 @@ def Daq_SetFilter(filter: DaqFilter, enabled: bool) -> None:
     """
     if not isinstance(filter, DaqFilter):
         raise TypeError('filter must be an instance of DaqFilter IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.Daq_SetFilter(
+    CTS3Exception._check_error(_MPuLib.Daq_SetFilter(
         c_uint32(filter),
         c_uint8(1) if enabled else c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 # region Probe Management
@@ -487,17 +471,15 @@ def Daq_ProbeCompensation(channel: int, label: Optional[str]) -> None:
     """
     _check_limits(c_uint8, channel, 'channel')
     if label is None:
-        ret = CTS3ErrorCode(_MPuLib.Daq_ProbeCompensation(
+        CTS3Exception._check_error(_MPuLib.Daq_ProbeCompensation(
             c_uint8(channel),
             c_uint32(0),
             None))
     else:
-        ret = CTS3ErrorCode(_MPuLib.Daq_ProbeCompensation(
+        CTS3Exception._check_error(_MPuLib.Daq_ProbeCompensation(
             c_uint8(channel),
             c_uint32(0),
             label.encode('ascii')))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def Daq_LoadProbe(label: Optional[str], channel: int) -> None:
@@ -512,15 +494,13 @@ def Daq_LoadProbe(label: Optional[str], channel: int) -> None:
     """
     _check_limits(c_uint8, channel, 'channel')
     if label is None:
-        ret = CTS3ErrorCode(_MPuLib.Daq_LoadProbe(
+        CTS3Exception._check_error(_MPuLib.Daq_LoadProbe(
             None,
             c_uint8(channel)))
     else:
-        ret = CTS3ErrorCode(_MPuLib.Daq_LoadProbe(
+        CTS3Exception._check_error(_MPuLib.Daq_LoadProbe(
             label.encode('ascii'),
             c_uint8(channel)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def Daq_ListProbes() -> List[str]:
@@ -532,10 +512,8 @@ def Daq_ListProbes() -> List[str]:
         Compensation identifiers list
     """
     cables_list = create_string_buffer(0xFFFF)
-    ret = CTS3ErrorCode(_MPuLib.Daq_ListProbes(
+    CTS3Exception._check_error(_MPuLib.Daq_ListProbes(
         cables_list))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     list_string = cables_list.value.decode('ascii')
     return list_string.split(';') if len(list_string) else []
 
@@ -548,10 +526,8 @@ def Daq_DeleteProbe(label: str) -> None:
     label : str
         Compensation identifier
     """
-    ret = CTS3ErrorCode(_MPuLib.Daq_DeleteProbe(
+    CTS3Exception._check_error(_MPuLib.Daq_DeleteProbe(
         label.encode('ascii')))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 

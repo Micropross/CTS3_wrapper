@@ -1,11 +1,10 @@
 from enum import IntEnum, unique
 from ctypes import c_uint8, c_int32, c_uint32, byref
-from typing import Union, Tuple, Optional, overload
+from typing import Union, Optional, overload
 from . import _MPuLib, _MPuLib_variadic, _check_limits
 from .Measurement import VoltmeterRange
 from .Nfc import TechnologyType, NfcTriggerId, NfcTrigger, DataRate
 from .Nfc import VicinityCodingMode, VicinityDataRate, VicinitySubCarrier
-from .MPStatus import CTS3ErrorCode
 from .MPException import CTS3Exception
 
 
@@ -18,13 +17,11 @@ def MPC_OpenScenarioPicc() -> int:
         Scenario instance identifier
     """
     scenario_id = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_OpenScenarioPicc(
+    CTS3Exception._check_error(_MPuLib.MPC_OpenScenarioPicc(
         c_uint8(0),
         byref(scenario_id),
         c_uint32(0),
         c_uint32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return scenario_id.value
 
 
@@ -344,7 +341,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[0], int):
             raise TypeError('param must be an instance of int')
         _check_limits(c_uint32, args[0], 'param')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -356,7 +353,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[0], TechnologyType):
             raise TypeError('param must be an instance of '
                             'TechnologyTypeype IntEnum')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -368,7 +365,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[0], VoltmeterRange):
             raise TypeError('param must be an instance of '
                             'VoltmeterRange IntEnum')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -380,7 +377,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[0], AutoSwtxMgt):
             raise TypeError('param must be an instance of '
                             'AutoSwtxMgt IntEnum')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -392,7 +389,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[0], int):
             raise TypeError('param must be an instance of int')
         _check_limits(c_uint32, args[0], 'param')  # Trigger
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -409,7 +406,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('param must be an instance of float')
         delay_us = round(args[0] * 1e6)
         _check_limits(c_uint32, delay_us, 'param')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -425,7 +422,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('param must be an instance of float')
         delay_ns = round(args[0] * 1e9)
         _check_limits(c_uint32, delay_ns, 'param')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -438,7 +435,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         if len(args) != 1:
             raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                             f'exactly three arguments ({len(args) + 2} given)')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -456,7 +453,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('delay must be an instance of float')
         delay_ns = round(args[1] * 1e9)
         _check_limits(c_int32, delay_ns, 'delay')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -472,7 +469,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[1], DataRate):
             raise TypeError('picc_datarate must be an instance of '
                             'DataRate IntEnum')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -485,7 +482,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[0], int):
             raise TypeError('trigger must be an instance of int')
         _check_limits(c_uint32, args[0], 'trigger')  # Trigger
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -502,7 +499,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[1], bytes):
             raise TypeError('command must be an instance of bytes')
         _check_limits(c_uint32, len(args[1]), 'command')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -525,7 +522,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[2], VicinitySubCarrier):
             raise TypeError('sub_carrier must be an instance of '
                             'VicinitySubCarrier IntEnum')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -543,7 +540,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('config must be an instance of '
                             'NfcTrigger IntEnum')
         if args[1] == NfcTrigger.TRIG_FORCE:
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -555,7 +552,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 raise TypeError('value must be an instance of float')
             delay_ns = round(args[2] * 1e9)
             _check_limits(c_uint32, delay_ns, 'value')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -575,7 +572,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[2], int):
             raise TypeError('field_delay must be an instance of int')
         _check_limits(c_uint32, args[2], 'field_delay')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -596,7 +593,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('fdt must be an instance of float')
         fdt_ns = round(args[2] * 1e9)
         _check_limits(c_uint32, fdt_ns, 'fdt')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -629,7 +626,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                                 'exactly six arguments '
                                 f'({len(args) + 2} given)')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -646,7 +643,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 raise TypeError('timeout must be an instance of float')
             timeout_us = round(args[4] * 1e6)
             _check_limits(c_uint32, timeout_us, 'timeout')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -681,7 +678,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 mask = b'\xFF' * len(args[3])
         else:
             mask = b'\xFF' * len(args[3])
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -716,7 +713,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         else:
             tx_bits = args[3]
         _check_limits(c_uint32, tx_bits, 'tx_bits')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -754,7 +751,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                                 'exactly eight arguments '
                                 f'({len(args) + 2} given)')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -773,7 +770,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 raise TypeError('timeout must be an instance of float')
             timeout_us = round(args[6] * 1e6)
             _check_limits(c_uint32, timeout_us, 'timeout')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -797,7 +794,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                                 'exactly three arguments '
                                 f'({len(args) + 2} given)')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -811,7 +808,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 raise TypeError('timeout must be an instance of float')
             timeout_us = round(args[1] * 1e6)
             _check_limits(c_uint32, timeout_us, 'timeout')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -851,7 +848,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                                 'exactly eleven arguments '
                                 f'({len(args) + 2} given)')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -873,7 +870,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 raise TypeError('timeout must be an instance of float')
             timeout_us = round(args[8] * 1e6)
             _check_limits(c_uint32, timeout_us, 'timeout')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -929,7 +926,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('timeout must be an instance of float')
         timeout_ms = round(args[8] * 1e3)
         _check_limits(c_uint32, timeout_ms, 'timeout')
-        ret = CTS3ErrorCode(func_pointer(
+        CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
@@ -959,7 +956,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                                 'exactly five arguments '
                                 f'({len(args) + 2} given)')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -975,7 +972,7 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 raise TypeError('timeout must be an instance of float')
             timeout_us = round(args[3] * 1e6)
             _check_limits(c_uint32, timeout_us, 'timeout')
-            ret = CTS3ErrorCode(func_pointer(
+            CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
@@ -983,9 +980,6 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 args[1],  # pPcdFrame
                 c_uint32(args[2]),
                 c_uint32(timeout_us)))  # RxTimeout_us
-
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_ExecuteScenarioPicc(scenario_id: int,
@@ -1004,17 +998,15 @@ def MPC_ExecuteScenarioPicc(scenario_id: int,
     if timeout:
         timeout_ms = round(timeout * 1e3)
         _check_limits(c_uint32, timeout_ms, 'timeout')
-        ret = CTS3ErrorCode(_MPuLib.MPC_ExecuteScenarioPicc(
+        CTS3Exception._check_error(_MPuLib.MPC_ExecuteScenarioPicc(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(timeout_ms)))
     else:
-        ret = CTS3ErrorCode(_MPuLib.MPC_ExecuteScenarioPicc(
+        CTS3Exception._check_error(_MPuLib.MPC_ExecuteScenarioPicc(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_CloseScenarioPicc(scenario_id: int) -> None:
@@ -1026,8 +1018,6 @@ def MPC_CloseScenarioPicc(scenario_id: int) -> None:
         Scenario instance identifier
     """
     _check_limits(c_uint32, scenario_id, 'scenario_id')
-    ret = CTS3ErrorCode(_MPuLib.MPC_CloseScenarioPicc(
+    CTS3Exception._check_error(_MPuLib.MPC_CloseScenarioPicc(
         c_uint8(0),
         c_uint32(scenario_id)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)

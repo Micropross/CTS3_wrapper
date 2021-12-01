@@ -38,13 +38,11 @@ def MPC_GetVDCIn(duration: float,
         raise TypeError('voltmeter_range must be an instance of '
                         'VdcRange IntEnum')
     vdc = c_int32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetVDCIn(
+    CTS3Exception._check_error(_MPuLib.MPC_GetVDCIn(
         c_uint8(0),
         byref(vdc),
         c_uint32(duration_ms),
         c_uint32(voltmeter_range)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return vdc.value / 1e3
 
 
@@ -74,14 +72,12 @@ def MPC_GetVOV(integration_time: float, timeout: float,
         raise TypeError('voltmeter_range must be an instance of '
                         'VdcRange IntEnum')
     vdc = c_int32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetVOV(
+    CTS3Exception._check_error(_MPuLib.MPC_GetVOV(
         c_uint8(0),
         byref(vdc),
         c_uint32(integration_time_us),
         c_uint32(timeout_ms),
         c_uint32(voltmeter_range)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return vdc.value / 1e3
 
 
@@ -132,12 +128,11 @@ def MPC_StartRFMeasure2(settings: MeasureTriggerSetting, source: MeasureSource,
     if not isinstance(unit, NfcUnit):
         raise TypeError('unit must be an instance of NfcUnit IntEnum')
     # Unit auto-selection
-    computed_unit, [computed_delay,
-                    computed_duration] = _unit_autoselect(unit,
-                                                          [delay, duration])
+    computed_unit, [computed_delay, computed_duration] = \
+        _unit_autoselect(unit, [delay, duration])
     _check_limits(c_int32, computed_delay, 'delay')
     _check_limits(c_uint32, computed_duration, 'duration')
-    ret = CTS3ErrorCode(_MPuLib.MPC_StartRFMeasure2(
+    CTS3Exception._check_error(_MPuLib.MPC_StartRFMeasure2(
         c_uint8(0),
         c_uint32(settings),
         c_uint32(source),
@@ -145,8 +140,6 @@ def MPC_StartRFMeasure2(settings: MeasureTriggerSetting, source: MeasureSource,
         c_int32(computed_delay),
         c_uint32(computed_duration),
         file_name.encode('ascii')))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -170,11 +163,9 @@ def MPC_RFMeasureStatus() -> RfStatus:
         Current trigger status
     """
     status = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPC_RFMeasureStatus(
+    CTS3Exception._check_error(_MPuLib.MPC_RFMeasureStatus(
         c_uint8(0),
         byref(status)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return RfStatus(status.value)
 
 
@@ -198,11 +189,9 @@ def MPC_SwitchResonanceFrequencyConnector(connector: MeasurementConnector) \
     if not isinstance(connector, MeasurementConnector):
         raise TypeError('connector must be an instance of '
                         'MeasurementConnector IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SwitchResonanceFrequencyConnector(
+    CTS3Exception._check_error(_MPuLib.MPC_SwitchResonanceFrequencyConnector(
         c_uint8(0),
         c_uint8(connector)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -227,11 +216,9 @@ def MPC_SelectVoltmeterRange(voltmeter_range: VoltmeterRange) -> None:
     if not isinstance(voltmeter_range, VoltmeterRange):
         raise TypeError('voltmeter_range must be an instance of '
                         'VoltmeterRange IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectVoltmeterRange(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectVoltmeterRange(
         c_uint8(0),
         c_uint16(voltmeter_range)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_GetVoltmeterRange() -> VoltmeterRange:
@@ -243,11 +230,9 @@ def MPC_GetVoltmeterRange() -> VoltmeterRange:
         Voltmeter range
     """
     voltmeter_range = c_uint16()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetVoltmeterRange(
+    CTS3Exception._check_error(_MPuLib.MPC_GetVoltmeterRange(
         c_uint8(0),
         byref(voltmeter_range)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return VoltmeterRange(voltmeter_range.value)
 
 
@@ -283,54 +268,40 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
     -------
     dict
         If measurement_type is SCINFC_MEASTYPE_PCD_WAVEFORM:
-            't1' (float): T1 in s (Type A and Vicinity only)
-            't2' (float): T2 in s (Type A 106kb/s and Vicinity only)
-            't3' (float): T3 in s (Type A 106kb/s and Vicinity only)
-            't4' (float): T4 in s (Type A 106kb/s and Vicinity only)
-            't5' (float): T5 in s (Type A > 106kb/s only)
-            't5' (list(float)): T5 list in s (Type A 106kb/s only)
-            't6' (float): T6 in s (Type A > 106kb/s only)
-            'v1' (float): V1 in V
-            'v1_noise_floor' (float): V1 noise floor in V
-                                      (Type B, FeliCa and Vicinity only)
-            'v2' (float): V2 in V
-            'v2_noise_floor' (float): V2 noise floor in V
-                                      (Type B and FeliCa only)
-            'v3' (float): V3 in V
-            'v4' (float): V4 in V
-            'v5' (float): V5 in V (Type A > 106kb/s only)
-            'modulation_index' (float): Modulation index in V
-            'modulation_depth' (float): Modulation depth in V
-                                        (Type A 106kb/s, Type B, FeliCa and
-                                        Vicinity only)
-            'monotonic_rising_edge' (bool): True if rising edge is monotonic
-            'rising_time' (float): Rising time in s
-                                   (Type A > 106kb/s, Type B and FeliCa only)
-            'overshoot_after_rising_edge' (float): Rising edge overshoot in V
-            'undershoot_after_rising_edge' (float): Rising edge undershoot in V
-                                                    (Type A > 106kb/s, Type B
-                                                    and FeliCa only)
-            'ringing_level' (float): Ringing in V (Type A 106kb/s only)
-            'high_state_noise_floor' (float): High state noise in V
-                                              (Type A only)
-            'monotonic_falling_edge' (bool): True if falling edge is monotonic
-            'falling_time' (float): Falling time in s
-                                    (Type A > 106kb/s, Type B and FeliCa only)
-            'overshoot_after_falling_edge' (float): Falling edge overshoot in V
-            'overshoot_delay_after_falling_edge' (float): Delay adter falling
-                                                          edge in s
-                                                          (Type A and
-                                                          Vicinity only)
-            'undershoot_after_falling_edge' (float): Falling edge undershoot
-                                                     in V (Type B and
-                                                     FeliCa only)
+            't1' (float) : T1 in s (Type A and Vicinity only)
+            't2' (float) : T2 in s (Type A 106kb/s and Vicinity only)
+            't3' (float) : T3 in s (Type A 106kb/s and Vicinity only)
+            't4' (float) : T4 in s (Type A 106kb/s and Vicinity only)
+            't5' (float) : T5 in s (Type A > 106kb/s only)
+            't5' (list(float)) : T5 list in s (Type A 106kb/s only)
+            't6' (float) : T6 in s (Type A > 106kb/s only)
+            'v1' (float) : V1 in V
+            'v1_noise_floor' (float) : V1 noise floor in V (Type B, FeliCa and Vicinity only)
+            'v2' (float) : V2 in V
+            'v2_noise_floor' (float) : V2 noise floor in V (Type B and FeliCa only)
+            'v3' (float) : V3 in V
+            'v4' (float) : V4 in V
+            'v5' (float) : V5 in V (Type A > 106kb/s only)
+            'modulation_index' (float) : Modulation index in V
+            'modulation_depth' (float) : Modulation depth in V (Type A 106kb/s, Type B, FeliCa and Vicinity only)
+            'monotonic_rising_edge' (bool) : True if rising edge is monotonic
+            'rising_time' (float) : Rising time in s (Type A > 106kb/s, Type B and FeliCa only)
+            'overshoot_after_rising_edge' (float) : Rising edge overshoot in V
+            'undershoot_after_rising_edge' (float) : Rising edge undershoot in V (Type A > 106kb/s, Type B and FeliCa only)
+            'ringing_level' (float) : Ringing in V (Type A 106kb/s only)
+            'high_state_noise_floor' (float) : High state noise in V (Type A only)
+            'monotonic_falling_edge' (bool) : True if falling edge is monotonic
+            'falling_time' (float) : Falling time in s (Type A > 106kb/s, Type B and FeliCa only)
+            'overshoot_after_falling_edge' (float) : Falling edge overshoot in V
+            'overshoot_delay_after_falling_edge' (float) : Delay adter falling edge in s (Type A and Vicinity only)
+            'undershoot_after_falling_edge' (float) : Falling edge undershoot in V (Type B and FeliCa only)
 
         If measurement_type is SCINFC_MEASTYPE_PICC_LMA:
-            'lma' (float): LMA in V
+            'lma' (float) : LMA in V
 
         If measurement_type is SCINFC_MEASTYPE_PCD_FIELD_STRENGTH:
-            'field_strength' (float): Field strength in Vpp
-    """
+            'field_strength' (float) : Field strength in Vpp
+    """  # noqa: E501
     if not isinstance(measurement_type, MeasurementType):
         raise TypeError('measurement_type must be an instance of '
                         'MeasurementType IntEnum')
@@ -342,7 +313,7 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
     measurement_count = c_uint32()
     measurements = c_void_p()
     if path:
-        ret = CTS3ErrorCode(_MPuLib.GetAnalyzedMeasureVoltmeterToFile(
+        CTS3Exception._check_error(_MPuLib.GetAnalyzedMeasureVoltmeterToFile(
             c_uint8(0),
             c_uint32(measurement_type),
             c_uint32(card_type),
@@ -352,7 +323,7 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
             byref(measurement_count),
             byref(measurements)))
     else:
-        ret = CTS3ErrorCode(_MPuLib.GetAnalyzedMeasureVoltmeterToFile(
+        CTS3Exception._check_error(_MPuLib.GetAnalyzedMeasureVoltmeterToFile(
             c_uint8(0),
             c_uint32(measurement_type),
             c_uint32(card_type),
@@ -361,8 +332,6 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
             None,
             byref(measurement_count),
             byref(measurements)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     if measurement_count.value:
         ptr = c_cast(measurements, POINTER(c_int32 * measurement_count.value))
         values = [i for i in ptr.contents]
@@ -473,12 +442,10 @@ def MPC_StoreCoeffAlignStandard(measure_type: MeasurementType,
     if not isinstance(measure_type, MeasurementType):
         raise TypeError('measure_type must be an instance of '
                         'MeasurementType IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_StoreCoeffAlignStandard(
+    CTS3Exception._check_error(_MPuLib.MPC_StoreCoeffAlignStandard(
         c_uint8(0),
         c_uint32(measure_type),
         c_double(coefficient)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # region Reader frequency measurement
 
@@ -523,13 +490,11 @@ def MPC_GetRFFrequency(resolution=None,  # type: ignore[no-untyped-def]
     if resolution is not None or timeout is not None:
         warn('deprecated parameters', FutureWarning)
     freq = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetRFFrequency(
+    CTS3Exception._check_error(_MPuLib.MPC_GetRFFrequency(
         c_uint8(0),
         c_uint32(0),
         c_uint32(0),
         byref(freq)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return freq.value
 
 # endregion
@@ -554,12 +519,10 @@ def MPC_GetDatarate(card_type: TechnologyType) -> int:
         raise TypeError('card_type must be an instance of '
                         'TechnologyType IntEnum')
     datarate = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetDatarate(
+    CTS3Exception._check_error(_MPuLib.MPC_GetDatarate(
         c_uint8(0),
         c_uint8(card_type),
         byref(datarate)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return datarate.value
 
 # endregion
@@ -586,17 +549,15 @@ def MPC_ImpedanceSelfCompensation(connector: MeasurementConnector,
                         'MeasurementConnector IntEnum')
     _check_limits(c_uint8, channel, 'channel')
     if label is None:
-        ret = CTS3ErrorCode(_MPuLib.MPC_ImpedanceSelfCompensation(
+        CTS3Exception._check_error(_MPuLib.MPC_ImpedanceSelfCompensation(
             c_uint8(connector),
             c_uint8(channel),
             None))
     else:
-        ret = CTS3ErrorCode(_MPuLib.MPC_ImpedanceSelfCompensation(
+        CTS3Exception._check_error(_MPuLib.MPC_ImpedanceSelfCompensation(
             c_uint8(connector),
             c_uint8(channel),
             label.encode('ascii')))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_ImpedanceLoadCable(label: Optional[str]) -> None:
@@ -608,15 +569,13 @@ def MPC_ImpedanceLoadCable(label: Optional[str]) -> None:
         Compensation identifier
     """
     if label is None:
-        ret = CTS3ErrorCode(_MPuLib.MPC_ImpedanceLoadCable(
+        CTS3Exception._check_error(_MPuLib.MPC_ImpedanceLoadCable(
             c_uint8(0),
             None))
     else:
-        ret = CTS3ErrorCode(_MPuLib.MPC_ImpedanceLoadCable(
+        CTS3Exception._check_error(_MPuLib.MPC_ImpedanceLoadCable(
             c_uint8(0),
             label.encode('ascii')))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_ImpedanceListCables() -> List[str]:
@@ -628,11 +587,9 @@ def MPC_ImpedanceListCables() -> List[str]:
         Compensation identifiers list
     """
     cables_list = create_string_buffer(0xFFFF)
-    ret = CTS3ErrorCode(_MPuLib.MPC_ImpedanceListCables(
+    CTS3Exception._check_error(_MPuLib.MPC_ImpedanceListCables(
         c_uint8(0),
         cables_list))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     list_string = cables_list.value.decode('ascii')
     return list_string.split(';') if len(list_string) else []
 
@@ -645,11 +602,9 @@ def MPC_ImpedanceDeleteCable(label: str) -> None:
     label : str
         Compensation identifier
     """
-    ret = CTS3ErrorCode(_MPuLib.MPC_ImpedanceDeleteCable(
+    CTS3Exception._check_error(_MPuLib.MPC_ImpedanceDeleteCable(
         c_uint8(0),
         label.encode('ascii')))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_MeasureImpedance(use_cable: bool = True, average: int = 1) \
@@ -681,7 +636,7 @@ def MPC_MeasureImpedance(use_cable: bool = True, average: int = 1) \
     inductance = c_double()
     vcc = c_double()
     icc = c_double()
-    ret = CTS3ErrorCode(_MPuLib.MPC_MeasureImpedance(
+    CTS3Exception._check_error(_MPuLib.MPC_MeasureImpedance(
         c_uint8(0),
         c_uint8(1) if use_cable else c_uint8(0),
         c_uint32(average),
@@ -692,8 +647,6 @@ def MPC_MeasureImpedance(use_cable: bool = True, average: int = 1) \
         byref(inductance),
         byref(vcc),
         byref(icc)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'impedance': complex(real_part.value, imaginary_part.value),
             'resistance': resistance.value,
             'capacitance': capacitance.value,
@@ -757,7 +710,7 @@ def MPC_ResonanceFrequency(method: ResonanceMethod,
     _check_limits(c_uint32, average, 'average')
     freq = c_uint32()
     q = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_ResonanceFrequencyVS(
+    CTS3Exception._check_error(_MPuLib.MPC_ResonanceFrequencyVS(
         c_uint8(0),
         c_uint8(method),
         c_int32(power_dbm_int),
@@ -767,8 +720,6 @@ def MPC_ResonanceFrequency(method: ResonanceMethod,
         c_uint32(freq_max_Hz),
         byref(freq),
         byref(q)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'resonance_frequency': freq.value,
             'q_factor': float(q.value) / 1e1}
 
@@ -799,13 +750,11 @@ def MPC_GetMeasureResFreq(measure_type: ResFreqMeasureType =
                         'ResFreqMeasureType IntEnum')
     measurement_count = c_uint32()
     measurements = c_void_p()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetMeasureResFreq(
+    CTS3Exception._check_error(_MPuLib.MPC_GetMeasureResFreq(
         c_uint8(0),
         byref(measurement_count),
         byref(measurements),
         c_int32(measure_type)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     if measurement_count.value:
         ptr = c_cast(measurements, POINTER(c_double * measurement_count.value))
         return [i for i in ptr.contents]
@@ -846,15 +795,13 @@ def MPC_S11StartMeasurement(frequency_min: float,
     power_dbm_int = round(power_dbm)
     _check_limits(c_int32, power_dbm_int, 'power_dbm')
     _check_limits(c_uint32, average, 'average')
-    ret = CTS3ErrorCode(_MPuLib.MPC_S11StartMeasurement(
+    CTS3Exception._check_error(_MPuLib.MPC_S11StartMeasurement(
         c_uint8(0),
         c_uint32(freq_min_Hz),
         c_uint32(freq_max_Hz),
         c_uint32(step_Hz),
         c_int32(power_dbm_int),
         c_uint32(average)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -884,13 +831,11 @@ def MPC_GetMeasureS11(measure_type: S11MeasureType =
                         'S11MeasureType IntEnum')
     measurement_count = c_uint32()
     measurements = c_void_p()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetMeasureS11(
+    CTS3Exception._check_error(_MPuLib.MPC_GetMeasureS11(
         c_uint8(0),
         byref(measurement_count),
         byref(measurements),
         c_int32(measure_type)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     if measurement_count.value:
         ptr = c_cast(measurements, POINTER(c_double * measurement_count.value))
         return [i for i in ptr.contents]
@@ -994,12 +939,10 @@ def MPC_GetRFField(coil: CalibrationCoil =
     if not isinstance(coil, CalibrationCoil):
         raise TypeError('coil must be an instance of CalibrationCoil IntEnum')
     voltage = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_GetRFField(
+    CTS3Exception._check_error(_MPuLib.MPC_GetRFField(
         c_uint8(0),
         c_uint32(coil),
         byref(voltage)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return voltage.value / 1e3
 
 # endregion

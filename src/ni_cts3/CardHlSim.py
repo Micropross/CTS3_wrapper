@@ -145,7 +145,7 @@ def MPC_Set14443AInitParameters(atqa: bytes, uid: bytes,
     else:
         raise TypeError('sak must be an instance of int or 1 byte')
     if ats is None:
-        ret = CTS3ErrorCode(_MPuLib.MPC_Set14443AInitParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_Set14443AInitParameters(
             c_uint8(0),
             atqa,
             c_uint32(len(uid)),
@@ -157,7 +157,7 @@ def MPC_Set14443AInitParameters(atqa: bytes, uid: bytes,
         if not isinstance(ats, bytes):
             raise TypeError('ats must be an instance of bytes')
         _check_limits(c_uint32, len(ats), 'ats')
-        ret = CTS3ErrorCode(_MPuLib.MPC_Set14443AInitParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_Set14443AInitParameters(
             c_uint8(0),
             atqa,
             c_uint32(len(uid)),
@@ -165,8 +165,6 @@ def MPC_Set14443AInitParameters(atqa: bytes, uid: bytes,
             byref(c_uint8(sak_value)),
             c_uint32(len(ats)),
             ats))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_Set14443BInitParameters(atqb: bytes) -> None:
@@ -180,12 +178,10 @@ def MPC_Set14443BInitParameters(atqb: bytes) -> None:
     if not isinstance(atqb, bytes):
         raise TypeError('atqb must be an instance of bytes')
     _check_limits(c_uint32, len(atqb), 'atqb')
-    ret = CTS3ErrorCode(_MPuLib.MPC_Set14443BInitParameters(
+    CTS3Exception._check_error(_MPuLib.MPC_Set14443BInitParameters(
         c_uint8(0),
         c_uint32(len(atqb)),
         atqb))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_Set15693InitParameters(data_rate: VicinityDataRate,
@@ -205,12 +201,10 @@ def MPC_Set15693InitParameters(data_rate: VicinityDataRate,
     if not isinstance(sub_carrier, VicinitySubCarrier):
         raise TypeError('sub_carrier must be an instance of '
                         'VicinitySubCarrier IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_Set15693InitParameters(
+    CTS3Exception._check_error(_MPuLib.MPC_Set15693InitParameters(
         c_uint8(0),
         c_uint8(data_rate),
         c_uint8(sub_carrier)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SetNFCInitParameters(mode: NfcMode, data_rate: NfcDataRate,
@@ -278,7 +272,7 @@ def MPC_SetNFCInitParameters(mode: NfcMode, data_rate: NfcDataRate,
         raise TypeError('atr_res must be an instance of bytes')
     _check_limits(c_uint32, len(atr_res), 'atr_res')
 
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetNFCInitParameters(
+    CTS3Exception._check_error(_MPuLib.MPC_SetNFCInitParameters(
         c_uint8(0),
         c_uint8(mode),
         c_uint16(data_rate),
@@ -289,8 +283,6 @@ def MPC_SetNFCInitParameters(mode: NfcMode, data_rate: NfcDataRate,
         nfc_id,
         c_uint32(len(atr_res)),
         atr_res))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SetSParameterInit(pcd_to_picc_bitrate: Union[bytes, int],
@@ -343,15 +335,13 @@ def MPC_SetSParameterInit(pcd_to_picc_bitrate: Union[bytes, int],
         raise TypeError('framing_option_picc_to_pcd must be an instance of '
                         'int or 1 byte')
 
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetSParameterInit(
+    CTS3Exception._check_error(_MPuLib.MPC_SetSParameterInit(
         c_uint8(0),
         c_uint8(pcd_to_picc),
         c_uint8(picc_to_pcd),
         c_uint8(framing),
         c_uint8(0),
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SetT2TInitParameters(masked_events: Optional[Type2TagSimulatorEvent],
@@ -389,7 +379,7 @@ def MPC_SetT2TInitParameters(masked_events: Optional[Type2TagSimulatorEvent],
         raise TypeError('nfc_id must be an instance of bytes')
     _check_limits(c_uint32, len(nfc_id), 'nfc_id')
     if masked_events is not None:
-        ret = CTS3ErrorCode(_MPuLib.MPC_SetT2TInitParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_SetT2TInitParameters(
             c_uint8(0),
             c_uint32(masked_events),
             sens_res,
@@ -397,15 +387,13 @@ def MPC_SetT2TInitParameters(masked_events: Optional[Type2TagSimulatorEvent],
             c_uint32(len(nfc_id)),
             nfc_id))
     else:
-        ret = CTS3ErrorCode(_MPuLib.MPC_SetT2TInitParameters(
+        CTS3Exception._check_error(_MPuLib.MPC_SetT2TInitParameters(
             c_uint8(0),
             c_uint32(0),
             sens_res,
             byref(c_uint8(sel_res_value)),
             c_uint32(len(nfc_id)),
             nfc_id))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
@@ -498,8 +486,8 @@ def MPC_GetBufferedRawFrame() -> \
     Returns
     -------
     dict
-        'rx_frame' (bytes): Received frame
-        'rx_type' (TechnologyType): Received frame type
+        'rx_frame' (bytes) : Received frame
+        'rx_type' (TechnologyType) : Received frame type
     """
     max_size = 65538
     data = bytes(max_size)
@@ -543,8 +531,8 @@ def MPS_GetAPDU2() -> Optional[Dict[str, bytes]]:
     Returns
     -------
     dict
-        'header' (bytes): APDU header
-        'data' (bytes): APDU data
+        'header' (bytes) : APDU header
+        'data' (bytes) : APDU data
     """
     header = _APDUHeader()
     data = bytes(0xFFFF)
@@ -789,7 +777,7 @@ def MPS_SendRAPDU(apdu: Optional[bytes], status: Union[int, bytes]) -> None:
     else:
         raise TypeError('status must be an instance of int or 2 bytes')
     if apdu is None:
-        ret = CTS3ErrorCode(_MPuLib.MPS_SendRAPDU(
+        CTS3Exception._check_error(_MPuLib.MPS_SendRAPDU(
             c_uint8(0),
             None,
             c_uint32(0),
@@ -797,13 +785,11 @@ def MPS_SendRAPDU(apdu: Optional[bytes], status: Union[int, bytes]) -> None:
     else:
         if not isinstance(apdu, bytes):
             raise TypeError('apdu must be an instance of bytes')
-        ret = CTS3ErrorCode(_MPuLib.MPS_SendRAPDU(
+        CTS3Exception._check_error(_MPuLib.MPS_SendRAPDU(
             c_uint8(0),
             apdu,
             c_uint32(len(apdu)),
             c_uint16(status_word)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SendNFC_PSL_RES(did: Union[int, bytes] = 0xFF,
@@ -836,12 +822,10 @@ def MPC_SendNFC_PSL_RES(did: Union[int, bytes] = 0xFF,
         crc_value = crc
     else:
         raise TypeError('crc must be an instance of int or 2 bytes')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SendNFC_PSL_RES(
+    CTS3Exception._check_error(_MPuLib.MPC_SendNFC_PSL_RES(
         c_uint8(0),
         byref(c_uint8(did_value)),
         byref(c_uint16(crc_value))))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SendNFC_DSL_RES(did: Union[int, bytes] = 0xFF,
@@ -874,12 +858,10 @@ def MPC_SendNFC_DSL_RES(did: Union[int, bytes] = 0xFF,
         crc_value = crc
     else:
         raise TypeError('crc must be an instance of int or 2 bytes')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SendNFC_DSL_RES(
+    CTS3Exception._check_error(_MPuLib.MPC_SendNFC_DSL_RES(
         c_uint8(0),
         byref(c_uint8(did_value)),
         byref(c_uint16(crc_value))))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SendNFC_RLS_RES(did: Union[int, bytes] = 0xFF,
@@ -912,12 +894,10 @@ def MPC_SendNFC_RLS_RES(did: Union[int, bytes] = 0xFF,
         crc_value = crc
     else:
         raise TypeError('crc must be an instance of int or 2 bytes')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SendNFC_RLS_RES(
+    CTS3Exception._check_error(_MPuLib.MPC_SendNFC_RLS_RES(
         c_uint8(0),
         byref(c_uint8(did_value)),
         byref(c_uint16(crc_value))))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SendNFC_WUP_RES(did: Union[int, bytes] = 0xFF,
@@ -950,12 +930,10 @@ def MPC_SendNFC_WUP_RES(did: Union[int, bytes] = 0xFF,
         crc_value = crc
     else:
         raise TypeError('crc must be an instance of int or 2 bytes')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SendNFC_WUP_RES(
+    CTS3Exception._check_error(_MPuLib.MPC_SendNFC_WUP_RES(
         c_uint8(0),
         byref(c_uint8(did_value)),
         byref(c_uint16(crc_value))))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SendNFCTimeoutExtensionRequest(rtox: Union[int, bytes]) -> None:
@@ -975,11 +953,9 @@ def MPC_SendNFCTimeoutExtensionRequest(rtox: Union[int, bytes]) -> None:
         rtox_value = rtox
     else:
         raise TypeError('rtox must be an instance of int or 1 byte')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SendNFCTimeoutExtensionRequest(
+    CTS3Exception._check_error(_MPuLib.MPC_SendNFCTimeoutExtensionRequest(
         c_uint8(0),
         c_uint8(rtox_value)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SendNFC_DEP_RES(pfb: Union[int, bytes],
@@ -1041,7 +1017,7 @@ def MPC_SendNFC_DEP_RES(pfb: Union[int, bytes],
         crc_value = crc
     else:
         raise TypeError('crc must be an instance of int or 2 bytes')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SendNFC_DEP_RES(
+    CTS3Exception._check_error(_MPuLib.MPC_SendNFC_DEP_RES(
         c_uint8(0),
         c_uint8(pfb_value),
         c_uint32(0) if data is None else c_uint32(len(data)),
@@ -1049,8 +1025,6 @@ def MPC_SendNFC_DEP_RES(pfb: Union[int, bytes],
         byref(c_uint8(did_value)),
         byref(c_uint8(nad_value)),
         byref(c_uint16(crc_value))))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SendNFC_RUserData(data: bytes) -> None:
@@ -1063,12 +1037,10 @@ def MPC_SendNFC_RUserData(data: bytes) -> None:
     """
     if not isinstance(data, bytes):
         raise TypeError('data must be an instance of bytes')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SendNFC_RUserData(
+    CTS3Exception._check_error(_MPuLib.MPC_SendNFC_RUserData(
         c_uint8(0),
         c_uint32(len(data)),
         data))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SendPPSResponse(pps: Optional[bytes] = None) -> None:
@@ -1080,18 +1052,16 @@ def MPC_SendPPSResponse(pps: Optional[bytes] = None) -> None:
         5-byte PPS response
     """
     if pps is None:
-        ret = CTS3ErrorCode(_MPuLib.MPC_SendPPSResponse(
+        CTS3Exception._check_error(_MPuLib.MPC_SendPPSResponse(
             c_uint8(0),
             None))
     else:
         if not isinstance(pps, bytes) or len(pps) != 5:
             raise TypeError('pps must be an instance of 5 bytes')
         pps_struct = _TypeAPPSStruct(pps[0], pps[1], pps[2], pps[3], pps[4])
-        ret = CTS3ErrorCode(_MPuLib.MPC_SendPPSResponse(
+        CTS3Exception._check_error(_MPuLib.MPC_SendPPSResponse(
             c_uint8(0),
             byref(pps_struct)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -1115,12 +1085,10 @@ def MPS_SendWTXRequest(unit: WtxRequestMode, value: int) -> None:
     if not isinstance(unit, WtxRequestMode):
         raise TypeError('unit must be an instance of WtxRequestMode IntEnum')
     _check_limits(c_uint32, value, 'value')
-    ret = CTS3ErrorCode(_MPuLib.MPS_SendWTXRequest(
+    CTS3Exception._check_error(_MPuLib.MPS_SendWTXRequest(
         c_uint8(0),
         c_uint8(unit),
         c_uint32(value)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
@@ -1181,23 +1149,19 @@ def MPS_SimWaitNStart(mode: CardEmulationMode,
                         'Type2TagSimulatorEvent IntFlag')
     timeout_ms = round(timeout * 1e3)
     _check_limits(c_uint32, timeout_ms, 'timeout')
-    ret = CTS3ErrorCode(_MPuLib.MPS_SimWaitNStart(
+    CTS3Exception._check_error(_MPuLib.MPS_SimWaitNStart(
         c_uint8(mode),
         c_uint32(protocol),
         c_uint32(event_mask),
         c_uint8(1) if start_spy else c_uint8(0),
         c_uint32(timeout_ms)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_SimStop() -> None:
     """Stops simulator"""
-    ret = CTS3ErrorCode(_MPuLib.MPS_SimStop(
+    CTS3Exception._check_error(_MPuLib.MPS_SimStop(
         c_uint8(0),
         c_uint32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_WaitSimEvent(timeout: float) -> Union[None,
@@ -1298,7 +1262,7 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
                             'VicinitySimulatorEvent IntFlag, '
                             'NfcSimulatorEvent IntFlag or '
                             'Type2TagSimulatorEvent IntFlag')
-        ret = CTS3ErrorCode(_MPuLib.MPS_ChangeSimParameters(
+        CTS3Exception._check_error(_MPuLib.MPS_ChangeSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(c_uint32(parameter_value)),
@@ -1307,7 +1271,7 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
     # IsoSimulatorEvent parameter
     elif parameter_type == SimulatorParameter.SIM_INITRULE_MASK:
         if parameter_value is None:
-            ret = CTS3ErrorCode(_MPuLib.MPS_ChangeSimParameters(
+            CTS3Exception._check_error(_MPuLib.MPS_ChangeSimParameters(
                 c_uint8(0),
                 c_uint32(parameter_type),
                 byref(c_uint32(0)),
@@ -1316,7 +1280,7 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
             if not isinstance(parameter_value, IsoSimulatorEvent):
                 raise TypeError('event must be an instance of '
                                 'IsoSimulatorEvent IntFlag')
-            ret = CTS3ErrorCode(_MPuLib.MPS_ChangeSimParameters(
+            CTS3Exception._check_error(_MPuLib.MPS_ChangeSimParameters(
                 c_uint8(0),
                 c_uint32(parameter_type),
                 byref(c_uint32(parameter_value)),
@@ -1326,7 +1290,7 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
     elif parameter_type == SimulatorParameter.SIM_AUTO_WTX or \
             parameter_type == SimulatorParameter.SIM_MUTE_ATN or \
             parameter_type == SimulatorParameter.SIM_STRICT_RFU:
-        ret = CTS3ErrorCode(_MPuLib.MPS_ChangeSimParameters(
+        CTS3Exception._check_error(_MPuLib.MPS_ChangeSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(c_uint8(1)) if parameter_value else byref(c_uint8(0)),
@@ -1338,7 +1302,7 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
             parameter_type == SimulatorParameter.SIM_WUP_RES_CRC or \
             parameter_type == SimulatorParameter.SIM_POLL_RES_CRC:
         if parameter_value is None:
-            ret = CTS3ErrorCode(_MPuLib.MPS_ChangeSimParameters(
+            CTS3Exception._check_error(_MPuLib.MPS_ChangeSimParameters(
                 c_uint8(0),
                 c_uint32(parameter_type),
                 None,
@@ -1356,7 +1320,7 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
             else:
                 raise TypeError('parameter_value must be an instance of '
                                 'int or 2 bytes')
-            ret = CTS3ErrorCode(_MPuLib.MPS_ChangeSimParameters(
+            CTS3Exception._check_error(_MPuLib.MPS_ChangeSimParameters(
                 c_uint8(0),
                 c_uint32(parameter_type),
                 byref(c_uint16(value)),
@@ -1367,7 +1331,7 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
         if not isinstance(parameter_value, bytes):
             raise TypeError('parameter_value must be an instance of bytes')
         _check_limits(c_uint32, len(parameter_value), 'parameter_value')
-        ret = CTS3ErrorCode(_MPuLib.MPS_ChangeSimParameters(
+        CTS3Exception._check_error(_MPuLib.MPS_ChangeSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             parameter_value,
@@ -1378,7 +1342,7 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
         if not isinstance(parameter_value, int):
             raise TypeError('parameter_value must be an instance of int')
         _check_limits(c_uint8, parameter_value, 'parameter_value')
-        ret = CTS3ErrorCode(_MPuLib.MPS_ChangeSimParameters(
+        CTS3Exception._check_error(_MPuLib.MPS_ChangeSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(c_uint8(parameter_value)),
@@ -1388,14 +1352,11 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
         if not isinstance(parameter_value, int):
             raise TypeError('parameter_value must be an instance of int')
         _check_limits(c_uint32, parameter_value, 'parameter_value')
-        ret = CTS3ErrorCode(_MPuLib.MPS_ChangeSimParameters(
+        CTS3Exception._check_error(_MPuLib.MPS_ChangeSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(c_uint32(parameter_value)),
             c_uint32(4)))
-
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_GetSimParameters(parameter_type: SimulatorParameter) \
@@ -1421,14 +1382,12 @@ def MPS_GetSimParameters(parameter_type: SimulatorParameter) \
     # bytes parameter:
     if parameter_type == SimulatorParameter.SIM_VICINITY_COLLISIONS:
         val = bytes(255)
-        ret = CTS3ErrorCode(_MPuLib.MPS_GetSimParameters(
+        CTS3Exception._check_error(_MPuLib.MPS_GetSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             val,
             c_uint32(255),
             byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return val[param_size.value]
 
     # c_uint16 parameter
@@ -1437,14 +1396,12 @@ def MPS_GetSimParameters(parameter_type: SimulatorParameter) \
             parameter_type == SimulatorParameter.SIM_WUP_RES_CRC or \
             parameter_type == SimulatorParameter.SIM_POLL_RES_CRC:
         int16_val = c_uint16()
-        ret = CTS3ErrorCode(_MPuLib.MPS_GetSimParameters(
+        CTS3Exception._check_error(_MPuLib.MPS_GetSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(int16_val),
             c_uint32(2),
             byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         if param_size.value == 0:
             return None
         return bytes([int16_val.value >> 8, int16_val.value & 0xFF])
@@ -1454,38 +1411,32 @@ def MPS_GetSimParameters(parameter_type: SimulatorParameter) \
             parameter_type == SimulatorParameter.SIM_MUTE_ATN or \
             parameter_type == SimulatorParameter.SIM_STRICT_RFU:
         int8_val = c_uint8()
-        ret = CTS3ErrorCode(_MPuLib.MPS_GetSimParameters(
+        CTS3Exception._check_error(_MPuLib.MPS_GetSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(int8_val),
             c_uint32(1),
             byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return int8_val.value > 0
 
     # int parameter
     elif parameter_type == SimulatorParameter.SIM_AUTO_WTX_VALUE:
         int8_val = c_uint8()
-        ret = CTS3ErrorCode(_MPuLib.MPS_GetSimParameters(
+        CTS3Exception._check_error(_MPuLib.MPS_GetSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(int8_val),
             c_uint32(1),
             byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return int8_val.value
     else:
         int32_val = c_uint32()
-        ret = CTS3ErrorCode(_MPuLib.MPS_GetSimParameters(
+        CTS3Exception._check_error(_MPuLib.MPS_GetSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
             byref(int32_val),
             c_uint32(4),
             byref(param_size)))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         if parameter_type == SimulatorParameter.SIM_INITRULE_MASK:
             if int32_val.value > 0:
                 return IsoSimulatorEvent(int32_val.value)
@@ -1733,29 +1684,25 @@ def MPS_AddFilter(filter: Union[IoClCrcFilter_index,
 
     if isinstance(filter, IoClCrcFilter_index) or \
             isinstance(filter, IoClCrcFilter_pattern):
-        ret = CTS3ErrorCode(_MPuLib.MPS_AddFilter(
+        CTS3Exception._check_error(_MPuLib.MPS_AddFilter(
             c_uint8(0),
             c_uint32(0),
             c_uint32(filter_type.value),
             c_uint32(0),
             byref(crc_filter)))
     else:
-        ret = CTS3ErrorCode(_MPuLib.MPS_AddFilter(
+        CTS3Exception._check_error(_MPuLib.MPS_AddFilter(
             c_uint8(0),
             c_uint32(0),
             c_uint32(filter_type.value),
             c_uint32(0),
             byref(supp_filter)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_RemoveFilters() -> None:
     """Removes all simulation filters"""
-    ret = CTS3ErrorCode(_MPuLib.MPS_RemoveFilters(
+    CTS3Exception._check_error(_MPuLib.MPS_RemoveFilters(
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
@@ -1861,7 +1808,7 @@ def MPS_SimAddRule(event_mask: Union[IsoSimulatorEvent,
         count = 0xFFFFFFFF  # Always active
     rule_id = c_uint32()
     if pattern_condition is None:
-        ret = CTS3ErrorCode(_MPuLib.MPS_SimAddRule(
+        CTS3Exception._check_error(_MPuLib.MPS_SimAddRule(
             c_uint8(0),
             c_uint32(protocol),
             c_uint32(event_mask),
@@ -1885,7 +1832,7 @@ def MPS_SimAddRule(event_mask: Union[IsoSimulatorEvent,
                          b'\x00' * (256 - len(pattern_condition.pattern)))
         pattern = (c_uint8 * 256).from_buffer(temp)
         condition_ctypes = _ActionConditionDataPattern(length, mask, pattern)
-        ret = CTS3ErrorCode(_MPuLib.MPS_SimAddRule(
+        CTS3Exception._check_error(_MPuLib.MPS_SimAddRule(
             c_uint8(0),
             c_uint32(protocol),
             c_uint32(event_mask),
@@ -1903,8 +1850,6 @@ def MPS_SimAddRule(event_mask: Union[IsoSimulatorEvent,
     else:
         raise TypeError('pattern_condition must be an instance of '
                         'ActionConditionDataPattern')
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return rule_id.value
 
 
@@ -1917,11 +1862,9 @@ def MPS_SimRemoveRule(rule_id: int) -> None:
         Rule identifier
     """
     _check_limits(c_uint32, rule_id, 'rule_id')
-    ret = CTS3ErrorCode(_MPuLib.MPS_SimRemoveRule(
+    CTS3Exception._check_error(_MPuLib.MPS_SimRemoveRule(
         c_uint8(0),
         c_uint32(0),
         c_uint32(rule_id)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion

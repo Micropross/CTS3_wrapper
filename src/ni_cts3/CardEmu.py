@@ -5,7 +5,6 @@ from enum import IntEnum, unique
 from . import _MPuLib, _check_limits
 from .Nfc import TechnologyType, DataRate
 from .Nfc import VicinityDataRate, VicinitySubCarrier
-from .MPStatus import CTS3ErrorCode
 from .MPException import CTS3Exception
 
 
@@ -30,11 +29,9 @@ def MPC_ChannelOpen(mode: CardEmulationMode =
     if not isinstance(mode, CardEmulationMode):
         raise TypeError('mode must be an instance of '
                         'CardEmulationMode IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_ChannelOpen(
+    CTS3Exception._check_error(_MPuLib.MPC_ChannelOpen(
         c_uint8(0),
         c_uint8(mode)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -58,19 +55,15 @@ def MPC_ChannelFlush(direction: CardEmulationChannelDirection =
     if not isinstance(direction, CardEmulationChannelDirection):
         raise TypeError('direction must be an instance of '
                         'CardEmulationChannelDirection IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_ChannelFlush(
+    CTS3Exception._check_error(_MPuLib.MPC_ChannelFlush(
         c_uint8(0),
         c_uint8(direction)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_ChannelClose() -> None:
     """Closes card emulation"""
-    ret = CTS3ErrorCode(_MPuLib.MPC_ChannelClose(
+    CTS3Exception._check_error(_MPuLib.MPC_ChannelClose(
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -92,11 +85,9 @@ def MPC_SelectLoadAntennaNfc(load: NfcLoad) -> None:
     """
     if not isinstance(load, NfcLoad):
         raise TypeError('load must be an instance of NfcLoad IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectLoadAntennaNfc(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectLoadAntennaNfc(
         c_uint8(0),
         c_uint16(load)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SetLMAForCardEmulation(low_voltage: float,
@@ -114,12 +105,10 @@ def MPC_SetLMAForCardEmulation(low_voltage: float,
     high_voltage_mV = round(high_voltage * 1e3)
     _check_limits(c_int32, low_voltage_mV, 'low_voltage')
     _check_limits(c_int32, high_voltage_mV, 'high_voltage')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetLMAForCardEmulation(
+    CTS3Exception._check_error(_MPuLib.MPC_SetLMAForCardEmulation(
         c_uint8(0),
         c_int32(low_voltage_mV),
         c_int32(high_voltage_mV)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SetLMAForEMD(low_voltage: float,
@@ -137,12 +126,10 @@ def MPC_SetLMAForEMD(low_voltage: float,
     high_voltage_mV = round(high_voltage * 1e3)
     _check_limits(c_int32, low_voltage_mV, 'low_voltage')
     _check_limits(c_int32, high_voltage_mV, 'high_voltage')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetLMAForEMD(
+    CTS3Exception._check_error(_MPuLib.MPC_SetLMAForEMD(
         c_uint8(0),
         c_int32(low_voltage_mV),
         c_int32(high_voltage_mV)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -165,7 +152,7 @@ def MPC_SetUpReferencePICC(subcarrier: Optional[SubcarrierFrequency]) -> None:
         Sub-carrier frequency, or None to disable generation
     """
     if subcarrier is None:
-        ret = CTS3ErrorCode(_MPuLib.MPC_SetUpReferencePICC(
+        CTS3Exception._check_error(_MPuLib.MPC_SetUpReferencePICC(
             c_uint8(0),
             c_uint8(0),
             c_uint32(0)))
@@ -173,12 +160,10 @@ def MPC_SetUpReferencePICC(subcarrier: Optional[SubcarrierFrequency]) -> None:
         if not isinstance(subcarrier, SubcarrierFrequency):
             raise TypeError('subcarrier must be an instance of '
                             'SubcarrierFrequency IntEnum')
-        ret = CTS3ErrorCode(_MPuLib.MPC_SetUpReferencePICC(
+        CTS3Exception._check_error(_MPuLib.MPC_SetUpReferencePICC(
             c_uint8(0),
             c_uint8(1),
             c_uint32(subcarrier)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SetPCDPauseMax(pause_duration_fc: float) -> None:
@@ -191,12 +176,10 @@ def MPC_SetPCDPauseMax(pause_duration_fc: float) -> None:
     """
     pause_duration_10fc = round(pause_duration_fc * 10)
     _check_limits(c_uint16, pause_duration_10fc, 'pause_duration_fc')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetPCDPauseMax(
+    CTS3Exception._check_error(_MPuLib.MPC_SetPCDPauseMax(
         c_uint8(0),
         c_uint8(TechnologyType.TYPE_A),
         c_uint16(pause_duration_10fc)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SetDetectionPCDModulation(ask_filter: int) -> None:
@@ -208,11 +191,9 @@ def MPC_SetDetectionPCDModulation(ask_filter: int) -> None:
         Raw ASK detection filter value
     """
     _check_limits(c_uint32, ask_filter, 'ask_filter')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetDetectionPCDModulation(
+    CTS3Exception._check_error(_MPuLib.MPC_SetDetectionPCDModulation(
         c_uint8(0),
         c_uint32(ask_filter)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # region PCD communication
 
@@ -226,11 +207,9 @@ def MPC_RfFieldOffDetected() -> bool:
         True if RF field went off
     """
     field = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_RfFieldOffDetected(
+    CTS3Exception._check_error(_MPuLib.MPC_RfFieldOffDetected(
         c_uint8(0),
         byref(field)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return field.value > 0
 
 
@@ -266,15 +245,13 @@ def MPC_WaitTypeAActiveState(atqa: bytes, uid: bytes,
         raise TypeError('sak must be an instance of int or 1 byte')
     timeout_ms = round(timeout * 1e3)
     _check_limits(c_uint32, timeout_ms, 'timeout')
-    ret = CTS3ErrorCode(_MPuLib.MPC_WaitTypeAActiveState(
+    CTS3Exception._check_error(_MPuLib.MPC_WaitTypeAActiveState(
         c_uint8(0),
         atqa,
         uid,
         c_uint32(len(uid)),
         byref(c_uint8(sak_value)),
         c_uint32(timeout_ms)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_WaitAndGetFrame(timeout: float) \
@@ -289,8 +266,8 @@ def MPC_WaitAndGetFrame(timeout: float) \
     Returns
     -------
     dict
-        'rx_frame' (bytes): Received frame
-        'rx_type' (TechnologyType): Received frame type
+        'rx_frame' (bytes) : Received frame
+        'rx_type' (TechnologyType) : Received frame type
     """
     timeout_ms = round(timeout * 1e3)
     _check_limits(c_uint32, timeout_ms, 'timeout')
@@ -298,15 +275,13 @@ def MPC_WaitAndGetFrame(timeout: float) \
     data = bytes(max_size)
     card_type = c_int32()
     bytes_number = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_WaitAndGetFrame(
+    CTS3Exception._check_error(_MPuLib.MPC_WaitAndGetFrame(
         c_uint8(0),
         c_uint32(timeout_ms),
         byref(card_type),
         data,
         c_uint32(max_size),
         byref(bytes_number)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'rx_frame': data[:bytes_number.value],
             'rx_type': TechnologyType(card_type.value)}
 
@@ -323,22 +298,20 @@ def MPC_WaitAndGetFrameTypeA106ModeBit(timeout: float) \
     Returns
     -------
     dict
-        'rx_frame' (bytes): Received frame
-        'rx_bits_number' (int): Number of received bits
+        'rx_frame' (bytes) : Received frame
+        'rx_bits_number' (int) : Number of received bits
     """
     timeout_ms = round(timeout * 1e3)
     _check_limits(c_uint32, timeout_ms, 'timeout')
     max_size = 8192
     data = bytes(max_size)
     rx_bits = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPC_WaitAndGetFrameTypeA106ModeBit(
+    CTS3Exception._check_error(_MPuLib.MPC_WaitAndGetFrameTypeA106ModeBit(
         c_uint8(0),
         c_uint32(timeout_ms),
         data,
         c_uint32(max_size),
         byref(rx_bits)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     bytes_number = int(rx_bits.value / 8)
     if rx_bits.value % 8 > 0:
         bytes_number += 1
@@ -362,13 +335,11 @@ def MPC_SendRawFrameType(card_type: TechnologyType, frame: bytes) -> None:
     if not isinstance(frame, bytes):
         raise TypeError('frame must be an instance of bytes')
     _check_limits(c_uint32, len(frame), 'frame')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SendRawFrameType(
+    CTS3Exception._check_error(_MPuLib.MPC_SendRawFrameType(
         c_uint8(0),
         c_uint32(card_type),
         frame,
         c_uint32(len(frame))))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SendRawFrameTypeWithCRC(card_type: TechnologyType,
@@ -388,13 +359,11 @@ def MPC_SendRawFrameTypeWithCRC(card_type: TechnologyType,
     if not isinstance(frame, bytes):
         raise TypeError('frame must be an instance of bytes')
     _check_limits(c_uint32, len(frame), 'frame')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SendRawFrameTypeWithCRC(
+    CTS3Exception._check_error(_MPuLib.MPC_SendRawFrameTypeWithCRC(
         c_uint8(0),
         c_uint32(card_type),
         frame,
         c_uint32(len(frame))))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_TransmitFrameA(frame: bytes, bits_number: Optional[int] = None,
@@ -415,13 +384,11 @@ def MPC_TransmitFrameA(frame: bytes, bits_number: Optional[int] = None,
     if bits_number is None:
         bits_number = 8 * len(frame)
     _check_limits(c_uint32, bits_number, 'bits_number')
-    ret = CTS3ErrorCode(_MPuLib.MPC_TransmitFrameA(
+    CTS3Exception._check_error(_MPuLib.MPC_TransmitFrameA(
         c_uint8(0),
         frame,
         c_uint32(bits_number),
         c_int32(1) if parity else c_int32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_SimSetDesyncPattern(t1_fc: Optional[float],
@@ -442,19 +409,17 @@ def MPS_SimSetDesyncPattern(t1_fc: Optional[float],
         _check_limits(c_uint32, t1_10fc, 't1_fc')
         t2_10fc = round(t2_fc * 1e1)
         _check_limits(c_uint32, t2_10fc, 't2_fc')
-        ret = CTS3ErrorCode(_MPuLib.MPS_SimSetDesyncPattern(
+        CTS3Exception._check_error(_MPuLib.MPS_SimSetDesyncPattern(
             c_uint8(0),
             c_uint8(1),
             c_uint32(t1_10fc),
             c_uint32(t2_10fc)))
     else:
-        ret = CTS3ErrorCode(_MPuLib.MPS_SimSetDesyncPattern(
+        CTS3Exception._check_error(_MPuLib.MPS_SimSetDesyncPattern(
             c_uint8(0),
             c_uint8(0),
             c_uint32(0),
             c_uint32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_SimChangeDataRate(picc_datarate: DataRate,
@@ -474,12 +439,10 @@ def MPS_SimChangeDataRate(picc_datarate: DataRate,
     if not isinstance(pcd_datarate, DataRate):
         raise TypeError('pcd_datarate must be an instance of '
                         'DataRate IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPS_SimChangeDataRate(
+    CTS3Exception._check_error(_MPuLib.MPS_SimChangeDataRate(
         c_uint8(0),
         c_uint16(picc_datarate),
         c_uint16(pcd_datarate)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_SelectVICCDataRate(data_rate: VicinityDataRate,
@@ -499,12 +462,10 @@ def MPC_SelectVICCDataRate(data_rate: VicinityDataRate,
     if not isinstance(sub_carrier, VicinitySubCarrier):
         raise TypeError('sub_carrier must be an instance of '
                         'VicinitySubCarrier IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SelectVICCDataRate(
+    CTS3Exception._check_error(_MPuLib.MPC_SelectVICCDataRate(
         c_uint8(0),
         c_uint8(data_rate),
         c_uint8(sub_carrier)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_SimSetFdt(fdt1_clk: int, fdt2_clk: int) -> None:
@@ -519,13 +480,11 @@ def MPS_SimSetFdt(fdt1_clk: int, fdt2_clk: int) -> None:
     """
     _check_limits(c_uint32, fdt1_clk, 'fdt1_clk')
     _check_limits(c_uint32, fdt2_clk, 'fdt2_clk')
-    ret = CTS3ErrorCode(_MPuLib.MPS_SimSetFdt(
+    CTS3Exception._check_error(_MPuLib.MPS_SimSetFdt(
         c_uint8(0),
         c_uint8(0),
         c_uint32(fdt1_clk),
         c_uint32(fdt2_clk)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
@@ -534,10 +493,8 @@ def MPS_SimSetFdt(fdt1_clk: int, fdt2_clk: int) -> None:
 
 def MPC_IQLMInit() -> None:
     """Initializes IQ load modulation"""
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMInit(
+    CTS3Exception._check_error(_MPuLib.MPC_IQLMInit(
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -557,11 +514,9 @@ def MPC_IQLMStart(mode: IqlmMode = IqlmMode.IQLM_MODE_DYNAMIC) -> None:
     """
     if not isinstance(mode, IqlmMode):
         raise TypeError('mode must be an instance of IqlmMode IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMStart(
+    CTS3Exception._check_error(_MPuLib.MPC_IQLMStart(
         c_uint8(0),
         c_uint8(mode)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_IQLoadModulationStart(mode: IqlmMode = IqlmMode.IQLM_MODE_DYNAMIC) \
@@ -585,12 +540,10 @@ def MPC_IQLMSuspendControlLoop(suspend: bool) -> None:
     suspend : bool
         True to suspend the regulation
     """
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMSuspendControlLoop(
+    CTS3Exception._check_error(_MPuLib.MPC_IQLMSuspendControlLoop(
         c_uint8(0),
         c_uint8(1) if suspend else c_uint8(0),
         c_uint32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_IQLoadModulationSuspendControlLoop(suspend: bool) -> None:
@@ -607,10 +560,8 @@ def MPC_IQLoadModulationSuspendControlLoop(suspend: bool) -> None:
 
 def MPC_IQLMStop() -> None:
     """Stops IQ load modulation regulation"""
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMStop(
+    CTS3Exception._check_error(_MPuLib.MPC_IQLMStop(
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_IQLoadModulationStop() -> None:
@@ -633,13 +584,11 @@ def MPC_IQLMSetHR(amplitude: float, phase: float) -> None:
     _check_limits(c_uint32, amplitude_mV, 'amplitude')
     phase_cdeg = round(phase * 1e2)
     _check_limits(c_int32, phase_cdeg, 'phase')
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMSetHR(
+    CTS3Exception._check_error(_MPuLib.MPC_IQLMSetHR(
         c_uint8(0),
         c_uint32(amplitude_mV),
         c_int32(phase_cdeg),
         c_uint32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_IQLoadModulationSetHR(amplitude: float, phase: float) -> None:
@@ -684,15 +633,13 @@ def MPC_IQLMSidebands(lower_amplitude: float, lower_phase: float,
     _check_limits(c_int32, upper_phase_cdeg, 'upper_phase')
     offset_mV = round(offset * 1e3)
     _check_limits(c_int32, offset_mV, 'offset')
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMSidebands(
+    CTS3Exception._check_error(_MPuLib.MPC_IQLMSidebands(
         c_uint8(0),
         c_uint32(lower_amplitude_mV),
         c_int32(lower_phase_cdeg),
         c_uint32(upper_amplitude_mV),
         c_int32(upper_phase_cdeg),
         c_int32(offset_mV)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_IQLoadModulationSidebands(lower_amplitude: float, lower_phase: float,
@@ -742,18 +689,16 @@ def MPC_IQLMChangeParameters(parameter: IqlmParameter,
     if not isinstance(parameter, IqlmParameter):
         raise TypeError('parameter must be an instance of '
                         'IqlmParameter IntEnum')
-    if parameter == IqlmParameter.CP_IQLM_REF_CARRIER_PHASE:  # 1/100 degree
+    if parameter == IqlmParameter.CP_IQLM_REF_CARRIER_PHASE:  # 1°/100
         val = round(value * 1e2)
         _check_limits(c_int32, val, 'value')
     else:  # boolean
         val = 1 if value else 0
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMChangeParameters(
+    CTS3Exception._check_error(_MPuLib.MPC_IQLMChangeParameters(
         c_uint8(0),
         c_uint8(parameter),
         c_int32(val),
         c_uint32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_IQLoadModulationChangeParameters(parameter: IqlmParameter,
@@ -803,13 +748,11 @@ def MPC_IQLMPhaseDrift(frequency_drift: float, condition: IqlmCondition,
                         'IqlmCondition IntEnum')
     if not isinstance(data_rate, DataRate):
         raise TypeError('data_rate must be an instance of DataRate IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMPhaseDrift(
+    CTS3Exception._check_error(_MPuLib.MPC_IQLMPhaseDrift(
         c_uint8(0),
         c_uint32(frequency_drift_Hz),
         c_int32(condition),
         data_rate))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPC_IQLoadModulationPhaseDrift(frequency_drift: float,
@@ -845,17 +788,15 @@ def MPC_IQLMGetStatus() -> Dict[str, Union[IqlmPhaseStatus, float]]:
     Returns
     -------
     dict
-        'status' (IqlmPhaseStatus): Regulation loop status
-        'frequency' (float): Regulation frequency in Hz
+        'status' (IqlmPhaseStatus) : Regulation loop status
+        'frequency' (float) : Regulation frequency in Hz
     """
     status = c_uint8()
     freq = c_double()
-    ret = CTS3ErrorCode(_MPuLib.MPC_IQLMGetStatus(
+    CTS3Exception._check_error(_MPuLib.MPC_IQLMGetStatus(
         c_uint8(0),
         byref(status),
         byref(freq)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'status': IqlmPhaseStatus(status.value),
             'frequency': freq.value}
 
@@ -867,8 +808,8 @@ def MPC_IQLoadModulationGetStatus() \
     Returns
     -------
     dict
-        'status' (IqlmPhaseStatus): Regulation loop status
-        'frequency' (float): Regulation frequency in Hz
+        'status' (IqlmPhaseStatus) : Regulation loop status
+        'frequency' (float) : Regulation frequency in Hz
     """
     warn('renamed as MPC_IQLMGetStatus', FutureWarning)
     return MPC_IQLMGetStatus()

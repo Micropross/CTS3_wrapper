@@ -15,6 +15,7 @@ from ctypes import c_char, c_char_p, c_uint8, c_int16, c_uint16
 from ctypes import c_int32, c_uint32, c_double, sizeof
 from ctypes import c_void_p, byref, create_string_buffer
 from ctypes import CDLL, Structure, CFUNCTYPE
+from .MPStatus import CTS3ErrorCode
 
 if sys.version_info < (3, 6):
     raise Exception('Requires Python ≥ 3.6')
@@ -245,7 +246,6 @@ def GetMifareErrorMessageFromCode(error_code: int) -> str:
     return f'Unknown error code {error_code}'
 
 
-from .MPStatus import CTS3ErrorCode  # noqa: E402
 from .MPException import CTS3Exception  # noqa: E402
 
 
@@ -339,25 +339,21 @@ def MPOS_OpenResource(resource_id: Union[int, ResourceType, None] = None,
             c_uint8(0),
             c_uint32(blocking_mode))
         if ret_code != 27:  # For compatiblity with MP500
-            ret = CTS3ErrorCode(ret_code)
-            if ret != CTS3ErrorCode.RET_OK:
-                raise CTS3Exception(ret)
+            CTS3Exception._check_error(ret_code)
         ret_code = _MPuLib.MPOS_OpenResource(
             c_uint32(MPOS_GetResourceID()),
             c_uint8(0),
             c_uint32(blocking_mode))
         if ret_code == 3901:  # For compatiblity with MP500
-            ret = CTS3ErrorCode.RET_RESOURCE_ALREADY_OPEN
+            CTS3Exception._check_error(CTS3ErrorCode.RET_RESOURCE_ALREADY_OPEN)
         else:
-            ret = CTS3ErrorCode(ret_code)
+            CTS3Exception._check_error(ret_code)
     else:
         _check_limits(c_uint32, resource_id, 'resource_id')
-        ret = CTS3ErrorCode(_MPuLib.MPOS_OpenResource(
+        CTS3Exception._check_error(_MPuLib.MPOS_OpenResource(
             c_uint32(resource_id),
             c_uint8(0),
             c_uint32(blocking_mode)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPOS_CloseResource(resource_id: Union[int, ResourceType, None] =
@@ -403,11 +399,9 @@ def MPOS_GetResourceID() -> int:
         Resource identifier
     """
     resource_id = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPOS_GetResourceID(
+    CTS3Exception._check_error(_MPuLib.MPOS_GetResourceID(
         c_uint8(0),
         byref(resource_id)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return resource_id.value
 
 # endregion
@@ -424,10 +418,8 @@ def MPS_GetVersion() -> str:
         Device version
     """
     message = create_string_buffer(128)
-    ret = CTS3ErrorCode(_MPuLib.MPS_GetVersion(
+    CTS3Exception._check_error(_MPuLib.MPS_GetVersion(
         message))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return message.value.decode('ascii').strip()
 
 
@@ -437,16 +429,14 @@ def MPS_GetHardRev() -> Dict[str, Union[str, int]]:
     Returns
     -------
     dict
-        'revision' (str): Hardware revision
-        'variant' (int): Hardware variant
+        'revision' (str) : Hardware revision
+        'variant' (int) : Hardware variant
     """
     rev = c_char()
     var = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPS_GetHardRev(
+    CTS3Exception._check_error(_MPuLib.MPS_GetHardRev(
         byref(rev),
         byref(var)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return {'revision': rev.value.decode('ascii'),
             'variant': var.value}
 
@@ -460,10 +450,8 @@ def MPS_GetVersion2() -> str:
         Device information in XML format
     """
     message = create_string_buffer(1024 * 1024)
-    ret = CTS3ErrorCode(_MPuLib.MPS_GetVersion2(
+    CTS3Exception._check_error(_MPuLib.MPS_GetVersion2(
         message))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     info = message.value.decode('ascii').strip()
     return cast(str, parseString(info).toprettyxml())
 
@@ -487,12 +475,10 @@ def MPS_EESetConfig(config: EEConfig, value: bool) -> None:
     """
     if not isinstance(config, EEConfig):
         raise TypeError('config must be an instance of EEConfig IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPS_EESetConfig(
+    CTS3Exception._check_error(_MPuLib.MPS_EESetConfig(
         c_uint8(0),
         c_uint32(config),
         c_uint32(1) if value else c_uint32(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_EEGetConfig(config: EEConfig) -> bool:
@@ -511,12 +497,10 @@ def MPS_EEGetConfig(config: EEConfig) -> bool:
     if not isinstance(config, EEConfig):
         raise TypeError('config must be an instance of EEConfig IntEnum')
     value = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPS_EESetConfig(
+    CTS3Exception._check_error(_MPuLib.MPS_EESetConfig(
         c_uint8(0),
         c_uint32(config),
         byref(value)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return value.value > 0
 
 
@@ -529,10 +513,8 @@ def MPS_SelectActivePartition(partition: int) -> None:
         Partition index
     """
     _check_limits(c_uint8, partition, 'partition')
-    ret = CTS3ErrorCode(_MPuLib.MPS_SelectActivePartition(
+    CTS3Exception._check_error(_MPuLib.MPS_SelectActivePartition(
         c_uint8(partition)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_GetActivePartition() -> int:
@@ -544,10 +526,8 @@ def MPS_GetActivePartition() -> int:
         Partition index
     """
     partition = c_uint8()
-    ret = CTS3ErrorCode(_MPuLib.MPS_GetActivePartition(
+    CTS3Exception._check_error(_MPuLib.MPS_GetActivePartition(
         byref(partition)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return partition.value
 
 
@@ -562,11 +542,11 @@ def MPS_ListVersions(partition: int) -> Dict[str, Union[str, int]]:
     Returns
     -------
     dict
-        'active_partition' (int): Index of the partition currently in use
-        'os_version' (str): OS version
-        'application_version' (str): Application version
-        'fpga_version' (str): FPGA version
-        'daq_version' (str): DAQ version
+        'active_partition' (int) : Index of the partition currently in use
+        'os_version' (str) : OS version
+        'application_version' (str) : Application version
+        'fpga_version' (str) : FPGA version
+        'daq_version' (str) : DAQ version
     """
     _check_limits(c_uint8, partition, 'partition')
     current_partition = c_uint8()
@@ -574,15 +554,13 @@ def MPS_ListVersions(partition: int) -> Dict[str, Union[str, int]]:
     app = create_string_buffer(64)
     fpga = create_string_buffer(64)
     daq = create_string_buffer(64)
-    ret = CTS3ErrorCode(_MPuLib.MPS_ListVersions(
+    CTS3Exception._check_error(_MPuLib.MPS_ListVersions(
         c_uint8(partition),
         byref(current_partition),
         system,
         app,
         fpga,
         daq))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     if partition > 0:
         return {'active_partition': current_partition.value,
                 'os_version': system.value.decode('ascii').strip(),
@@ -611,17 +589,15 @@ def UpdateFirmware(path: str, partIndex: int,
     if call_back:
         cmp_func = CFUNCTYPE(c_int32, c_int32)
 
-        ret = CTS3ErrorCode(_MPuLib.UpdateFirmware(
+        CTS3Exception._check_error(_MPuLib.UpdateFirmware(
             path.encode('ascii'),
             c_uint8(partIndex),
             cmp_func(call_back)))
     else:
-        ret = CTS3ErrorCode(_MPuLib.UpdateFirmware(
+        CTS3Exception._check_error(_MPuLib.UpdateFirmware(
             path.encode('ascii'),
             c_uint8(partIndex),
             None))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def ApplyLicenseUpdateFile(path: str) -> None:
@@ -632,10 +608,8 @@ def ApplyLicenseUpdateFile(path: str) -> None:
     path : str
         License update file path
     """
-    ret = CTS3ErrorCode(_MPuLib.ApplyLicenseUpdateFile(
+    CTS3Exception._check_error(_MPuLib.ApplyLicenseUpdateFile(
         path.encode('ascii')))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -708,10 +682,8 @@ def MPS_ResetHard(resource_id: Union[int, ResourceType, None] = None) -> None:
     if resource_id is None:
         resource_id = 0
     _check_limits(c_uint8, resource_id, 'resource_id')
-    ret = CTS3ErrorCode(_MPuLib.MPS_ResetHard(
+    CTS3Exception._check_error(_MPuLib.MPS_ResetHard(
         c_uint8(resource_id)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_NetworkGetAddress() -> Dict[str, Union[IPv4Interface, IPv4Address]]:
@@ -720,18 +692,16 @@ def MPS_NetworkGetAddress() -> Dict[str, Union[IPv4Interface, IPv4Address]]:
     Returns
     -------
     dict
-        'ip_interface' (IPv4Interface): IP interface
-        'gateway_address' (IPv4Address): Gateway IP address
+        'ip_interface' (IPv4Interface) : IP interface
+        'gateway_address' (IPv4Address) : Gateway IP address
     """
     ip_address = c_uint32()
     subnet_mask = c_uint32()
     gateway_address = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPS_NetworkGetAddress(
+    CTS3Exception._check_error(_MPuLib.MPS_NetworkGetAddress(
         byref(ip_address),
         byref(subnet_mask),
         byref(gateway_address)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     interface = IPv4Interface((ip_address.value,
                                str(IPv4Address(subnet_mask.value))))
     return {'ip_interface': interface,
@@ -751,7 +721,7 @@ def MPS_NetworkSetAddress(ip_interface: Optional[IPv4Interface],
         Gateway IP address
     """
     if ip_interface is None:
-        ret = CTS3ErrorCode(_MPuLib.MPS_NetworkSetAddress(
+        CTS3Exception._check_error(_MPuLib.MPS_NetworkSetAddress(
             c_uint32(0),
             c_uint32(0),
             c_uint32(0)))
@@ -760,7 +730,7 @@ def MPS_NetworkSetAddress(ip_interface: Optional[IPv4Interface],
             raise TypeError('ip_interface must be an instance of '
                             'IPv4Interface')
         if gateway_address is None:
-            ret = CTS3ErrorCode(_MPuLib.MPS_NetworkSetAddress(
+            CTS3Exception._check_error(_MPuLib.MPS_NetworkSetAddress(
                 c_uint32(int(ip_interface.ip)),
                 c_uint32(int(ip_interface.netmask)),
                 c_uint32(0)))
@@ -768,12 +738,10 @@ def MPS_NetworkSetAddress(ip_interface: Optional[IPv4Interface],
             if not isinstance(gateway_address, IPv4Address):
                 raise TypeError('gateway_address must be an instance of '
                                 'IPv4Address')
-            ret = CTS3ErrorCode(_MPuLib.MPS_NetworkSetAddress(
+            CTS3Exception._check_error(_MPuLib.MPS_NetworkSetAddress(
                 c_uint32(int(ip_interface.ip)),
                 c_uint32(int(ip_interface.netmask)),
                 c_uint32(int(gateway_address))))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_NetworkSetUsbAddress(ip_interface: IPv4Interface) -> None:
@@ -787,10 +755,8 @@ def MPS_NetworkSetUsbAddress(ip_interface: IPv4Interface) -> None:
     if not isinstance(ip_interface, IPv4Interface):
         raise TypeError('ip_interface must be an instance of '
                         'IPv4Interface')
-    ret = CTS3ErrorCode(_MPuLib.MPS_NetworkSetUsbAddress(
+    CTS3Exception._check_error(_MPuLib.MPS_NetworkSetUsbAddress(
         str(ip_interface.ip).encode('ascii')))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -832,10 +798,8 @@ def MPS_Beep(duration: float) -> None:
     """
     duration_ms = round(duration * 1e3)
     _check_limits(c_uint32, duration_ms, 'duration')
-    ret = CTS3ErrorCode(_MPuLib.MPS_Beep(
+    CTS3Exception._check_error(_MPuLib.MPS_Beep(
         c_uint32(duration_ms)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 @unique
@@ -866,12 +830,10 @@ def MPS_CouplerCheckLicense(embedded_license: LicenseId) -> bool:
         raise TypeError('embedded_license must be an instance of '
                         'LicenseId IntEnum')
     license_validity = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPS_CouplerCheckLicense(
+    CTS3Exception._check_error(_MPuLib.MPS_CouplerCheckLicense(
         c_uint8(0),
         c_uint32(embedded_license),
         byref(license_validity)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return license_validity.value == 0xFFFFFFFF
 
 
@@ -885,12 +847,10 @@ def GetLastSystemErrorMessageEx() -> str:
     """
     max_size = 2 * 1024 * 1024
     message = create_string_buffer(max_size)
-    ret = CTS3ErrorCode(_MPuLib.GetLastSystemErrorMessageEx(
+    CTS3Exception._check_error(_MPuLib.GetLastSystemErrorMessageEx(
         message,
         c_uint8(0),
         c_uint32(max_size)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return message.value.decode('ascii').strip()
 
 
@@ -944,10 +904,8 @@ def MPS_DoTempo(delay: float) -> None:
     """
     delay_us = round(delay * 1e6)
     _check_limits(c_uint32, delay_us, 'delay')
-    ret = CTS3ErrorCode(_MPuLib.MPS_DoTempo(
+    CTS3Exception._check_error(_MPuLib.MPS_DoTempo(
         c_uint32(delay_us)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_GetTickCount() -> float:
@@ -988,18 +946,14 @@ def MPS_GetTime() -> datetime:
         System time
     """
     time = _RTM_Time()
-    ret = CTS3ErrorCode(_MPuLib.MPS_GetTime(
+    CTS3Exception._check_error(_MPuLib.MPS_GetTime(
         byref(time)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     if time.Seconds > 59:
         time.Seconds = 59
 
     date = _RTM_Date()
-    ret = CTS3ErrorCode(_MPuLib.MPS_GetDate(
+    CTS3Exception._check_error(_MPuLib.MPS_GetDate(
         byref(date)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
     local_time = datetime(date.Year + 1900, date.Month, date.DayOfMonth,
                           time.Hours, time.Minutes, time.Seconds)
@@ -1031,16 +985,12 @@ def MPS_SetTime(time: datetime = datetime.now().astimezone()) -> None:
 
     _check_limits(c_uint8, time.year - 1900, 'time')
     c_time = _RTM_Time(time.hour, time.minute, time.second)
-    ret = CTS3ErrorCode(_MPuLib.MPS_SetTime(
+    CTS3Exception._check_error(_MPuLib.MPS_SetTime(
         byref(c_time)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
     c_date = _RTM_Date(0, time.day, time.month, time.year - 1900)
-    ret = CTS3ErrorCode(_MPuLib.MPS_SetDate(
+    CTS3Exception._check_error(_MPuLib.MPS_SetDate(
         byref(c_date)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_GetTimeZone() -> str:
@@ -1052,10 +1002,8 @@ def MPS_GetTimeZone() -> str:
         Current time zone
     """
     time_zone = create_string_buffer(128)
-    ret = CTS3ErrorCode(_MPuLib.MPS_GetTimeZone(
+    CTS3Exception._check_error(_MPuLib.MPS_GetTimeZone(
         time_zone))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return time_zone.value.decode('ascii')
 
 
@@ -1078,10 +1026,8 @@ def MPS_SetTimeZone(time_zone: Optional[str] = None) -> None:
             time_zone = str(ZoneInfo('localtime'))
     if not time_zone:
         raise ValueError('unable to get local time zone')
-    ret = CTS3ErrorCode(_MPuLib.MPS_SetTimeZone(
+    CTS3Exception._check_error(_MPuLib.MPS_SetTimeZone(
         time_zone.encode('ascii')))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_GetDate() -> datetime:
@@ -1133,19 +1079,15 @@ def MPS_LedOn(color: LedColor) -> None:
     """
     if not isinstance(color, LedColor):
         raise TypeError('color must be an instance of LedColor IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPS_LedOn(
+    CTS3Exception._check_error(_MPuLib.MPS_LedOn(
         c_uint8(0),
         c_uint8(color)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_LedOff() -> None:
     """Switches AUX CPU connector LED off"""
-    ret = CTS3ErrorCode(_MPuLib.MPS_LedOff(
+    CTS3Exception._check_error(_MPuLib.MPS_LedOff(
         c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
@@ -1166,12 +1108,10 @@ def MPS_I2cAuxWrite(slave_address: int, data: bytes) -> None:
     if not isinstance(data, bytes):
         raise TypeError('data must be an instance of bytes')
     _check_limits(c_uint8, len(data), 'data')
-    ret = CTS3ErrorCode(_MPuLib.MPS_I2cAuxWrite(
+    CTS3Exception._check_error(_MPuLib.MPS_I2cAuxWrite(
         c_uint8(slave_address),
         c_uint8(len(data)),
         data))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_I2cAuxRead(slave_address: int, data_length: int) -> bytes:
@@ -1193,12 +1133,10 @@ def MPS_I2cAuxRead(slave_address: int, data_length: int) -> bytes:
     _check_limits(c_uint8, data_length, 'data_length')
     data = bytes(255)
     size = c_uint8(data_length)
-    ret = CTS3ErrorCode(_MPuLib.MPS_I2cAuxRead(
+    CTS3Exception._check_error(_MPuLib.MPS_I2cAuxRead(
         c_uint8(slave_address),
         byref(size),
         data))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:size.value]
 
 
@@ -1216,12 +1154,10 @@ def MPS_I2cAux1Write(slave_address: int, data: bytes) -> None:
     if not isinstance(data, bytes):
         raise TypeError('data must be an instance of bytes')
     _check_limits(c_uint8, len(data), 'data')
-    ret = CTS3ErrorCode(_MPuLib.MPS_I2cAux1Write(
+    CTS3Exception._check_error(_MPuLib.MPS_I2cAux1Write(
         c_uint8(slave_address),
         c_uint8(len(data)),
         data))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_I2cAux1Read(slave_address: int, data_length: int) -> bytes:
@@ -1243,12 +1179,10 @@ def MPS_I2cAux1Read(slave_address: int, data_length: int) -> bytes:
     _check_limits(c_uint8, data_length, 'data_length')
     data = bytes(255)
     size = c_uint8(data_length)
-    ret = CTS3ErrorCode(_MPuLib.MPS_I2cAux1Read(
+    CTS3Exception._check_error(_MPuLib.MPS_I2cAux1Read(
         c_uint8(slave_address),
         byref(size),
         data))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return data[:size.value]
 
 # endregion
@@ -1310,12 +1244,10 @@ def MPS_PortInit(baud_rate: Baudrate = Baudrate.BAUDS_115200,
         raise ValueError('invalid data_bits value')
     if xon_xoff:
         flag |= 0x08
-    ret = CTS3ErrorCode(_MPuLib.MPS_PortInit(
+    CTS3Exception._check_error(_MPuLib.MPS_PortInit(
         c_uint8(3),
         c_uint8(baud_rate),
         c_uint8(flag)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_PortSend(tx_frame: bytes) -> None:
@@ -1329,12 +1261,10 @@ def MPS_PortSend(tx_frame: bytes) -> None:
     if not isinstance(tx_frame, bytes):
         raise TypeError('tx_frame must be an instance of bytes')
     _check_limits(c_uint16, len(tx_frame), 'tx_frame')
-    ret = CTS3ErrorCode(_MPuLib.MPS_PortSend(
+    CTS3Exception._check_error(_MPuLib.MPS_PortSend(
         c_uint8(3),
         tx_frame,
         c_uint16(len(tx_frame))))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def MPS_PortReceive(data_count: Optional[int] = None) -> bytes:
@@ -1354,23 +1284,20 @@ def MPS_PortReceive(data_count: Optional[int] = None) -> bytes:
     if data_count:
         _check_limits(c_uint16, data_count, 'data_count')
         data = bytes(data_count)
-        ret = CTS3ErrorCode(_MPuLib.MPS_PortReceive(
+        CTS3Exception._check_error(_MPuLib.MPS_PortReceive(
             c_uint8(3),
             data,
             c_uint16(data_count)))
     else:
         count = c_uint16()
-        ret = CTS3ErrorCode(_MPuLib.MPS_PortStatus(
+        CTS3Exception._check_error(_MPuLib.MPS_PortStatus(
             c_uint8(3),
             byref(count)))
-        if ret == CTS3ErrorCode.RET_OK:
-            data = bytes(count.value)
-            ret = CTS3ErrorCode(_MPuLib.MPS_PortReceive(
-                c_uint8(3),
-                data,
-                count))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+        data = bytes(count.value)
+        CTS3Exception._check_error(_MPuLib.MPS_PortReceive(
+            c_uint8(3),
+            data,
+            count))
     return data
 
 
@@ -1398,12 +1325,10 @@ def MPS_PortStatusEx(status_type: PortStatusType) -> int:
         raise TypeError('status_type must be an instance of '
                         'PortStatusType IntEnum')
     value = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.MPS_PortStatusEx(
+    CTS3Exception._check_error(_MPuLib.MPS_PortStatusEx(
         c_uint8(3),
         c_uint32(status_type),
         byref(value)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return value.value
 
 # endregion
@@ -1433,12 +1358,10 @@ def MPC_SetRelay(relay_number: AuxRelay, state: bool) -> None:
     """
     if not isinstance(relay_number, AuxRelay):
         raise TypeError('relay_number must be an instance of AuxRelay IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.MPC_SetRelay(
+    CTS3Exception._check_error(_MPuLib.MPC_SetRelay(
         c_uint8(0),
         c_uint8(relay_number),
         c_uint8(1) if state else c_uint8(0)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
@@ -1487,14 +1410,12 @@ def LaunchEmbeddedScript(script_command: str,
     retCode = c_uint8(0)
     if call_back:
         cmp_func = CFUNCTYPE(c_int32, c_char_p)
-    ret = CTS3ErrorCode(_MPuLib.LaunchEmbeddedScript(
+    CTS3Exception._check_error(_MPuLib.LaunchEmbeddedScript(
         script_command.encode('ascii'),
         c_uint32(option),
         c_uint32(timeout_ms),
         byref(retCode),
         cmp_func(call_back) if call_back else None))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     return retCode.value
 
 
@@ -1514,12 +1435,10 @@ def StartEmbeddedApplication(application_path: str, args: str,
     """
     if call_back:
         cmp_func = CFUNCTYPE(c_int32, c_char_p)
-    ret = CTS3ErrorCode(_MPuLib.StartEmbeddedApplication(
+    CTS3Exception._check_error(_MPuLib.StartEmbeddedApplication(
         application_path.encode('ascii'),
         args.encode('ascii') if args else None,
         cmp_func(call_back) if call_back else None))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
 
@@ -1539,15 +1458,13 @@ def OpenCommunication(host: Union[str, IPv4Address],
     """
     _MPuLib.OpenCommunication.restype = c_int32
     if isinstance(host, str):
-        ret = CTS3ErrorCode(_MPuLib.OpenCommunication(
+        CTS3Exception._check_error(_MPuLib.OpenCommunication(
             host.encode('ascii')))
     elif isinstance(host, IPv4Address):
-        ret = CTS3ErrorCode(_MPuLib.OpenCommunication(
+        CTS3Exception._check_error(_MPuLib.OpenCommunication(
             str(host).encode('ascii')))
     else:
         raise TypeError('host must be an instance of str or IPv4Interface')
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     if log:
         _log_start()
 
@@ -1556,9 +1473,7 @@ def CloseCommunication() -> None:
     """Closes the communication channel"""
     _log_stop()
     _MPuLib.CloseCommunication.restype = c_int32
-    ret = CTS3ErrorCode(_MPuLib.CloseCommunication())
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
+    CTS3Exception._check_error(_MPuLib.CloseCommunication())
 
 
 @unique
@@ -1586,11 +1501,9 @@ def SetDLLParameter(param: LibraryParameter, value: float) -> None:
                         'LibraryParameter IntEnum')
     value_ms = round(value * 1e3)
     _check_limits(c_uint32, value_ms, 'value')
-    ret = CTS3ErrorCode(_MPuLib.SetDLLParameter(
+    CTS3Exception._check_error(_MPuLib.SetDLLParameter(
         c_uint32(param),
         c_uint32(value_ms)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def GetDLLParameter(param: LibraryParameter) -> Union[str, float]:
@@ -1610,11 +1523,9 @@ def GetDLLParameter(param: LibraryParameter) -> Union[str, float]:
         raise TypeError('param must be an instance of '
                         'LibraryParameter IntEnum')
     val = c_uint32()
-    ret = CTS3ErrorCode(_MPuLib.GetDLLParameter(
+    CTS3Exception._check_error(_MPuLib.GetDLLParameter(
         c_uint32(param),
         byref(val)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     if param == LibraryParameter.DLL_VERSION:
         return str(val.value >> 24) + '.' + str((val.value >> 16) & 0xFF) + \
             '.' + str((val.value >> 8) & 0xFF) + '.' + \
@@ -1665,38 +1576,32 @@ def SendFrame(command: Optional[str], timeout: int = -1,
     max_buffer_size = 3 * 1024 * 1024 + 1
     if command is None:
         response = create_string_buffer(max_buffer_size)
-        ret = CTS3ErrorCode(_MPuLib.SendFrame(
+        CTS3Exception._check_error(_MPuLib.SendFrame(
             None,
             c_int32(0),
             c_uint16(timeout),
             '',
             response))
-        if ret != CTS3ErrorCode.RET_OK:
-            raise CTS3Exception(ret)
         return response.value.decode('ascii').strip()
     else:
         if not asynchronous_tx and not command.endswith('\r'):
             command += '\r'
         if asynchronous_tx:
-            ret = CTS3ErrorCode(_MPuLib.SendFrame(
+            CTS3Exception._check_error(_MPuLib.SendFrame(
                 byref(c_uint32(1)),
                 c_int32(1),
                 c_uint16(timeout),
                 command.encode('ascii'),
                 None))
-            if ret != CTS3ErrorCode.RET_OK:
-                raise CTS3Exception(ret)
             return None
         else:
             response = create_string_buffer(max_buffer_size)
-            ret = CTS3ErrorCode(_MPuLib.SendFrame(
+            CTS3Exception._check_error(_MPuLib.SendFrame(
                 None,
                 c_int32(0),
                 c_uint16(timeout),
                 command.encode('ascii'),
                 response))
-            if ret != CTS3ErrorCode.RET_OK:
-                raise CTS3Exception(ret)
             return response.value.decode('ascii').strip()
 
 
@@ -1716,13 +1621,11 @@ def SetDLLMode(mode: LibraryMode) -> None:
     mode : LibraryMode
         Working mode
     """
-    _MPuLib.SetDLLMode.restype = c_int32
     if not isinstance(mode, LibraryMode):
         raise TypeError('flag must be an instance of LibraryMode IntEnum')
-    ret = CTS3ErrorCode(_MPuLib.SetDLLMode(
+    _MPuLib.SetDLLMode.restype = c_int32
+    CTS3Exception._check_error(_MPuLib.SetDLLMode(
         c_uint32(mode)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def USBEnumerateDevices() -> List[str]:
@@ -1733,14 +1636,12 @@ def USBEnumerateDevices() -> List[str]:
     list(str)
         Devices serial number list
     """
-    _MPuLib.SetDLLMode.restype = c_int32
     devices_number = c_int32()
     devices_list = create_string_buffer(0xFFFF)
-    ret = CTS3ErrorCode(_MPuLib.USBEnumerateDevices2(
+    _MPuLib.USBEnumerateDevices2.restype = c_int32
+    CTS3Exception._check_error(_MPuLib.USBEnumerateDevices2(
         byref(devices_number),
         devices_list))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     list_string = devices_list.value.decode('ascii')
     return list_string.splitlines() if len(list_string) else []
 
@@ -1751,18 +1652,16 @@ def TCPEnumerateDevices() -> Dict[str, IPv4Address]:
     Returns
     -------
     dict
-        Device serial number (str): Device IP address (IPv4Address)
+        Device serial number (str) : Device IP address (IPv4Address)
     """
-    _MPuLib.SetDLLMode.restype = c_int32
     devices_number = c_uint32()
     devices_ip = create_string_buffer(0xFFFF)
     devices_serial = create_string_buffer(0xFFFF)
-    ret = CTS3ErrorCode(_MPuLib.TCPEnumerateDevices(
+    _MPuLib.TCPEnumerateDevices.restype = c_int32
+    CTS3Exception._check_error(_MPuLib.TCPEnumerateDevices(
         byref(devices_number),
         devices_ip,
         devices_serial))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
     list_ip = devices_ip.value.decode('ascii').splitlines()
     list_serial = devices_serial.value.decode('ascii').splitlines()
     if len(list_ip) and len(list_ip) == len(list_serial):
@@ -1793,10 +1692,8 @@ def SelectActiveDevice(active_device: int) -> None:
     """
     _check_limits(c_uint32, active_device, 'active_device')
     _MPuLib.SelectActiveDevice.restype = c_int32
-    ret = CTS3ErrorCode(_MPuLib.SelectActiveDevice(
+    CTS3Exception._check_error(_MPuLib.SelectActiveDevice(
         c_uint32(active_device)))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def AbortCoupler(host: Union[str, IPv4Address]) -> None:
@@ -1829,11 +1726,9 @@ def UploadClientFile(local_path: str, remote_name: str) -> None:
     remote_name : str
         CTS3 remote file name (will be over-written if already exists)
     """
-    ret = CTS3ErrorCode(_MPuLib.UploadClientFile(
+    CTS3Exception._check_error(_MPuLib.UploadClientFile(
         local_path.encode('ascii'),
         remote_name.encode('ascii')))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 
 def DownloadClientFile(remote_name: str, local_path: str) -> None:
@@ -1846,10 +1741,8 @@ def DownloadClientFile(remote_name: str, local_path: str) -> None:
     local_path : str
         Path to file to be downloaded
     """
-    ret = CTS3ErrorCode(_MPuLib.DownloadClientFile(
+    CTS3Exception._check_error(_MPuLib.DownloadClientFile(
         remote_name.encode('ascii'),
         local_path.encode('ascii')))
-    if ret != CTS3ErrorCode.RET_OK:
-        raise CTS3Exception(ret)
 
 # endregion
