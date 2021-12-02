@@ -8,6 +8,7 @@ from .MPStatus import CTS3ErrorCode
 from .MPException import CTS3Exception
 from struct import iter_unpack
 from math import sqrt
+from warnings import warn
 
 
 class ChannelConfig(Structure):
@@ -341,16 +342,14 @@ class DaqDownloadMode(IntEnum):
 
 @unique
 class DaqDataFormat(IntEnum):
-    """DAQ Data Format mode"""
+    """Deprecated DAQ Data Format mode"""
     FORMAT_RAW_16BITS = 0
-    FORMAT_TDMS = 1
 
 
 def Daq_StartStopAcq(acq_mode: DaqAcqMode,
                      download_mode: DaqDownloadMode =
                      DaqDownloadMode.MODE_DOWNLOAD,
-                     data_format: DaqDataFormat =
-                     DaqDataFormat.FORMAT_RAW_16BITS,
+                     data_format: Optional[DaqDataFormat] = None,
                      file_name: str = '') -> None:
     """Starts/Stops the acquisition
 
@@ -361,7 +360,7 @@ def Daq_StartStopAcq(acq_mode: DaqAcqMode,
     download_mode : DaqDownloadMode, optional
         Download mode (only if acq_mode is MODE_SINGLE or MODE_RUN)
     data_format : DaqDataFormat, optional
-        Data format (only if acq_mode is MODE_SINGLE or MODE_RUN)
+        Not used
     file_name : str, optional
         File name (only if acq_mode is MODE_SINGLE or MODE_RUN)
     """
@@ -370,9 +369,9 @@ def Daq_StartStopAcq(acq_mode: DaqAcqMode,
     if not isinstance(download_mode, DaqDownloadMode):
         raise TypeError('download_mode must be an instance of '
                         'DaqAcqMode IntEnum')
-    if not isinstance(data_format, DaqDataFormat):
-        raise TypeError('data_format must be an instance of '
-                        'DaqDataFormat IntEnum')
+    if data_format is not None:
+        warn("deprecated 'data_format' parameter",
+             FutureWarning, 2)
     if _MPuLib_variadic is None:
         func_pointer = _MPuLib.Daq_StartStopAcq
     else:
@@ -380,7 +379,7 @@ def Daq_StartStopAcq(acq_mode: DaqAcqMode,
     CTS3Exception._check_error(func_pointer(
         c_uint32(acq_mode),
         c_uint32(download_mode),
-        c_uint32(data_format),
+        c_uint32(0),
         file_name.encode('ascii')))
 
 
