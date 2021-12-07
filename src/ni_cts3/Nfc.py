@@ -467,25 +467,27 @@ class DataRate(IntEnum):
     DATARATE_6780KB = 6780
 
 
-def MPC_SelectDataRate(tx_data_rate: DataRate,
-                       rx_data_rate: DataRate) -> None:
+def MPC_SelectDataRate(pcd_data_rate: DataRate,
+                       picc_data_rate: DataRate) -> None:
     """Selects data rate
 
     Parameters
     ----------
-    tx_data_rate : DataRate
+    pcd_data_rate : DataRate
         PCD to PICC data rate
-    rx_data_rate : DataRate
+    picc_data_rate : DataRate
         PICC to PCD data rate
     """
-    if not isinstance(tx_data_rate, DataRate):
-        raise TypeError('tx_data_rate must be an instance of DataRate IntEnum')
-    if not isinstance(rx_data_rate, DataRate):
-        raise TypeError('rx_data_rate must be an instance of DataRate IntEnum')
+    if not isinstance(pcd_data_rate, DataRate):
+        raise TypeError('pcd_data_rate must be an instance of '
+                        'DataRate IntEnum')
+    if not isinstance(picc_data_rate, DataRate):
+        raise TypeError('picc_data_rate must be an instance of '
+                        'DataRate IntEnum')
     CTS3Exception._check_error(_MPuLib.MPC_SelectDataRate(
         c_uint8(0),
-        c_uint16(tx_data_rate),
-        c_uint16(rx_data_rate)))
+        c_uint16(pcd_data_rate),
+        c_uint16(picc_data_rate)))
 
 
 def MPC_ExchangeCmd(tx_frame: bytes,
