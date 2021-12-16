@@ -93,7 +93,7 @@ class EmdSubCarrier(IntEnum):
     EMD_6780_PERIODS = 6780
 
 
-class _S_EMD(Structure):
+class _S_emd(Structure):
     """EMD structure definition"""
     _pack_ = 1
     _fields_ = [('nb_pattern', c_uint16),
@@ -101,7 +101,7 @@ class _S_EMD(Structure):
 
 
 @unique
-class S_EMD_pattern(IntEnum):
+class S_emd_pattern(IntEnum):
     """EMD pattern"""
     high_state = 0    # ‾‾‾
     rising_edge = 1   # _|‾
@@ -109,30 +109,30 @@ class S_EMD_pattern(IntEnum):
     low_state = 3     # ___
 
 
-class S_EMD():
+class S_emd():
     """EMD definition
 
     Attributes
     ----------
     number : int
         Patterns number to send
-    type : S_EMD_pattern
+    type : S_emd_pattern
     """
 
-    def __init__(self, patterns_number: int, pattern_type: S_EMD_pattern):
-        """Inits S_EMD
+    def __init__(self, patterns_number: int, pattern_type: S_emd_pattern):
+        """Inits S_emd
 
         Parameters
         ----------
         pattern_number : int
             Patterns number to send
-        pattern_type : S_EMD_pattern
+        pattern_type : S_emd_pattern
             EMD waveform pattern
         """
         _check_limits(c_uint16, patterns_number, 'patterns_number')
-        if not isinstance(pattern_type, S_EMD_pattern):
+        if not isinstance(pattern_type, S_emd_pattern):
             raise TypeError('pattern_type must be an instance of '
-                            'S_EMD_pattern IntEnum')
+                            'S_emd_pattern IntEnum')
         self.number = patterns_number
         self.type = pattern_type
 
@@ -198,7 +198,7 @@ def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
 
 @overload
 def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         fdt: int, emd: List[S_EMD]) -> None:
+                         fdt: int, emd: List[S_emd]) -> None:
     # TSCN_DO_EMD
     ...
 
@@ -278,8 +278,7 @@ def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
 
 @overload
 def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         pcd_ebf: bool, picc_ebf: bool,
-                         pcd_picc_option: int, picc_pcd_option: int,
+                         picc_ebf: bool, picc_pcd_option: int,
                          picc_crc: bool, pcd_type: TechnologyType,
                          synchro: bool, picc_frame: bytes) -> None:
     # TSCN_DO_EXCHANGE_EBF
@@ -292,7 +291,7 @@ def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
                          pcd_picc_option: int, picc_pcd_option: int,
                          pcd_crc: bool, picc_crc: bool,
                          pcd_type: TechnologyType, synchro: bool,
-                         pcd_frame: bytes,
+                         pcd_frame: Optional[bytes],
                          picc_frame: Optional[bytes]) -> None:
     # TSCN_DO_EXCHANGE_EBF
     ...
@@ -677,14 +676,14 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('fdt must be an instance of int')
         _check_limits(c_uint32, args[0], 'fdt')  # FdtEmd
         if not isinstance(args[1], list):
-            raise TypeError('emd must be an instance of S_EMD list')
-        emd = (_S_EMD * (len(args[1]) + 1))()
+            raise TypeError('emd must be an instance of S_emd list')
+        emd = (_S_emd * (len(args[1]) + 1))()
         for i in range(len(args[1])):
-            if not isinstance(args[1][i], S_EMD):
-                raise TypeError('emd must be an instance of S_EMD list')
-            emd[i] = _S_EMD(c_uint16(args[1][i].number),
+            if not isinstance(args[1][i], S_emd):
+                raise TypeError('emd must be an instance of S_emd list')
+            emd[i] = _S_emd(c_uint16(args[1][i].number),
                             c_uint16(args[1][i].type.value))
-        emd[len(args[1])] = _S_EMD(c_uint16(0), c_uint16(0))
+        emd[len(args[1])] = _S_emd(c_uint16(0), c_uint16(0))
         CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
@@ -896,82 +895,126 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                     bytes()))  # pPiccResponse
 
     elif action == CardEmuSeqAction.TSCN_DO_EXCHANGE_EBF:
-        if len(args) != 8 and len(args) != 10:
+        if len(args) != 6 and len(args) != 10:
             raise TypeError(f'MPC_AddToScenarioPcd({action.name}) takes '
-                            f'ten or twelve arguments ({len(args) + 2} given)')
-        if not isinstance(args[2], int):
-            raise TypeError('pcd_picc_option must be an instance of int')
-        _check_limits(c_uint32, args[2], 'pcd_picc_option')
-        if not isinstance(args[3], int):
-            raise TypeError('picc_pcd_option must be an instance of int')
-        _check_limits(c_uint32, args[3], 'picc_pcd_option')
+                            'eight or twelve arguments '
+                            f'({len(args) + 2} given)')
         if len(args) > 9:
+            if not isinstance(args[2], int):
+                raise TypeError('pcd_picc_option must be an instance of int')
+            _check_limits(c_uint32, args[2], 'pcd_picc_option')
+            if not isinstance(args[3], int):
+                raise TypeError('picc_pcd_option must be an instance of int')
+            _check_limits(c_uint32, args[3], 'picc_pcd_option')
             if not isinstance(args[6], TechnologyType):
                 raise TypeError('pcd_type must be an instance of '
                                 'TechnologyType IntEnum')
-            if not isinstance(args[8], bytes):
-                raise TypeError('pcd_frame must be an instance of bytes')
-            _check_limits(c_uint32, len(args[8]), 'pcd_frame')
-            if args[9] is None:
-                CTS3Exception._check_error(func_pointer(
-                    c_uint8(0),
-                    c_uint32(scenario_id),
-                    c_uint32(action),
-                    c_uint32(1) if args[0] else c_uint32(0),  # PcdUseEBF
-                    c_uint32(1) if args[1] else c_uint32(0),  # PiccUseEBF
-                    c_uint32(args[2]),  # FrameOptionPcdToPicc
-                    c_uint32(args[3]),  # FrameOptionPiccToPcd
-                    c_uint32(2) if args[4] else c_uint32(1),  # PcdCrc
-                    c_uint32(2) if args[5] else c_uint32(1),  # PiccCrc
-                    c_uint32(args[6]),  # PcdFrameType
-                    c_uint32(1) if args[7] else c_uint32(0),  # Synchro
-                    c_uint32(len(args[8])),  # PcdFrameLength
-                    args[8],  # pExpectedPcdFrame
-                    c_uint32(0),  # PiccFrameLength
-                    bytes()))  # pPiccResponse
+            if args[8] is None:
+                if args[9] is None:
+                    CTS3Exception._check_error(func_pointer(
+                        c_uint8(0),
+                        c_uint32(scenario_id),
+                        c_uint32(action),
+                        c_uint32(1) if args[0] else c_uint32(0),  # PcdUseEBF
+                        c_uint32(1) if args[1] else c_uint32(0),  # PiccUseEBF
+                        c_uint32(args[2]),  # FrameOptionPcdToPicc
+                        c_uint32(args[3]),  # FrameOptionPiccToPcd
+                        c_uint32(2) if args[4] else c_uint32(1),  # PcdCrc
+                        c_uint32(2) if args[5] else c_uint32(1),  # PiccCrc
+                        c_uint32(args[6]),  # PcdFrameType
+                        c_uint32(1) if args[7] else c_uint32(0),  # Synchro
+                        c_uint32(1000000),  # PCD_FRAME_DONT_CARE
+                        bytes(),  # pExpectedPcdFrame
+                        c_uint32(0),  # PiccFrameLength
+                        bytes()))  # pPiccResponse
+                else:
+                    if not isinstance(args[9], bytes):
+                        raise TypeError('picc_frame must be an instance '
+                                        'of bytes')
+                    _check_limits(c_uint32, len(args[9]), 'picc_frame')
+                    CTS3Exception._check_error(func_pointer(
+                        c_uint8(0),
+                        c_uint32(scenario_id),
+                        c_uint32(action),
+                        c_uint32(1) if args[0] else c_uint32(0),  # PcdUseEBF
+                        c_uint32(1) if args[1] else c_uint32(0),  # PiccUseEBF
+                        c_uint32(args[2]),  # FrameOptionPcdToPicc
+                        c_uint32(args[3]),  # FrameOptionPiccToPcd
+                        c_uint32(2) if args[4] else c_uint32(1),  # PcdCrc
+                        c_uint32(2) if args[5] else c_uint32(1),  # PiccCrc
+                        c_uint32(args[6]),  # PcdFrameType
+                        c_uint32(1) if args[7] else c_uint32(0),  # Synchro
+                        c_uint32(1000000),  # PCD_FRAME_DONT_CARE
+                        bytes(),  # pExpectedPcdFrame
+                        c_uint32(len(args[9])),  # PiccFrameLength
+                        args[9]))  # pPiccResponse
             else:
-                if not isinstance(args[9], bytes):
-                    raise TypeError('picc_frame must be an instance of bytes')
-                _check_limits(c_uint32, len(args[9]), 'picc_frame')
-                CTS3Exception._check_error(func_pointer(
-                    c_uint8(0),
-                    c_uint32(scenario_id),
-                    c_uint32(action),
-                    c_uint32(1) if args[0] else c_uint32(0),  # PcdUseEBF
-                    c_uint32(1) if args[1] else c_uint32(0),  # PiccUseEBF
-                    c_uint32(args[2]),  # FrameOptionPcdToPicc
-                    c_uint32(args[3]),  # FrameOptionPiccToPcd
-                    c_uint32(2) if args[4] else c_uint32(1),  # PcdCrc
-                    c_uint32(2) if args[5] else c_uint32(1),  # PiccCrc
-                    c_uint32(args[6]),  # PcdFrameType
-                    c_uint32(1) if args[7] else c_uint32(0),  # Synchro
-                    c_uint32(len(args[8])),  # PcdFrameLength
-                    args[8],  # pExpectedPcdFrame
-                    c_uint32(len(args[9])),  # PiccFrameLength
-                    args[9]))  # pPiccResponse
+                if not isinstance(args[8], bytes):
+                    raise TypeError('pcd_frame must be an instance of bytes')
+                _check_limits(c_uint32, len(args[8]), 'pcd_frame')
+                if args[9] is None:
+                    CTS3Exception._check_error(func_pointer(
+                        c_uint8(0),
+                        c_uint32(scenario_id),
+                        c_uint32(action),
+                        c_uint32(1) if args[0] else c_uint32(0),  # PcdUseEBF
+                        c_uint32(1) if args[1] else c_uint32(0),  # PiccUseEBF
+                        c_uint32(args[2]),  # FrameOptionPcdToPicc
+                        c_uint32(args[3]),  # FrameOptionPiccToPcd
+                        c_uint32(2) if args[4] else c_uint32(1),  # PcdCrc
+                        c_uint32(2) if args[5] else c_uint32(1),  # PiccCrc
+                        c_uint32(args[6]),  # PcdFrameType
+                        c_uint32(1) if args[7] else c_uint32(0),  # Synchro
+                        c_uint32(len(args[8])),  # PcdFrameLength
+                        args[8],  # pExpectedPcdFrame
+                        c_uint32(0),  # PiccFrameLength
+                        bytes()))  # pPiccResponse
+                else:
+                    if not isinstance(args[9], bytes):
+                        raise TypeError('picc_frame must be an instance '
+                                        'of bytes')
+                    _check_limits(c_uint32, len(args[9]), 'picc_frame')
+                    CTS3Exception._check_error(func_pointer(
+                        c_uint8(0),
+                        c_uint32(scenario_id),
+                        c_uint32(action),
+                        c_uint32(1) if args[0] else c_uint32(0),  # PcdUseEBF
+                        c_uint32(1) if args[1] else c_uint32(0),  # PiccUseEBF
+                        c_uint32(args[2]),  # FrameOptionPcdToPicc
+                        c_uint32(args[3]),  # FrameOptionPiccToPcd
+                        c_uint32(2) if args[4] else c_uint32(1),  # PcdCrc
+                        c_uint32(2) if args[5] else c_uint32(1),  # PiccCrc
+                        c_uint32(args[6]),  # PcdFrameType
+                        c_uint32(1) if args[7] else c_uint32(0),  # Synchro
+                        c_uint32(len(args[8])),  # PcdFrameLength
+                        args[8],  # pExpectedPcdFrame
+                        c_uint32(len(args[9])),  # PiccFrameLength
+                        args[9]))  # pPiccResponse
         else:
-            if not isinstance(args[5], TechnologyType):
+            if not isinstance(args[1], int):
+                raise TypeError('picc_pcd_option must be an instance of int')
+            if not isinstance(args[3], TechnologyType):
                 raise TypeError('pcd_type must be an instance of '
                                 'TechnologyType IntEnum')
-            if not isinstance(args[7], bytes):
+            if not isinstance(args[5], bytes):
                 raise TypeError('picc_frame must be an instance of bytes')
-            _check_limits(c_uint32, len(args[7]), 'picc_frame')
+            _check_limits(c_uint32, len(args[5]), 'picc_frame')
             CTS3Exception._check_error(func_pointer(
                 c_uint8(0),
                 c_uint32(scenario_id),
                 c_uint32(action),
-                c_uint32(1) if args[0] else c_uint32(0),  # PcdUseEBF
+                c_uint32(0),  # PcdUseEBF
                 c_uint32(1) if args[1] else c_uint32(0),  # PiccUseEBF
-                c_uint32(args[2]),  # FrameOptionPcdToPicc
-                c_uint32(args[3]),  # FrameOptionPiccToPcd
+                c_uint32(0),  # FrameOptionPcdToPicc
+                c_uint32(args[1]),  # FrameOptionPiccToPcd
                 c_uint32(1),  # PcdCrc
-                c_uint32(2) if args[4] else c_uint32(1),  # PiccCrc
-                c_uint32(args[5]),  # PcdFrameType
-                c_uint32(1) if args[6] else c_uint32(0),  # Synchro
+                c_uint32(2) if args[2] else c_uint32(1),  # PiccCrc
+                c_uint32(args[3]),  # PcdFrameType
+                c_uint32(1) if args[4] else c_uint32(0),  # Synchro
                 c_uint32(0),  # PcdFrameLength
                 bytes(),  # pExpectedPcdFrame
-                c_uint32(len(args[7])),  # PiccFrameLength
-                args[7]))  # pPiccResponse
+                c_uint32(len(args[5])),  # PiccFrameLength
+                args[5]))  # pPiccResponse
 
 
 def MPC_ExecuteScenarioPcd(scenario_id: int, timeout: float) -> None:
