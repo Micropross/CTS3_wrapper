@@ -459,6 +459,7 @@ class EEConfig(IntEnum):
     """Configuration type"""
     EEC_AUTO_BOOT = 1
     EEC_DEBUG_PORT = 4
+    EEC_TELNET_NEGO = 5
 
 
 def MPS_EESetConfig(config: EEConfig, value: bool) -> None:
