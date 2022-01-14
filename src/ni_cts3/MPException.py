@@ -38,7 +38,8 @@ class CTS3Exception(Exception):
                 ret == CTS3ErrorCode.ERR_TIME_FDT_MIN or \
                 ret == CTS3ErrorCode.ERR_TIME_TR1_MAX or \
                 ret == CTS3ErrorCode.ERR_TIME_TR1_MIN or\
-                ret == CTS3ErrorCode.ERR_PHASE_DRIFT:
+                ret == CTS3ErrorCode.ERR_PHASE_DRIFT or \
+                ret == CTS3ErrorCode.ERR_ADJUST_THRESHOLD_RF_FIELD:
             warn(GetErrorMessageFromCode(status), UserWarning, 3)
         elif ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
