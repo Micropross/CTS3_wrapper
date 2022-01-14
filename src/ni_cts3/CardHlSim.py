@@ -1100,7 +1100,7 @@ def MPS_SimWaitNStart(mode: CardEmulationMode,
                                         VicinitySimulatorEvent,
                                         NfcSimulatorEvent,
                                         Type2TagSimulatorEvent],
-                      start_spy: bool, timeout: float) -> None:
+                      start_spy: bool, timeout: float = 0) -> None:
     """Starts simulator
 
     Parameters
@@ -1113,7 +1113,7 @@ def MPS_SimWaitNStart(mode: CardEmulationMode,
         Subscribed events
     start_spy : bool
         True to start protocol analyzer
-    timeout : float
+    timeout : float, optional
         RF field detection timeout in s
     """
     if not isinstance(mode, CardEmulationMode):
