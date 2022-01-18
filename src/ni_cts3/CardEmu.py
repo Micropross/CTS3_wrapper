@@ -468,6 +468,19 @@ def MPC_SelectVICCDataRate(data_rate: VicinityDataRate,
         c_uint8(sub_carrier)))
 
 
+def MPS_SimVicinityEofMode(enabled: bool) -> None:
+    """Enables Vicinity isolated EOF reception mode
+
+    Parameters
+    ----------
+    enabled : bool
+        True to enable isolated EOF mode
+    """
+    CTS3Exception._check_error(_MPuLib.MPS_SimVicinityEofMode(
+        c_uint8(0),
+        c_uint32(1) if enabled else c_uint32(0)))
+
+
 def MPS_SimSetFdt(fdt1_clk: int, fdt2_clk: int) -> None:
     """Selects the FDT
 
