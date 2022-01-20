@@ -1,7 +1,8 @@
 from enum import IntEnum, unique
 from ctypes import c_uint8, c_uint16, c_int32, c_uint32
 from ctypes import Structure, byref
-from typing import Union, Tuple, List, Optional, overload
+from typing import Union, List, Optional, overload
+from warnings import warn
 from . import _MPuLib, _MPuLib_variadic, _check_limits
 from .Measurement import VoltmeterRange
 from .Nfc import TechnologyType, NfcTrigger, DataRate
@@ -72,6 +73,7 @@ class CardEmuSeqAction(IntEnum):
     TSCN_DO_EXCHANGE_ACTIVE_TARGET = 77
     TSCN_PARAM_NFC_ACTIVE_TIMINGS = 78
     TSCN_PARAM_ACTIVE_FDT_MODE = 80
+    TSCN_PARAM_ACTIVE_TIMINGS = 82
 
 
 @unique
@@ -184,6 +186,14 @@ def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
     # TSCN_PARAM_NFC_ACTIVE_TIMINGS,
     # TSCN_DO_CE_TRIGGER,
     # TSCN_DO_SEQUENCE_ERROR
+    ...
+
+
+@overload
+def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
+                         tadt: int, tarfg: int,
+                         toff: int, tmute: int) -> None:
+    # TSCN_PARAM_ACTIVE_TIMINGS
     ...
 
 
@@ -594,20 +604,22 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                             f'exactly five arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('param1 must be an instance of int')
-        _check_limits(c_uint32, args[0], 'param1')  # NtrfwTadt
+        _check_limits(c_uint32, args[0], 'param1')  # Tadt
         if not isinstance(args[1], int):
             raise TypeError('param2 must be an instance of int')
         _check_limits(c_uint32, args[1], 'param2')  # Tarfg
         if not isinstance(args[2], int):
             raise TypeError('param3 must be an instance of int')
-        _check_limits(c_uint32, args[2], 'param3')  # FieldDelay
+        _check_limits(c_uint32, args[2], 'param3')  # Toff
+        warn("deprecated 'TSCN_PARAM_NFC_ACTIVE_TIMINGS' instruction",
+             FutureWarning, 2)
         CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
-            c_uint32(args[0]),  # NtrfwTadt
+            c_uint32(args[0]),  # Tadt
             c_uint32(args[1]),  # Tarfg
-            c_uint32(args[2])))  # FieldDelay
+            c_uint32(args[2])))  # Toff
     elif action == CardEmuSeqAction.TSCN_DO_EXCHANGE_RAW_TYPEA:
         if len(args) != 3:
             raise TypeError(f'MPC_AddToScenarioPcd({action.name}) takes '
@@ -666,6 +678,32 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                 c_uint32(action),
                 c_uint32(1) if args[0] else c_uint32(0),  # OnOff
                 c_uint32(args[1])))  # TimeBeforeTload_clk
+
+    # Four parameters
+    elif action == CardEmuSeqAction.TSCN_PARAM_ACTIVE_TIMINGS:
+        if len(args) != 4:
+            raise TypeError(f'MPC_AddToScenarioPcd({action.name}) takes '
+                            f'exactly six arguments ({len(args) + 2} given)')
+        if not isinstance(args[0], int):
+            raise TypeError('tadt must be an instance of int')
+        _check_limits(c_uint32, args[0], 'tadt')
+        if not isinstance(args[1], int):
+            raise TypeError('tarfg must be an instance of int')
+        _check_limits(c_uint32, args[1], 'tarfg')
+        if not isinstance(args[2], int):
+            raise TypeError('toff must be an instance of int')
+        _check_limits(c_uint32, args[2], 'toff')
+        if not isinstance(args[3], int):
+            raise TypeError('tmute must be an instance of int')
+        _check_limits(c_uint32, args[3], 'tmute')
+        CTS3Exception._check_error(func_pointer(
+            c_uint8(0),
+            c_uint32(scenario_id),
+            c_uint32(action),
+            c_uint32(args[0]),  # Tadt
+            c_uint32(args[1]),  # Tarfg
+            c_uint32(args[2]),  # Toff
+            c_uint32(args[3])))  # Tmute
 
     # Structure parameter
     elif action == CardEmuSeqAction.TSCN_DO_EMD:

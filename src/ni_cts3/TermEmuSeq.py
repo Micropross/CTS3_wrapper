@@ -1,6 +1,7 @@
 from enum import IntEnum, unique
 from ctypes import c_uint8, c_int32, c_uint32, byref
 from typing import Union, Optional, overload
+from warnings import warn
 from . import _MPuLib, _MPuLib_variadic, _check_limits
 from .Measurement import VoltmeterRange
 from .Nfc import TechnologyType, NfcTriggerId, NfcTrigger, DataRate
@@ -81,6 +82,7 @@ class TermEmuSeqAction(IntEnum):
     TSCN_DO_EXCHANGE_ACTIVE_INITIATOR = 79
     TSCN_PARAM_ACTIVE_FDT_MODE = 80
     TSCN_DO_EXCHANGE_PATTERN = 81
+    TSCN_PARAM_ACTIVE_TIMINGS = 82
 
 
 @unique
@@ -165,8 +167,16 @@ def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
 
 @overload
 def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          tadt: int, tarfg: int, field_delay: int) -> None:
+                          tadt: int, tarfg: int, toff: int) -> None:
     # TSCN_PARAM_NFC_ACTIVE_TIMINGS
+    ...
+
+
+@overload
+def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
+                          tadt: int, tarfg: int,
+                          toff: int, tmute: int) -> None:
+    # TSCN_PARAM_ACTIVE_TIMINGS
     ...
 
 
@@ -570,15 +580,44 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             raise TypeError('tarfg must be an instance of int')
         _check_limits(c_uint32, args[1], 'tarfg')
         if not isinstance(args[2], int):
-            raise TypeError('field_delay must be an instance of int')
-        _check_limits(c_uint32, args[2], 'field_delay')
+            raise TypeError('toff must be an instance of int')
+        _check_limits(c_uint32, args[2], 'toff')
+        warn("deprecated 'TSCN_PARAM_NFC_ACTIVE_TIMINGS' instruction",
+             FutureWarning, 2)
+        CTS3Exception._check_error(func_pointer(
+            c_uint8(0),
+            c_uint32(scenario_id),
+            c_uint32(action),
+            c_uint32(args[0]),  # Tadt
+            c_uint32(args[1]),  # Tarfg
+            c_uint32(args[2])))  # Toff
+
+    # Four parameters
+    elif action == TermEmuSeqAction.TSCN_PARAM_ACTIVE_TIMINGS:
+        if len(args) != 4:
+            raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
+                            f'exactly six arguments ({len(args) + 2} given)')
+        if not isinstance(args[0], int):
+            raise TypeError('tadt must be an instance of int')
+        _check_limits(c_uint32, args[0], 'tadt')
+        if not isinstance(args[1], int):
+            raise TypeError('tarfg must be an instance of int')
+        _check_limits(c_uint32, args[1], 'tarfg')
+        if not isinstance(args[2], int):
+            raise TypeError('toff must be an instance of int')
+        _check_limits(c_uint32, args[2], 'toff')
+        if not isinstance(args[3], int):
+            raise TypeError('tmute must be an instance of int')
+        _check_limits(c_uint32, args[3], 'tmute')
         CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
             c_uint32(args[0]),  # NtrfwTadt
             c_uint32(args[1]),  # Tarfg
-            c_uint32(args[2])))  # FieldDelay
+            c_uint32(args[2]),  # Toff
+            c_uint32(args[3])))  # Tmute
+
     elif action == TermEmuSeqAction.TSCN_DO_REQUESTB_ATTRIB_FDT:
         if len(args) != 3:
             raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
