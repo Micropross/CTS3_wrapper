@@ -2807,356 +2807,386 @@ class ProtocolParameters(IntEnum):
     CPP_ASK_FILTER_106 = 66
     CPP_TX_FIRST_BUFFER_SIZE = 67
     CPP_NFC_MAX_LR_VALUE_NFCFORUM = 68
+    CPP_LMA_OUTPUT = 69
+    CPP_VDC_INPUT = 70
 
 
-def MPC_ChangeProtocolParameters(parameter_type: ProtocolParameters,
-                                 parameter_value: Union[int, float, bool,
-                                                        List[int],
-                                                        List[float]]) \
-        -> None:
+@unique
+class ConnectorState(IntEnum):
+    """VDC or LMA connector"""
+    CONNECTOR_AUTOMATIC = 0
+    CONNECTOR_HDMI = 1
+    CONNECTOR_SMA = 2
+
+
+def MPC_ChangeProtocolParameters(param_type: ProtocolParameters,
+                                 param_value: Union[int, float, bool,
+                                                    ConnectorState,
+                                                    List[int],
+                                                    List[float]]) -> None:
     """Changes a protocol parameter
 
     Parameters
     ----------
-    parameter_type : ProtocolParameters
+    param_type : ProtocolParameters
         Parameter to change
-    parameter_value : int, float, bool, list(int) or list(float)
+    param_value : int, float, bool, ConnectorState,
+                      list(int) or list(float)
         Parameter value
     """
-    if not isinstance(parameter_type, ProtocolParameters):
-        raise TypeError('parameter_type must be an instance of '
+    if not isinstance(param_type, ProtocolParameters):
+        raise TypeError('param_type must be an instance of '
                         'ProtocolParameters IntEnum')
-    if parameter_type == ProtocolParameters.CPP_CURRENT_CID or \
-            parameter_type == ProtocolParameters.CPP_CURRENT_NAD:
-        if not isinstance(parameter_value, int):
-            raise TypeError('parameter_type must be an instance of int')
-        int_val = c_uint32(parameter_value)
+    if param_type == ProtocolParameters.CPP_CURRENT_CID or \
+            param_type == ProtocolParameters.CPP_CURRENT_NAD:
+        if not isinstance(param_value, int):
+            raise TypeError('param_value must be an instance of int')
+        int_val = c_uint32(param_value)
         CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             byref(int_val),
             c_uint32(1)))
 
     # List parameter
-    elif parameter_type == ProtocolParameters.CPP_FRAME_TYPE_B or \
-            parameter_type == ProtocolParameters.CPP_FRAME_FELICA_OPTION or \
-            parameter_type == ProtocolParameters.CPP_FRAME_TYPE_F_CLK:
-        if not isinstance(parameter_value, list) or \
-                len(parameter_value) != 4:
-            raise TypeError('parameter_value must be an instance of'
+    elif param_type == ProtocolParameters.CPP_FRAME_TYPE_B or \
+            param_type == ProtocolParameters.CPP_FRAME_FELICA_OPTION or \
+            param_type == ProtocolParameters.CPP_FRAME_TYPE_F_CLK:
+        if not isinstance(param_value, list) or \
+                len(param_value) != 4:
+            raise TypeError('param_value must be an instance of'
                             ' 4-int list')
         list_u16_val = (4 * c_uint16)()
         for i in range(4):
-            item = parameter_value[i]
+            item = param_value[i]
             if not isinstance(item, int):
-                raise TypeError('parameter_value must be an instance of'
+                raise TypeError('param_value must be an instance of'
                                 ' 4-int list')
-            _check_limits(c_uint16, item, 'parameter_value')
+            _check_limits(c_uint16, item, 'param_value')
             list_u16_val[i] = c_uint16(item)
         CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             list_u16_val,
             c_uint32(4)))
-    elif parameter_type == ProtocolParameters.CPP_CHANGE_BIT_BOUNDARY:
-        if not isinstance(parameter_value, list) or len(parameter_value) != 2:
-            raise TypeError('parameter_value must be an instance of'
+    elif param_type == ProtocolParameters.CPP_CHANGE_BIT_BOUNDARY:
+        if not isinstance(param_value, list) or len(param_value) != 2:
+            raise TypeError('param_value must be an instance of'
                             ' 2-int list')
         list_u16_val = (2 * c_uint16)()
         for i in range(2):
-            item = parameter_value[i]
+            item = param_value[i]
             if not isinstance(item, int):
-                raise TypeError('parameter_value must be an instance of'
+                raise TypeError('param_value must be an instance of'
                                 ' 2-int list')
-            _check_limits(c_uint16, item, 'parameter_value')
+            _check_limits(c_uint16, item, 'param_value')
             list_u16_val[i] = c_uint16(item)
         CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             list_u16_val,
             c_uint32(2)))
-    elif parameter_type == ProtocolParameters.CPP_FRAME_TYPE_B_CLK:
-        if not isinstance(parameter_value, list) or len(parameter_value) != 14:
-            raise TypeError('parameter_value must be an instance of'
+    elif param_type == ProtocolParameters.CPP_FRAME_TYPE_B_CLK:
+        if not isinstance(param_value, list) or len(param_value) != 14:
+            raise TypeError('param_value must be an instance of'
                             ' 14-int list')
         list_u16_val = (14 * c_uint16)()
         for i in range(14):
-            item = parameter_value[i]
+            item = param_value[i]
             if not isinstance(item, int):
-                raise TypeError('parameter_value must be an instance of'
+                raise TypeError('param_value must be an instance of'
                                 ' 14-int list')
-            _check_limits(c_uint16, item, 'parameter_value')
+            _check_limits(c_uint16, item, 'param_value')
             list_u16_val[i] = c_uint16(item)
         CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             list_u16_val,
             c_uint32(14)))
-    elif parameter_type == ProtocolParameters.CPP_FRAME_WITH_ERROR_CORRECTION:
-        if not isinstance(parameter_value, list) or len(parameter_value) != 8:
-            raise TypeError('parameter_value must be an instance of'
+    elif param_type == ProtocolParameters.CPP_FRAME_WITH_ERROR_CORRECTION:
+        if not isinstance(param_value, list) or len(param_value) != 8:
+            raise TypeError('param_value must be an instance of'
                             ' 8-int list')
         list_u16_val = (8 * c_uint16)()
         for i in range(8):
-            item = parameter_value[i]
+            item = param_value[i]
             if not isinstance(item, int):
-                raise TypeError('parameter_value must be an instance of'
+                raise TypeError('param_value must be an instance of'
                                 ' 8-int list')
-            _check_limits(c_uint16, item, 'parameter_value')
+            _check_limits(c_uint16, item, 'param_value')
             list_u16_val[i] = c_uint16(item)
         CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             list_u16_val,
             c_uint32(8)))
-    elif parameter_type == ProtocolParameters.CPP_POWER_ON_TRIGGER_IN:
-        if not isinstance(parameter_value, list) or len(parameter_value) != 3:
-            raise TypeError('parameter_value must be an instance of'
+    elif param_type == ProtocolParameters.CPP_POWER_ON_TRIGGER_IN:
+        if not isinstance(param_value, list) or len(param_value) != 3:
+            raise TypeError('param_value must be an instance of'
                             ' 3-float list')
         list_u32_val = (3 * c_uint32)()
         for i in range(3):
-            item = parameter_value[i]
+            item = param_value[i]
             if not isinstance(item, float):
-                raise TypeError('parameter_value must be an instance of'
+                raise TypeError('param_value must be an instance of'
                                 ' 3-float list')
             if i == 2:
-                _check_limits(c_uint32, round(item * 1e3), 'parameter_value')
+                _check_limits(c_uint32, round(item * 1e3), 'param_value')
                 int_item = round(item * 1e3)
             else:
-                _check_limits(c_uint32, round(item * 1e6), 'parameter_value')
+                _check_limits(c_uint32, round(item * 1e6), 'param_value')
                 int_item = round(item * 1e6)
             list_u32_val[i] = c_uint32(int_item)
         CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             list_u32_val,
             c_uint32(3)))
 
     # Boolean parameter
-    elif parameter_type == ProtocolParameters.CPP_CID or \
-            parameter_type == ProtocolParameters.CPP_NAD or \
-            parameter_type == ProtocolParameters.\
-            CPP_PROTOCOL_ERROR_MANAGEMENT or \
-            parameter_type == ProtocolParameters.CPP_TX_PARITY or \
-            parameter_type == ProtocolParameters.CPP_RX_PARITY or \
-            parameter_type == ProtocolParameters.CPP_ANTI_EMD or \
-            parameter_type == ProtocolParameters.CPP_CONFIG_ANTI_EMD or \
-            parameter_type == ProtocolParameters.\
-            CPP_VERIFY_PICC_14443_TIMING or \
-            parameter_type == ProtocolParameters.CPP_SFGT or \
-            parameter_type == ProtocolParameters.CPP_CE_REVERSE_POLARITY or \
-            parameter_type == ProtocolParameters.\
+    elif param_type == ProtocolParameters.CPP_CID or \
+            param_type == ProtocolParameters.CPP_NAD or \
+            param_type == ProtocolParameters.CPP_PROTOCOL_ERROR_MANAGEMENT or \
+            param_type == ProtocolParameters.CPP_TX_PARITY or \
+            param_type == ProtocolParameters.CPP_RX_PARITY or \
+            param_type == ProtocolParameters.CPP_ANTI_EMD or \
+            param_type == ProtocolParameters.CPP_CONFIG_ANTI_EMD or \
+            param_type == ProtocolParameters.CPP_VERIFY_PICC_14443_TIMING or \
+            param_type == ProtocolParameters.CPP_SFGT or \
+            param_type == ProtocolParameters.CPP_CE_REVERSE_POLARITY or \
+            param_type == ProtocolParameters.\
             CPP_ACTIVE_TARGET_MUTE_BEHAVIOR or \
-            parameter_type == ProtocolParameters.\
-            CPP_FELICA_BIT_CODING_REVERSE or \
-            parameter_type == ProtocolParameters.\
+            param_type == ProtocolParameters.CPP_FELICA_BIT_CODING_REVERSE or \
+            param_type == ProtocolParameters.\
             CPP_RF_FIELD_STRENGTH_COMPATIBILITY or \
-            parameter_type == ProtocolParameters.CPP_CE_SET_IQLM_ENABLE or \
-            parameter_type == ProtocolParameters.CPP_MODE_NO_EOF or \
-            parameter_type == ProtocolParameters.\
+            param_type == ProtocolParameters.CPP_CE_SET_IQLM_ENABLE or \
+            param_type == ProtocolParameters.CPP_MODE_NO_EOF or \
+            param_type == ProtocolParameters.\
             CPP_REJECT_INVERTED_MODULATION or \
-            parameter_type == ProtocolParameters.CPP_ALLOW_TA1_RFU or \
-            parameter_type == ProtocolParameters.CPP_DISABLE_ATQA_CHECK or \
-            parameter_type == ProtocolParameters.CPP_RF_FIELD_LOCK_ANTENNA or \
-            parameter_type == ProtocolParameters.CPP_NFC_ACTIVE_FDT_MODE or \
-            parameter_type == ProtocolParameters.CPP_ASK_FILTER_106 or \
-            parameter_type == ProtocolParameters.CPP_NFC_MAX_LR_VALUE_NFCFORUM:
-        int_val = c_uint32(1) if parameter_value else c_uint32(0)
+            param_type == ProtocolParameters.CPP_ALLOW_TA1_RFU or \
+            param_type == ProtocolParameters.CPP_DISABLE_ATQA_CHECK or \
+            param_type == ProtocolParameters.CPP_RF_FIELD_LOCK_ANTENNA or \
+            param_type == ProtocolParameters.CPP_NFC_ACTIVE_FDT_MODE or \
+            param_type == ProtocolParameters.CPP_ASK_FILTER_106 or \
+            param_type == ProtocolParameters.CPP_NFC_MAX_LR_VALUE_NFCFORUM:
+        int_val = c_uint32(1) if param_value else c_uint32(0)
         CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             byref(int_val),
             c_uint32(4)))
 
     # ms/mdB parameter
-    elif parameter_type == ProtocolParameters.CPP_PROTOCOL_STOP_TIMEOUT or \
-            parameter_type == ProtocolParameters.CPP_DAQ_AUTORANGE or \
-            parameter_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE or \
-            parameter_type == ProtocolParameters.CPP_PLI_STEP:
-        if isinstance(parameter_value, list) or \
-                not isinstance(parameter_value, float):
-            raise TypeError('parameter_value must be an instance of float')
-        value_ms = round(parameter_value * 1e3)
-        _check_limits(c_uint32, value_ms, 'parameter_value')
+    elif param_type == ProtocolParameters.CPP_PROTOCOL_STOP_TIMEOUT or \
+            param_type == ProtocolParameters.CPP_DAQ_AUTORANGE or \
+            param_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE or \
+            param_type == ProtocolParameters.CPP_PLI_STEP:
+        if isinstance(param_value, list) or \
+                not isinstance(param_value, float):
+            raise TypeError('param_value must be an instance of float')
+        value_ms = round(param_value * 1e3)
+        _check_limits(c_uint32, value_ms, 'param_value')
         int_val = c_uint32(value_ms)
         CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             byref(int_val),
             c_uint32(4)))
 
     # µs parameter
-    elif parameter_type == ProtocolParameters.CPP_FRAME_FDT:
-        if isinstance(parameter_value, list) or \
-                not isinstance(parameter_value, float):
-            raise TypeError('parameter_value must be an instance of float')
-        value_us = round(parameter_value * 1e6)
-        _check_limits(c_uint32, value_us, 'parameter_value')
+    elif param_type == ProtocolParameters.CPP_FRAME_FDT:
+        if isinstance(param_value, list) or \
+                not isinstance(param_value, float):
+            raise TypeError('param_value must be an instance of float')
+        value_us = round(param_value * 1e6)
+        _check_limits(c_uint32, value_us, 'param_value')
         int_val = c_uint32(value_us)
         CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             byref(int_val),
             c_uint32(4)))
 
-    # c_uint32 parameter
-    else:
-        if not isinstance(parameter_value, int):
-            raise TypeError('parameter_value must be an instance of int')
-        _check_limits(c_uint32, parameter_value, 'parameter_value')
-        int_val = c_uint32(parameter_value)
+    # ConnectorState parameter
+    elif param_type == ProtocolParameters.CPP_LMA_OUTPUT or \
+            param_type == ProtocolParameters.CPP_VDC_INPUT:
+        if not isinstance(param_value, ConnectorState):
+            raise TypeError('param_value must be an instance of'
+                            ' ConnectorState IntEnum')
+        int_val = c_uint32(param_value)
         CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
+            byref(int_val),
+            c_uint32(4)))
+
+    # int parameter
+    else:
+        if not isinstance(param_value, int):
+            raise TypeError('param_value must be an instance of int')
+        _check_limits(c_uint32, param_value, 'param_value')
+        int_val = c_uint32(param_value)
+        CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
+            c_uint8(0),
+            c_uint32(param_type),
             byref(int_val),
             c_uint32(4)))
 
 
-def MPC_GetProtocolParameters(parameter_type: ProtocolParameters) \
-        -> Union[int, float, bool, List[int], List[float]]:
+def MPC_GetProtocolParameters(param_type: ProtocolParameters) \
+        -> Union[int, float, bool, ConnectorState, List[int], List[float]]:
     """Gets a protocol parameter
 
     Parameters
     ----------
-    parameter_type : ProtocolParameters
+    param_type : ProtocolParameters
         Parameter to get
 
     Returns
     -------
-    int, float, bool, list(int) or list(float)
+    int, float, bool, ConnectorState, list(int) or list(float)
         Parameter value
     """
-    if not isinstance(parameter_type, ProtocolParameters):
-        raise TypeError('parameter_type must be an instance of '
+    if not isinstance(param_type, ProtocolParameters):
+        raise TypeError('param_type must be an instance of '
                         'ProtocolParameters IntEnum')
     param_size = c_uint32()
-    if parameter_type == ProtocolParameters.CPP_CURRENT_CID or \
-            parameter_type == ProtocolParameters.CPP_CURRENT_NAD:
+    if param_type == ProtocolParameters.CPP_CURRENT_CID or \
+            param_type == ProtocolParameters.CPP_CURRENT_NAD:
         int8_val = c_uint8()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             byref(int8_val),
             c_uint32(1),
             byref(param_size)))
         return int8_val.value
 
     # List parameter
-    elif parameter_type == ProtocolParameters.CPP_FRAME_TYPE_B or \
-            parameter_type == ProtocolParameters.CPP_FRAME_FELICA_OPTION or \
-            parameter_type == ProtocolParameters.CPP_FRAME_TYPE_F_CLK:
+    elif param_type == ProtocolParameters.CPP_FRAME_TYPE_B or \
+            param_type == ProtocolParameters.CPP_FRAME_FELICA_OPTION or \
+            param_type == ProtocolParameters.CPP_FRAME_TYPE_F_CLK:
         list_u16_val = (4 * c_uint16)()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             list_u16_val,
             c_uint32(8),
             byref(param_size)))
         return [list_u16_val[i] for i in range(4)]
-    elif parameter_type == ProtocolParameters.CPP_CHANGE_BIT_BOUNDARY:
+    elif param_type == ProtocolParameters.CPP_CHANGE_BIT_BOUNDARY:
         list_u16_val = (2 * c_uint16)()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             list_u16_val,
             c_uint32(4),
             byref(param_size)))
         return [list_u16_val[i] for i in range(2)]
-    elif parameter_type == ProtocolParameters.CPP_FRAME_TYPE_B_CLK:
+    elif param_type == ProtocolParameters.CPP_FRAME_TYPE_B_CLK:
         list_u16_val = (14 * c_uint16)()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             list_u16_val,
             c_uint32(28),
             byref(param_size)))
         return [list_u16_val[i] for i in range(14)]
-    elif parameter_type == ProtocolParameters.CPP_FRAME_WITH_ERROR_CORRECTION:
+    elif param_type == ProtocolParameters.CPP_FRAME_WITH_ERROR_CORRECTION:
         list_u16_val = (8 * c_uint16)()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             list_u16_val,
             c_uint32(16),
             byref(param_size)))
         return [list_u16_val[i] for i in range(8)]
-    elif parameter_type == ProtocolParameters.CPP_POWER_ON_TRIGGER_IN:
+    elif param_type == ProtocolParameters.CPP_POWER_ON_TRIGGER_IN:
         list_u32_val = (3 * c_uint32)()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             list_u32_val,
             c_uint32(12),
             byref(param_size)))
         return [float(list_u32_val[i]) / 1e6 for i in range(3)]
 
     # Boolean parameter
-    elif parameter_type == ProtocolParameters.CPP_CID or \
-            parameter_type == ProtocolParameters.CPP_NAD or \
-            parameter_type == ProtocolParameters.\
-            CPP_PROTOCOL_ERROR_MANAGEMENT or \
-            parameter_type == ProtocolParameters.CPP_TX_PARITY or \
-            parameter_type == ProtocolParameters.CPP_RX_PARITY or \
-            parameter_type == ProtocolParameters.CPP_ANTI_EMD or \
-            parameter_type == ProtocolParameters.CPP_CONFIG_ANTI_EMD or \
-            parameter_type == ProtocolParameters.\
-            CPP_VERIFY_PICC_14443_TIMING or \
-            parameter_type == ProtocolParameters.CPP_SFGT or \
-            parameter_type == ProtocolParameters.CPP_CE_REVERSE_POLARITY or \
-            parameter_type == ProtocolParameters.\
+    elif param_type == ProtocolParameters.CPP_CID or \
+            param_type == ProtocolParameters.CPP_NAD or \
+            param_type == ProtocolParameters.CPP_PROTOCOL_ERROR_MANAGEMENT or \
+            param_type == ProtocolParameters.CPP_TX_PARITY or \
+            param_type == ProtocolParameters.CPP_RX_PARITY or \
+            param_type == ProtocolParameters.CPP_ANTI_EMD or \
+            param_type == ProtocolParameters.CPP_CONFIG_ANTI_EMD or \
+            param_type == ProtocolParameters.CPP_VERIFY_PICC_14443_TIMING or \
+            param_type == ProtocolParameters.CPP_SFGT or \
+            param_type == ProtocolParameters.CPP_CE_REVERSE_POLARITY or \
+            param_type == ProtocolParameters.\
             CPP_ACTIVE_TARGET_MUTE_BEHAVIOR or \
-            parameter_type == ProtocolParameters.\
-            CPP_FELICA_BIT_CODING_REVERSE or \
-            parameter_type == ProtocolParameters.\
+            param_type == ProtocolParameters.CPP_FELICA_BIT_CODING_REVERSE or \
+            param_type == ProtocolParameters.\
             CPP_RF_FIELD_STRENGTH_COMPATIBILITY or \
-            parameter_type == ProtocolParameters.CPP_CE_SET_IQLM_ENABLE or \
-            parameter_type == ProtocolParameters.CPP_MODE_NO_EOF or \
-            parameter_type == ProtocolParameters.\
+            param_type == ProtocolParameters.CPP_CE_SET_IQLM_ENABLE or \
+            param_type == ProtocolParameters.CPP_MODE_NO_EOF or \
+            param_type == ProtocolParameters.\
             CPP_REJECT_INVERTED_MODULATION or \
-            parameter_type == ProtocolParameters.CPP_ALLOW_TA1_RFU or \
-            parameter_type == ProtocolParameters.CPP_DISABLE_ATQA_CHECK or \
-            parameter_type == ProtocolParameters.CPP_RF_FIELD_LOCK_ANTENNA or \
-            parameter_type == ProtocolParameters.CPP_NFC_ACTIVE_FDT_MODE:
+            param_type == ProtocolParameters.CPP_ALLOW_TA1_RFU or \
+            param_type == ProtocolParameters.CPP_DISABLE_ATQA_CHECK or \
+            param_type == ProtocolParameters.CPP_RF_FIELD_LOCK_ANTENNA or \
+            param_type == ProtocolParameters.CPP_NFC_ACTIVE_FDT_MODE:
         int_val = c_uint32()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             byref(int_val),
             c_uint32(1),
             byref(param_size)))
         return int_val.value > 0
 
     # ms/mdB parameter
-    elif parameter_type == ProtocolParameters.CPP_PROTOCOL_STOP_TIMEOUT or \
-            parameter_type == ProtocolParameters.CPP_DAQ_AUTORANGE or \
-            parameter_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE or \
-            parameter_type == ProtocolParameters.CPP_PLI_STEP:
+    elif param_type == ProtocolParameters.CPP_PROTOCOL_STOP_TIMEOUT or \
+            param_type == ProtocolParameters.CPP_DAQ_AUTORANGE or \
+            param_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE or \
+            param_type == ProtocolParameters.CPP_PLI_STEP:
         int_val = c_uint32()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             byref(int_val),
             c_uint32(1),
             byref(param_size)))
         return float(int_val.value) / 1e3
 
     # µs parameter
-    elif parameter_type == ProtocolParameters.CPP_FRAME_FDT:
+    elif param_type == ProtocolParameters.CPP_FRAME_FDT:
         int_val = c_uint32()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             byref(int_val),
             c_uint32(1),
             byref(param_size)))
         return float(int_val.value) / 1e6
+
+    # ConnectorState parameter
+    elif param_type == ProtocolParameters.CPP_LMA_OUTPUT or \
+            param_type == ProtocolParameters.CPP_VDC_INPUT:
+        int_val = c_uint32()
+        CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
+            c_uint8(0),
+            c_uint32(param_type),
+            byref(int_val),
+            c_uint32(1),
+            byref(param_size)))
+        return ConnectorState(int_val.value)
 
     # c_uint32 parameter
     else:
         int_val = c_uint32()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
-            c_uint32(parameter_type),
+            c_uint32(param_type),
             byref(int_val),
             c_uint32(1),
             byref(param_size)))

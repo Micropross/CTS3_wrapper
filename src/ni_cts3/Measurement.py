@@ -18,7 +18,7 @@ class VdcRange(IntEnum):
 
 def MPC_GetVDCIn(duration: float,
                  voltmeter_range: VdcRange = VdcRange.VDC_RANGE_24V) -> float:
-    """Performs a maximum voltage measurement on the AUX 1 connector
+    """Performs a maximum voltage measurement on AUX 1 or VDC IN connector
 
     Parameters
     ----------
@@ -48,7 +48,7 @@ def MPC_GetVDCIn(duration: float,
 
 def MPC_GetVOV(integration_time: float, timeout: float,
                voltmeter_range: VdcRange = VdcRange.VDC_RANGE_24V) -> float:
-    """Performs an integrated voltage measurement on the AUX 1 connector
+    """Performs an integrated voltage measurement on AUX 1 or VDC IN connector
 
     Parameters
     ----------
