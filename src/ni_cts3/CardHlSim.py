@@ -502,6 +502,31 @@ def MPC_GetBufferedRawFrame() -> \
             'rx_type': TechnologyType(rx_type.value)}
 
 
+def MPC_GetRawFrame() -> Optional[Dict[str, Union[bytes, TechnologyType]]]:
+    """Peeks last received frame
+
+    Returns
+    -------
+    dict
+        'rx_frame' (bytes) : Last received frame
+        'rx_type' (TechnologyType) : Received frame type
+    """
+    max_size = 65538
+    data = bytes(max_size)
+    rx_size = c_uint32()
+    rx_type = c_int32()
+    ret = _MPuLib.MPC_GetRawFrame(
+        c_uint8(0),
+        byref(rx_type),
+        data,
+        byref(rx_size))
+    if ret == CTS3ErrorCode.ERRSIM_NO_FRAME_AVAILABLE.value:
+        return None
+    CTS3Exception._check_error(ret)
+    return {'rx_frame': data[:rx_size.value],
+            'rx_type': TechnologyType(rx_type.value)}
+
+
 class _APDUHeader(Structure):
     """APDU header"""
     _fields_ = [('cla', c_uint8),
