@@ -1522,11 +1522,14 @@ class IoClCrcFilter_pattern():
         Frame pattern
     mask : bytes, optional
         Frame pattern mask
+    index : int, optional
+        Matching pattern index
     """
 
     def __init__(self, crc: Union[int, bytes],
                  pattern: bytes,
-                 mask: Optional[bytes] = None):
+                 mask: Optional[bytes] = None,
+                 index: int = 1):
         """Inits IoClCrcFilter_pattern
 
         Parameters
@@ -1537,6 +1540,8 @@ class IoClCrcFilter_pattern():
             Frame pattern
         mask : bytes, optional
             Frame pattern mask
+        index : int, optional
+            Matching pattern index
         """
         if isinstance(crc, bytes):
             if len(crc) != 2:
@@ -1560,6 +1565,7 @@ class IoClCrcFilter_pattern():
         self.crc = crc_value
         self.pattern = pattern
         self.mask = mask
+        self.index = index
 
 
 class IoClFrameSuppFilter_index():
@@ -1590,10 +1596,13 @@ class IoClFrameSuppFilter_pattern():
         Frame pattern
     mask : bytes, optional
         Frame pattern mask
+    index : int, optional
+        Matching pattern index
     """
 
     def __init__(self, pattern: bytes,
-                 mask: Optional[bytes] = None):
+                 mask: Optional[bytes] = None,
+                 index: int = 1):
         """Inits IoClFrameSuppFilter_pattern
 
         Parameters
@@ -1602,6 +1611,8 @@ class IoClFrameSuppFilter_pattern():
             Frame pattern
         mask : bytes, optional
             Frame pattern mask
+        index : int, optional
+            Matching pattern index
         """
         if not isinstance(pattern, bytes):
             raise TypeError('pattern must be an instance of bytes')
@@ -1614,6 +1625,7 @@ class IoClFrameSuppFilter_pattern():
             mask = b'\xFF' * len(pattern)
         self.pattern = pattern
         self.mask = mask
+        self.index = index
 
 
 @unique
@@ -1661,7 +1673,7 @@ def MPS_AddFilter(filter: Union[IoClCrcFilter_index,
         crc_filter = _IoClCrcFilter(index, length, mask, pattern, crc)
         filter_type = _FilterType.FILTER_TYPE_CL_CRC_TX
     elif isinstance(filter, IoClCrcFilter_pattern):
-        index = c_uint32(0)
+        index = c_uint32(filter.index)
         length = c_uint32(len(filter.pattern))
         temp = bytearray(filter.mask +
                          b'\x00' * (256 - len(filter.mask)))
@@ -1680,7 +1692,7 @@ def MPS_AddFilter(filter: Union[IoClCrcFilter_index,
         supp_filter = _IoClFrameSuppFilter(index, length, mask, pattern)
         filter_type = _FilterType.FILTER_TYPE_CL_SUPP_TX
     elif isinstance(filter, IoClFrameSuppFilter_pattern):
-        index = c_uint32(0)
+        index = c_uint32(filter.index)
         length = c_uint32(len(filter.pattern))
         temp = bytearray(filter.mask +
                          b'\x00' * (256 - len(filter.mask)))
