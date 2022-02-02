@@ -119,6 +119,7 @@ class S_emd():
     number : int
         Patterns number to send
     type : S_emd_pattern
+        EMD waveform pattern
     """
 
     def __init__(self, patterns_number: int, pattern_type: S_emd_pattern):
