@@ -3221,6 +3221,12 @@ def MPC_SelectRxChannel(channel: RxChannel) -> None:
         c_uint16(channel)))
 
 
+def MPC_AdjustRX_Channel_2() -> None:
+    """Triggers reception channel automatic adjustment"""
+    CTS3Exception._check_error(_MPuLib.MPC_AdjustRX_Channel_2(
+        c_uint8(0)))
+
+
 def MPC_GetRxGainExternalRx() -> int:
     """Gets current reception gain
 
