@@ -81,9 +81,7 @@ if not isfile(_lib_path):
         # Use library located in system path
         _lib_path = _lib_sys
     else:
-        raise FileNotFoundError(f'Library "{_lib_sys}" not found')
-else:
-    raise FileNotFoundError(f'Library "{_lib_path}" not found')
+        raise FileNotFoundError(f'Library "{_lib_path}" not found')
 
 # Load library
 if sys.platform == 'win32':
