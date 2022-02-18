@@ -1,5 +1,6 @@
 import sys
 from platform import processor, architecture
+from os import sep
 from os.path import dirname, abspath, isfile, join
 from time import sleep
 from atexit import register
@@ -71,7 +72,7 @@ else:
         _lib_name = 'libMPuLib.so'
     else:
         raise NotImplementedError(f'Unsupported platform: {sys.platform}')
-    _lib_sys = join('usr', 'lib', _lib_name)
+    _lib_sys = join(sep, 'usr', 'lib', _lib_name)
 
 # Locate library
 _lib_path = join(_lib_path, _lib_name)
@@ -80,7 +81,9 @@ if not isfile(_lib_path):
         # Use library located in system path
         _lib_path = _lib_sys
     else:
-        raise FileNotFoundError(f'Library "{_lib_path}" not found')
+        raise FileNotFoundError(f'Library "{_lib_sys}" not found')
+else:
+    raise FileNotFoundError(f'Library "{_lib_path}" not found')
 
 # Load library
 if sys.platform == 'win32':
