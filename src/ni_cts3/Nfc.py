@@ -2809,6 +2809,7 @@ class ProtocolParameters(IntEnum):
     CPP_NFC_MAX_LR_VALUE_NFCFORUM = 68
     CPP_LMA_OUTPUT = 69
     CPP_VDC_INPUT = 70
+    CPP_DEMOD_AUTOTHRESHOLD = 71
 
 
 @unique
@@ -2968,7 +2969,8 @@ def MPC_ChangeProtocolParameters(param_type: ProtocolParameters,
             param_type == ProtocolParameters.CPP_RF_FIELD_LOCK_ANTENNA or \
             param_type == ProtocolParameters.CPP_NFC_ACTIVE_FDT_MODE or \
             param_type == ProtocolParameters.CPP_ASK_FILTER_106 or \
-            param_type == ProtocolParameters.CPP_NFC_MAX_LR_VALUE_NFCFORUM:
+            param_type == ProtocolParameters.CPP_NFC_MAX_LR_VALUE_NFCFORUM or \
+            param_type == ProtocolParameters.CPP_DEMOD_AUTOTHRESHOLD:
         int_val = c_uint32(1) if param_value else c_uint32(0)
         CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
@@ -3134,7 +3136,10 @@ def MPC_GetProtocolParameters(param_type: ProtocolParameters) \
             param_type == ProtocolParameters.CPP_ALLOW_TA1_RFU or \
             param_type == ProtocolParameters.CPP_DISABLE_ATQA_CHECK or \
             param_type == ProtocolParameters.CPP_RF_FIELD_LOCK_ANTENNA or \
-            param_type == ProtocolParameters.CPP_NFC_ACTIVE_FDT_MODE:
+            param_type == ProtocolParameters.CPP_NFC_ACTIVE_FDT_MODE or \
+            param_type == ProtocolParameters.CPP_ASK_FILTER_106 or \
+            param_type == ProtocolParameters.CPP_NFC_MAX_LR_VALUE_NFCFORUM or \
+            param_type == ProtocolParameters.CPP_DEMOD_AUTOTHRESHOLD:
         int_val = c_uint32()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
