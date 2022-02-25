@@ -667,33 +667,6 @@ def MPC_SendSBlockParameters(tx_frame: bytes) -> bytes:
     return data[:length.value]
 
 
-@unique
-class RxGainType(IntEnum):
-    """Rx gain threshold type"""
-    RX_GAIN_TYPE_EXTERNAL_GAIN = 0
-    RX_GAIN_TYPE_SENSITIVITY_RX_EXT = 1
-    RX_GAIN_TYPE_SENSITIVITY_RX_TX = 2
-
-
-def MPC_SelectRxGainExt(gain_type: RxGainType, value: int) -> None:
-    """Changes Rx characteristics
-
-    Parameters
-    ----------
-    gain_type : RxGainType
-        Type of gain to be changed
-    value : int
-        Gain value
-    """
-    if not isinstance(gain_type, RxGainType):
-        raise TypeError('gain_type must be an instance of RxGainType IntEnum')
-    _check_limits(c_uint32, value, 'value')
-    CTS3Exception._check_error(_MPuLib.MPC_SelectRxGainExt(
-        c_uint8(0),
-        c_uint32(gain_type),
-        c_uint32(value)))
-
-
 def MPC_SetTxDelay(tx_delay: float, unit: NfcUnit) -> None:
     """Selects delay between Rx frame and following Tx frame
 
@@ -3232,16 +3205,58 @@ def MPC_AdjustRX_Channel_2() -> None:
         c_uint8(0)))
 
 
+@unique
+class RxGainType(IntEnum):
+    """Rx gain threshold type"""
+    RX_GAIN_TYPE_EXTERNAL_GAIN = 0
+    RX_GAIN_TYPE_SENSITIVITY_RX_EXT = 1
+    RX_GAIN_TYPE_SENSITIVITY_RX_TX = 2
+
+
+def MPC_SelectRxGainExt(gain_type: RxGainType, value: int) -> None:
+    """Changes reception channel gain or sub-carrier detection threshold
+
+    Parameters
+    ----------
+    gain_type : RxGainType
+        Type of gain to be changed
+    value : int
+        Value to change
+    """
+    if not isinstance(gain_type, RxGainType):
+        raise TypeError('gain_type must be an instance of RxGainType IntEnum')
+    _check_limits(c_uint32, value, 'value')
+    CTS3Exception._check_error(_MPuLib.MPC_SelectRxGainExt(
+        c_uint8(0),
+        c_uint32(gain_type),
+        c_uint32(value)))
+
+
 def MPC_GetRxGainExternalRx() -> int:
     """Gets current reception gain
 
     Returns
     -------
     int
-        Reception gain (raw value)
+        Reception gain
     """
     gain = c_uint32()
     CTS3Exception._check_error(_MPuLib.MPC_GetRxGainExternalRx(
+        c_uint8(0),
+        byref(gain)))
+    return gain.value
+
+
+def MPC_GetDemodThreshold() -> int:
+    """Gets current sub-carrier detection threshold
+
+    Returns
+    -------
+    int
+        Sub-carrier detection threshold
+    """
+    gain = c_uint32()
+    CTS3Exception._check_error(_MPuLib.MPC_GetDemodThreshold(
         c_uint8(0),
         byref(gain)))
     return gain.value
