@@ -3247,19 +3247,23 @@ def MPC_GetRxGainExternalRx() -> int:
     return gain.value
 
 
-def MPC_GetDemodThreshold() -> int:
+def MPC_GetDemodThreshold() -> Dict[str, int]:
     """Gets current sub-carrier detection threshold
 
     Returns
     -------
-    int
-        Sub-carrier detection threshold
+    dict
+        'threshold' (int): Sub-carrier detection threshold
+        'mean' (int): Mean sub-carrier level in the last received frame
     """
-    gain = c_uint32()
+    threshold = c_uint16()
+    mean = c_uint16()
     CTS3Exception._check_error(_MPuLib.MPC_GetDemodThreshold(
         c_uint8(0),
-        byref(gain)))
-    return gain.value
+        byref(threshold),
+        byref(mean)))
+    return {'threshold': threshold.value,
+            'mean': mean.value}
 
 
 def MPC_ForceGainExtRx(gain: int) -> None:
