@@ -3254,16 +3254,14 @@ def MPC_GetDemodThreshold() -> Dict[str, int]:
     -------
     dict
         'threshold' (int): Sub-carrier detection threshold
-        'mean' (int): Mean sub-carrier level in the last received frame
     """
     threshold = c_uint16()
-    mean = c_uint16()
+    rfu = c_uint16()
     CTS3Exception._check_error(_MPuLib.MPC_GetDemodThreshold(
         c_uint8(0),
         byref(threshold),
-        byref(mean)))
-    return {'threshold': threshold.value,
-            'mean': mean.value}
+        byref(rfu)))
+    return {'threshold': threshold.value}
 
 
 def MPC_ForceGainExtRx(gain: int) -> None:
@@ -4027,7 +4025,7 @@ def MPC_LoadDisturbanceWaveshape(operation: DisturbanceOperation,
     operation : DisturbanceOperation
         Disturbance operation to be loaded
     timebase : int
-        Signal time base in 1 ⁄ (150MHz)
+        Signal time base in 1 / (150 MHz)
     data : list(float)
         Disturbing signal in %
     """
