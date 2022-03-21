@@ -865,6 +865,8 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             if not isinstance(args[3], int):
                 raise TypeError('picc_bits_number must be an instance of int')
             _check_limits(c_uint32, args[3], 'picc_bits_number')
+            if args[3] > 8:
+                raise OverflowError('picc_bits_number cannot be higher than 8')
             if not isinstance(args[4], bytes):
                 raise TypeError('picc_frame must be an instance of bytes')
             if args[2] is None:

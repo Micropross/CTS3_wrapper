@@ -14,7 +14,7 @@ from xml.dom.minidom import parseString
 from datetime import datetime
 from ctypes import c_char, c_char_p, c_uint8, c_int16, c_uint16
 from ctypes import c_int32, c_uint32, c_double, sizeof
-from ctypes import c_void_p, byref, create_string_buffer
+from ctypes import byref, create_string_buffer
 from ctypes import CDLL, Structure, CFUNCTYPE
 from .MPStatus import CTS3ErrorCode
 
@@ -845,7 +845,7 @@ def GetLastSystemErrorMessageEx() -> str:
     str
         Firmware log
     """
-    max_size = 2 * 1024 * 1024
+    max_size = 3 * 1024 * 1024
     message = create_string_buffer(max_size)
     CTS3Exception._check_error(_MPuLib.GetLastSystemErrorMessageEx(
         message,
@@ -1533,7 +1533,7 @@ def SetDLLDebugMode(path: Optional[str]) -> None:
     path : str
         Log file path (None to deactivate)
     """
-    _MPuLib.SetDLLDebugMode.restype = c_void_p
+    _MPuLib.SetDLLDebugMode.restype = None
     if path is None or len(path) == 0:
         _MPuLib.SetDLLDebugMode(
             c_uint8(0), None)
