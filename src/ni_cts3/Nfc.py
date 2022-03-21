@@ -890,7 +890,7 @@ def MPC_SendPPS(cid: Union[int, bytes], dri: Union[int, bytes],
         c_uint8(dsi_value)))
 
 
-def MPC_ExchangeCmdRawA(tx_frame: bytes,
+def MPC_ExchangeCmdRawA(tx_frame: Optional[bytes],
                         tx_bits_number: Optional[int] = None) \
         -> Dict[str, Union[bytes, int]]:
     """Exchanges 106 kb/s sequences
@@ -908,11 +908,14 @@ def MPC_ExchangeCmdRawA(tx_frame: bytes,
         'rx_frame' (bytes): Received frame
         'rx_bits_number' (int): Number of received sequences
     """
-    if not isinstance(tx_frame, bytes):
-        raise TypeError('tx_frame must be an instance of bytes')
-    if tx_bits_number is None:
-        tx_bits_number = 8 * len(tx_frame)
-    _check_limits(c_uint32, tx_bits_number, 'tx_bits_number')
+    if tx_frame is None:
+        tx_bits_number = 0
+    else:
+        if not isinstance(tx_frame, bytes):
+            raise TypeError('tx_frame must be an instance of bytes')
+        if tx_bits_number is None:
+            tx_bits_number = 8 * len(tx_frame)
+        _check_limits(c_uint32, tx_bits_number, 'tx_bits_number')
     data = bytes(1000)
     rx_bits = c_uint32()
     CTS3Exception._check_error(_MPuLib.MPC_ExchangeCmdRawA(
