@@ -3257,14 +3257,16 @@ def MPC_GetDemodThreshold() -> Dict[str, int]:
     -------
     dict
         'threshold' (int): Sub-carrier detection threshold
+        'average' (int): Average modulation level
     """
     threshold = c_uint16()
-    rfu = c_uint16()
+    average = c_uint16()
     CTS3Exception._check_error(_MPuLib.MPC_GetDemodThreshold(
         c_uint8(0),
         byref(threshold),
-        byref(rfu)))
-    return {'threshold': threshold.value}
+        byref(average)))
+    return {'threshold': threshold.value,
+            'average': average.value}
 
 
 def MPC_ForceGainExtRx(gain: int) -> None:
