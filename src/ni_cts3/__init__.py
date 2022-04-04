@@ -26,7 +26,7 @@ if sys.platform == 'win32':
     from ctypes import WinDLL
 
 
-__version__ = '22.0.0'
+__version__ = '22.0.1'
 __author__ = 'NI'
 __copyright__ = 'Copyright 2022, NI'
 __license__ = 'MIT'
@@ -389,19 +389,22 @@ def MPOS_CloseResource(resource_id: Union[int, ResourceType, None] =
             raise CTS3Exception(ret)
 
 
-def MPOS_GetResourceID() -> int:
+def MPOS_GetResourceID() -> Union[int, ResourceType]:
     """Gets the resource identifier
 
     Returns
     -------
-    int
+    int or ResourceType
         Resource identifier
     """
     resource_id = c_uint32()
     CTS3Exception._check_error(_MPuLib.MPOS_GetResourceID(
         c_uint8(0),
         byref(resource_id)))
-    return resource_id.value
+    try:
+        return ResourceType(resource_id.value)
+    except ValueError:
+        return resource_id.value
 
 # endregion
 
@@ -461,6 +464,7 @@ class EEConfig(IntEnum):
     EEC_AUTO_BOOT = 1
     EEC_DEBUG_PORT = 4
     EEC_TELNET_NEGO = 5
+    EEC_WINUSB_DRIVER = 6
 
 
 def MPS_EESetConfig(config: EEConfig, value: bool) -> None:
@@ -852,6 +856,36 @@ def GetLastSystemErrorMessageEx() -> str:
         c_uint8(0),
         c_uint32(max_size)))
     return message.value.decode('ascii').strip()
+
+
+def GetRemoteHelp(remote: Optional[str] = None) -> Dict[str, str]:
+    """Gets remote command help message
+
+    Parameters
+    ----------
+    remote : str, optional
+        Remote command
+
+    Returns
+    -------
+    dict
+        Command/Description pairs
+    """
+    if remote and (not isinstance(remote, str) or len(remote) != 4):
+        raise TypeError('remote must be an instance of 4 characters string')
+    max_size = 3 * 1024 * 1024
+    message = create_string_buffer(max_size)
+    CTS3Exception._check_error(_MPuLib.GetRemoteHelp(
+        remote.encode('ascii') if remote else None,
+        message))
+    help: Dict[str, str] = {}
+    for cmd in message.value.decode('ascii').strip().split(';'):
+        pair = cmd.split('=')
+        if len(pair) == 1 and len(pair[0]):
+            help[pair[0]] = ''
+        elif len(pair) == 2 and len(pair[0]):
+            help[pair[0]] = pair[1]
+    return help
 
 
 def Reboot() -> None:
@@ -1471,6 +1505,7 @@ def CloseCommunication() -> None:
 class LibraryParameter(IntEnum):
     """MPuLib parameters"""
     TCP_TIMEOUT = 1
+    USB_TIMEOUT = 8
     DLL_VERSION = 10
     TCP_CONNECT_TIMEOUT = 12
     SPY_TIMEOUT = 13
@@ -1635,6 +1670,22 @@ def USBEnumerateDevices() -> List[str]:
         devices_list))
     list_string = devices_list.value.decode('ascii')
     return list_string.splitlines() if len(list_string) else []
+
+
+def UsbResetInterface(host: Optional[str] = None) -> None:
+    """Resets WinUSB driver interface
+
+    Parameters
+    ----------
+    host : str, optional
+        Host name
+    """
+    if sys.platform == 'win32':
+        _MPuLib.UsbResetInterface.restype = None
+        if host is None:
+            _MPuLib.UsbResetInterface(None, c_uint32(0))
+        else:
+            _MPuLib.UsbResetInterface(host.encode('ascii'), c_uint32(0))
 
 
 def TCPEnumerateDevices() -> Dict[str, IPv4Address]:
