@@ -4827,6 +4827,12 @@ def MPS_FlushLog() -> None:
         c_uint8(0)))
 
 
+def MPS_CancelDownload() -> None:
+    """Aborts events download"""
+    CTS3Exception._check_error(_MPuLib.MPS_CancelDownload(
+        c_uint8(0)))
+
+
 @unique
 class SpyParameter(IntEnum):
     CP_SPY_MEMORY_SIZE_MB = 2
