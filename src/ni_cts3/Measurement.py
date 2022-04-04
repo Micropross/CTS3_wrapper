@@ -539,8 +539,8 @@ def MPC_ImpedanceSelfCompensation(connector: MeasurementConnector,
     Parameters
     ----------
     connector : MeasurementConnector
-        Measurement connector used to perform the cable impedance compensation
-    channel :
+        Connector used to perform the cable impedance compensation
+    channel : int
         DAQ SMA input channel used to perform the cable impedance compensation
     label : str
         Compensation identifier
@@ -608,14 +608,121 @@ def MPC_ImpedanceDeleteCable(label: str) -> None:
         label.encode('ascii')))
 
 
-def MPC_MeasureImpedance(use_cable: bool = True, average: int = 1) \
+def MPC_ImpedanceAdapterCompensation(label: str, meas_load: complex,
+                                     meas_short: complex, meas_open: complex,
+                                     ref_load: complex, ref_short: complex = 0,
+                                     ref_open: complex = complex('inf')) \
+                                     -> None:
+    """Performs adapter impedance compensation
+
+    Parameters
+    ----------
+    label : str
+        Adapter identifier
+    meas_load : complex
+        Measured load condition complex impedance in Ω
+    meas_short : complex
+        Measured short condition complex impedance in Ω
+    meas_open : complex
+        Measured open condition complex impedance in Ω
+    ref_load : complex, optional
+        Reference load condition complex impedance in Ω
+    ref_short : complex, optional
+        Reference short condition complex impedance in Ω
+    ref_open : complex, optional
+        Reference open condition complex impedance in Ω
+    """
+    CTS3Exception._check_error(_MPuLib.MPC_ImpedanceAdapterCompensation(
+        label.encode('ascii'),
+        c_double(meas_load.real),
+        c_double(meas_load.imag),
+        c_double(meas_short.real),
+        c_double(meas_short.imag),
+        c_double(meas_open.real),
+        c_double(meas_open.imag),
+        c_double(ref_load.real),
+        c_double(ref_load.imag),
+        c_double(ref_short.real),
+        c_double(ref_short.imag),
+        c_double(ref_open.real),
+        c_double(ref_open.imag)))
+
+
+def MPC_ImpedanceLoadAdapter(label: Optional[str]) -> None:
+    """Loads adapter compensation information
+
+    Parameters
+    ----------
+    label : str
+        Compensation identifier
+    """
+    if label is None:
+        CTS3Exception._check_error(_MPuLib.MPC_ImpedanceLoadAdapter(
+            None))
+    else:
+        CTS3Exception._check_error(_MPuLib.MPC_ImpedanceLoadAdapter(
+            label.encode('ascii')))
+
+
+def MPC_ImpedanceListAdapters() -> List[str]:
+    """Lists available adapter compensations information
+
+    Returns
+    -------
+    list(str)
+        Compensation identifiers list
+    """
+    adapters_list = create_string_buffer(0xFFFF)
+    CTS3Exception._check_error(_MPuLib.MPC_ImpedanceListAdapters(
+        adapters_list))
+    list_string = adapters_list.value.decode('ascii')
+    return list_string.split(';') if len(list_string) else []
+
+
+def MPC_ImpedanceDeleteAdapter(label: str) -> None:
+    """Removes adapter compensation information from database
+
+    Parameters
+    ----------
+    label : str
+        Compensation identifier
+    """
+    CTS3Exception._check_error(_MPuLib.MPC_ImpedanceDeleteAdapter(
+        label.encode('ascii')))
+
+
+@unique
+class ImpedanceConfiguration(IntEnum):
+    """Impedance measurement configuration"""
+    WITH_NO_CABLE = 0
+    WITH_CABLE = 1
+    WITH_CABLE_AND_HEAD = 2
+
+
+@overload
+def MPC_MeasureImpedance(config: bool = True, average: int = 1) \
+        -> Dict[str, Union[float, complex]]:
+    ...
+
+
+@overload
+def MPC_MeasureImpedance(config: ImpedanceConfiguration =
+                         ImpedanceConfiguration.WITH_CABLE,
+                         average: int = 1) \
+        -> Dict[str, Union[float, complex]]:
+    ...
+
+
+def MPC_MeasureImpedance(  # type: ignore[no-untyped-def]
+                         config=ImpedanceConfiguration.WITH_CABLE,
+                         average=1) \
         -> Dict[str, Union[float, complex]]:
     """Performs an impedance measurement
 
     Parameters
     ----------
-    use_cable : bool, optional
-        True if impedance to measure is connected with a cable
+    config : ImpedanceConfiguration, optional
+        Configuration of impedance to measure
     average : int, optional
         Measurements number to average
 
@@ -629,6 +736,14 @@ def MPC_MeasureImpedance(use_cable: bool = True, average: int = 1) \
         'vcc' (float): Estimated voltage on the measured impedance in Vpp
         'icc' (float): Estimated current on the measured impedance in App
     """
+    if isinstance(config, bool):
+        warn("deprecated 'config' parameter type", FutureWarning, 2)
+        configuration = c_uint8(1) if config else c_uint8(0)
+    elif isinstance(config, ImpedanceConfiguration):
+        configuration = c_uint8(config)
+    else:
+        raise TypeError('config must be an instance of '
+                        'ImpedanceConfiguration IntEnum')
     _check_limits(c_uint32, average, 'average')
     real_part = c_double()
     imaginary_part = c_double()
@@ -639,7 +754,7 @@ def MPC_MeasureImpedance(use_cable: bool = True, average: int = 1) \
     icc = c_double()
     CTS3Exception._check_error(_MPuLib.MPC_MeasureImpedance(
         c_uint8(0),
-        c_uint8(1) if use_cable else c_uint8(0),
+        configuration,
         c_uint32(average),
         byref(real_part),
         byref(imaginary_part),
