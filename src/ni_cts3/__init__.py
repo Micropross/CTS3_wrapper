@@ -13,8 +13,8 @@ from enum import IntEnum, IntFlag, unique
 from xml.dom.minidom import parseString
 from datetime import datetime
 from ctypes import c_char, c_char_p, c_uint8, c_int16, c_uint16
-from ctypes import c_int32, c_uint32, c_double, sizeof
-from ctypes import byref, create_string_buffer
+from ctypes import c_bool, c_int32, c_uint32, c_double
+from ctypes import sizeof, byref, create_string_buffer
 from ctypes import CDLL, Structure, CFUNCTYPE
 from .MPStatus import CTS3ErrorCode
 
@@ -28,7 +28,7 @@ if sys.platform == 'win32':
 
 __version__ = '22.0.1'
 __author__ = 'NI'
-__copyright__ = 'Copyright 2022, NI'
+__copyright__ = f'Copyright 20{__version__[:2]}, NI'
 __license__ = 'MIT'
 
 
@@ -658,7 +658,7 @@ def MPS_CPUAutoTest(test_id: CpuAutotestId = CpuAutotestId.TEST_CPU_ALL,
     result = c_char_p()
     ret = CTS3ErrorCode(_MPuLib.MPS_CPUAutoTest(
         c_uint32(test_id),
-        c_uint8(1),
+        c_bool(True),
         c_uint32(parameter),
         byref(result)))
     if restore_log:
@@ -1386,7 +1386,7 @@ def MPC_SetRelay(relay_number: AuxRelay, state: bool) -> None:
     CTS3Exception._check_error(_MPuLib.MPC_SetRelay(
         c_uint8(0),
         c_uint8(relay_number),
-        c_uint8(1) if state else c_uint8(0)))
+        c_bool(state)))
 
 # endregion
 
@@ -1571,10 +1571,11 @@ def SetDLLDebugMode(path: Optional[str]) -> None:
     _MPuLib.SetDLLDebugMode.restype = None
     if path is None or len(path) == 0:
         _MPuLib.SetDLLDebugMode(
-            c_uint8(0), None)
+            c_bool(False),
+            None)
     else:
         _MPuLib.SetDLLDebugMode(
-            c_uint8(1),
+            c_bool(True),
             path.encode('ascii'))
 
 

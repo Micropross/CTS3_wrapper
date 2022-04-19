@@ -5,7 +5,7 @@ from . import _MPuLib, _MPuLib_variadic, _check_limits, _get_connection_string
 from .MPStatus import CTS3ErrorCode
 from .MPException import CTS3Exception, CTS3MifareException
 from ctypes import c_uint8, c_int16, c_uint16, c_int32, c_uint32, c_uint64
-from ctypes import c_char, c_char_p, c_int, c_float, c_double
+from ctypes import c_bool, c_char, c_char_p, c_int, c_float, c_double
 from ctypes import byref, POINTER, CFUNCTYPE, Structure
 from ctypes import Union as C_Union
 
@@ -423,7 +423,7 @@ def MPC_ForceModulationASK(activate: bool) -> None:
     """
     CTS3Exception._check_error(_MPuLib.MPC_ForceModulationASK(
         c_uint8(0),
-        c_uint8(1) if activate else c_uint8(0)))
+        c_bool(activate)))
 
 
 def MPC_SetFWTETU(fwt_etu: int) -> None:
@@ -2079,31 +2079,22 @@ def MPC_VcInventory(slot: int, afi: Optional[Union[bytes, int]],
             afi_value = afi
         else:
             raise TypeError('sak must be an instance of int or 1 byte')
+    else:
+        afi_value = 0
     if not isinstance(mask, bytes):
         raise TypeError('mask must be an instance of bytes')
     _check_limits(c_uint8, len(mask), 'mask')
     uid = bytes(8)
     response_flag = c_uint8()
-    if afi is None:
-        CTS3Exception._check_error(_MPuLib.MPC_VcInventory(
-            c_uint8(0),
-            c_uint8(slot),
-            c_uint8(0),
-            c_uint8(0),
-            c_uint8(len(mask)),
-            mask,
-            uid,
-            byref(response_flag)))
-    else:
-        CTS3Exception._check_error(_MPuLib.MPC_VcInventory(
-            c_uint8(0),
-            c_uint8(slot),
-            c_uint8(1),
-            c_uint8(afi_value),
-            c_uint8(len(mask)),
-            mask,
-            uid,
-            byref(response_flag)))
+    CTS3Exception._check_error(_MPuLib.MPC_VcInventory(
+        c_uint8(0),
+        c_uint8(slot),
+        c_bool(False) if afi is None else c_bool(True),
+        c_uint8(afi_value),
+        c_uint8(len(mask)),
+        mask,
+        uid,
+        byref(response_flag)))
     return {'uid': uid, 'response_flag': response_flag.value}
 
 
@@ -4128,7 +4119,7 @@ def MPS_CPLAutoTest(test_id: CplAutotestId = CplAutotestId.TEST_CPL_ALL) \
     ret = CTS3ErrorCode(_MPuLib.MPS_CPLAutoTest(
         c_uint8(0),
         c_uint32(test_id),
-        c_uint8(1),
+        c_bool(True),
         c_uint32(0),
         c_uint32(0),
         byref(result)))

@@ -1,5 +1,6 @@
 from warnings import warn
-from ctypes import c_uint8, c_uint16, c_int32, c_uint32, byref, c_double
+from ctypes import c_bool, c_uint8, c_uint16, c_int32, c_uint32, c_double
+from ctypes import byref
 from typing import Dict, Union, Optional
 from enum import IntEnum, unique
 from . import _MPuLib, _check_limits
@@ -154,7 +155,7 @@ def MPC_SetUpReferencePICC(subcarrier: Optional[SubcarrierFrequency]) -> None:
     if subcarrier is None:
         CTS3Exception._check_error(_MPuLib.MPC_SetUpReferencePICC(
             c_uint8(0),
-            c_uint8(0),
+            c_bool(False),
             c_uint32(0)))
     else:
         if not isinstance(subcarrier, SubcarrierFrequency):
@@ -162,7 +163,7 @@ def MPC_SetUpReferencePICC(subcarrier: Optional[SubcarrierFrequency]) -> None:
                             'SubcarrierFrequency IntEnum')
         CTS3Exception._check_error(_MPuLib.MPC_SetUpReferencePICC(
             c_uint8(0),
-            c_uint8(1),
+            c_bool(True),
             c_uint32(subcarrier)))
 
 
@@ -404,20 +405,20 @@ def MPS_SimSetDesyncPattern(t1_fc: Optional[float],
         t2 pattern duration in carrier periods
         (None to deactivate Desync Pattern)
     """
-    if t1_fc and t2_fc:
+    if t1_fc is not None and t2_fc is not None:
         t1_10fc = round(t1_fc * 1e1)
         _check_limits(c_uint32, t1_10fc, 't1_fc')
         t2_10fc = round(t2_fc * 1e1)
         _check_limits(c_uint32, t2_10fc, 't2_fc')
         CTS3Exception._check_error(_MPuLib.MPS_SimSetDesyncPattern(
             c_uint8(0),
-            c_uint8(1),
+            c_bool(True),
             c_uint32(t1_10fc),
             c_uint32(t2_10fc)))
     else:
         CTS3Exception._check_error(_MPuLib.MPS_SimSetDesyncPattern(
             c_uint8(0),
-            c_uint8(0),
+            c_bool(False),
             c_uint32(0),
             c_uint32(0)))
 
@@ -556,7 +557,7 @@ def MPC_IQLMSuspendControlLoop(suspend: bool) -> None:
     """
     CTS3Exception._check_error(_MPuLib.MPC_IQLMSuspendControlLoop(
         c_uint8(0),
-        c_uint8(1) if suspend else c_uint8(0),
+        c_bool(suspend),
         c_uint32(0)))
 
 

@@ -1,7 +1,7 @@
 from enum import IntEnum, unique
 from ctypes import c_uint8, c_int16, c_uint16, c_int32, c_uint32, c_uint64
 from ctypes import byref, create_string_buffer, sizeof, Structure
-from ctypes import c_char, c_char_p, c_float, c_double
+from ctypes import c_bool, c_char, c_char_p, c_float, c_double
 from typing import Optional, Dict, Union, List, cast
 from . import _MPuLib, _MPuLib_variadic, _check_limits
 from .MPStatus import CTS3ErrorCode
@@ -321,27 +321,18 @@ def Daq_SetChannel(channel: DaqChannel, enabled: bool,
     """
     if not isinstance(channel, DaqChannel):
         raise TypeError('channel must be an instance of DaqChannel IntEnum')
-    if enabled:
-        if not isinstance(voltage_range, DaqRange):
-            raise TypeError('voltage_range must be an instance of '
-                            'DaqRange IntEnum')
-        if not isinstance(nc_term, DaqNCTerm):
-            raise TypeError('nc_term must be an instance of DaqNCTerm IntEnum')
-        CTS3Exception._check_error(_MPuLib.Daq_SetChannel(
-            c_uint8(channel),
-            c_uint8(1),
-            c_uint16(voltage_range),
-            c_uint32(0),
-            c_uint32(nc_term),
-            c_uint8(0)))
-    else:
-        CTS3Exception._check_error(_MPuLib.Daq_SetChannel(
-            c_uint8(channel),
-            c_uint8(0),
-            c_uint16(0),
-            c_uint32(0),
-            c_uint32(0),
-            c_uint8(0)))
+    if enabled and not isinstance(voltage_range, DaqRange):
+        raise TypeError('voltage_range must be an instance of '
+                        'DaqRange IntEnum')
+    if not isinstance(nc_term, DaqNCTerm):
+        raise TypeError('nc_term must be an instance of DaqNCTerm IntEnum')
+    CTS3Exception._check_error(_MPuLib.Daq_SetChannel(
+        c_uint8(channel),
+        c_bool(enabled),
+        c_uint16(voltage_range) if enabled else c_uint16(0),
+        c_uint32(0),
+        c_uint32(nc_term),
+        c_uint8(0)))
 
 
 def Daq_GetChannel(channel: DaqChannel) \
@@ -362,7 +353,7 @@ def Daq_GetChannel(channel: DaqChannel) \
     """
     if not isinstance(channel, DaqChannel):
         raise TypeError('channel must be an instance of DaqChannel IntEnum')
-    enabled = c_uint8()
+    enabled = c_bool()
     range_mV = c_uint16()
     impedance = c_uint32()
     term = c_uint32()
@@ -374,7 +365,7 @@ def Daq_GetChannel(channel: DaqChannel) \
         byref(impedance),
         byref(term),
         byref(rfu)))
-    if enabled.value > 0:
+    if enabled.value:
         return {'enabled': True,
                 'voltage_range': DaqRange(range_mV.value),
                 'nc_term': DaqNCTerm(term.value)}
@@ -589,7 +580,7 @@ def Daq_SetFilter(filter: DaqFilter, enabled: bool) -> None:
         raise TypeError('filter must be an instance of DaqFilter IntEnum')
     CTS3Exception._check_error(_MPuLib.Daq_SetFilter(
         c_uint32(filter),
-        c_uint8(1) if enabled else c_uint8(0)))
+        c_bool(enabled)))
 
 
 # region Probe Management
@@ -696,7 +687,7 @@ def MPS_DaqAutoTest(test_id: DaqAutotestId = DaqAutotestId.TEST_DAQ_ALL) \
     result = c_char_p()
     ret = CTS3ErrorCode(_MPuLib.MPS_DaqAutoTest(
         c_uint32(test_id),
-        c_uint8(1),
+        c_bool(True),
         c_uint32(0),
         byref(result)))
     if (ret >= CTS3ErrorCode.RET_FAIL and ret <= CTS3ErrorCode.RET_WARNING) \

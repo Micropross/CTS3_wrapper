@@ -1,4 +1,5 @@
-from ctypes import c_uint8, c_uint16, c_uint32, c_int32, byref, Structure
+from ctypes import c_bool, c_uint8, c_uint16, c_uint32, c_int32, Structure
+from ctypes import byref
 from typing import Optional, Union, Dict
 from enum import IntEnum, IntFlag, unique
 from . import _MPuLib, _check_limits
@@ -1167,7 +1168,7 @@ def MPS_SimWaitNStart(mode: CardEmulationMode,
         c_uint8(mode),
         c_uint32(protocol),
         c_uint32(event_mask),
-        c_uint8(1) if start_spy else c_uint8(0),
+        c_bool(start_spy),
         c_uint32(timeout_ms)))
 
 
