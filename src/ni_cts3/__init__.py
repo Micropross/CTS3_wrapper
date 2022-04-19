@@ -220,7 +220,7 @@ def GetErrorMessageFromCode(error_code: int) -> str:
         c_uint16(error_code))).decode('ascii')
     if len(message) > 0:
         return message
-    return f'Unknown error code {error_code}'
+    return f'Unknown error code 0x{error_code:04X}'
 
 
 def GetMifareErrorMessageFromCode(error_code: int) -> str:
@@ -242,7 +242,7 @@ def GetMifareErrorMessageFromCode(error_code: int) -> str:
         c_int32(error_code))).decode('ascii')
     if len(message) > 0:
         return message
-    return f'Unknown error code {error_code}'
+    return f'Unknown error code 0x{error_code:02X}'
 
 
 from .MPException import CTS3Exception  # noqa: E402
