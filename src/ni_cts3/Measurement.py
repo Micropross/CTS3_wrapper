@@ -430,14 +430,14 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
 
 def MPC_StoreCoeffAlignStandard(measure_type: MeasurementType,
                                 coefficient: float) -> None:
-    """Stores a measurement compensation ratio into dual antenna EEPROM
+    """Stores a measurement compensation factor into dual antenna EEPROM
 
     Parameters
     ----------
     measurement_type : MeasurementType
         Type of measurement to compensate
     coefficient : float
-        Compensation ratio to be applied to the measurement
+        Compensation factor to be applied to the measurement
     """
     if not isinstance(measure_type, MeasurementType):
         raise TypeError('measure_type must be an instance of '
