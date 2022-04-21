@@ -85,6 +85,39 @@ class DaqPoint():
         self.y = y
 
 
+def get_signal_unit(file_path: str) -> str:
+    """Gets signal unit from an acquisition file
+
+    Parameters
+    ----------
+    file_path : str
+        Acquisition file
+
+    Returns
+    -------
+    str
+        Signal unit ('V', '°' or '')
+    """
+    with open(file_path, 'rb') as f:
+        header = _DaqHeader.from_buffer_copy(f.read(sizeof(_DaqHeader)))
+        if header.version < 2:
+            raise Exception(f'Unsupported DAQ file version ({header.version})')
+        data_width = int(header.bits_per_sample / 8)
+        if data_width == sizeof(c_uint32):
+            return 'V'
+        elif data_width == sizeof(c_int16):
+            channels = cast(int, header.channels)
+            if channels == 1:
+                SOURCE_TXRX = 1
+                SOURCE_PHASE = 6
+                if header.source == SOURCE_PHASE:
+                    return '°'
+                if header.source == SOURCE_TXRX:
+                    return ''
+            return 'V'
+        return ''
+
+
 def load_signals(file_path: str) -> List[List[DaqPoint]]:
     """Loads DAQ signals from an acquisition file (single mode)
 
@@ -113,10 +146,10 @@ def load_signals(file_path: str) -> List[List[DaqPoint]]:
         footer = _DaqFooter.from_buffer_copy(f.read(sizeof(_DaqFooter)))
         if footer.metadata_size:
             f.read(footer.metadata_size)
-
         signal: List[DaqPoint] = []
         date = start_date
         if data_width == sizeof(c_int16):
+            SOURCE_TXRX = 1
             SOURCE_PHASE = 6
             SOURCE_VDC = 5
             if channels == 1:
@@ -143,10 +176,12 @@ def load_signals(file_path: str) -> List[List[DaqPoint]]:
                     # Modulated signal
                     if header.ch1.config & 1:
                         offset = cast(float, header.ch1.offset)
-                        slope = cast(float, header.ch1.slope) / 1e3
+                        slope = cast(float, header.ch1.slope)
                     else:
                         offset = cast(float, header.ch2.offset)
-                        slope = cast(float, header.ch2.slope) / 1e3
+                        slope = cast(float, header.ch2.slope)
+                    if header.source != SOURCE_TXRX:
+                        slope /= 1e3
                     for y in iter_unpack('<h', file_content):
                         value = slope * (cast(int, y[0]) + offset)
                         signal.append(DaqPoint(date, value))
@@ -190,7 +225,7 @@ def load_signals(file_path: str) -> List[List[DaqPoint]]:
                 date += 1.0 / sampling
             return [signal]
 
-    return [[]]
+    return []
 
 
 def load_signal(file_path: str) -> List[List[float]]:
@@ -208,75 +243,11 @@ def load_signal(file_path: str) -> List[List[float]]:
     """
     warn('load_signal replaced by load_signals',
          FutureWarning, 2)
-    with open(file_path, 'rb') as f:
-        header = _DaqHeader.from_buffer_copy(f.read(sizeof(_DaqHeader)))
-        if header.version < 2:
-            raise Exception(f'Unsupported DAQ file version ({header.version})')
-        data_width = int(header.bits_per_sample / 8)
-        data_length = cast(int, header.measurements_count)
-        channels = cast(int, header.channels)
-        file_content = f.read(channels * data_length * data_width)
-        footer = _DaqFooter.from_buffer_copy(f.read(sizeof(_DaqFooter)))
-        if footer.metadata_size:
-            f.read(footer.metadata_size)
-
-        if data_width == sizeof(c_int16):
-            SOURCE_PHASE = 6
-            SOURCE_VDC = 5
-            if channels == 1:
-                if header.source == SOURCE_PHASE:
-                    # Phase
-                    signal = [float('nan') if cast(int, y[0]) > 8192
-                              else 180.0 * cast(int, y[0]) / 8192.0
-                              for y in iter_unpack('<h', file_content)]
-                elif header.source == SOURCE_VDC:
-                    # Vdc
-                    offset = cast(float, header.ch1.offset)
-                    slope = cast(float, header.ch1.slope)
-                    quadratic = cast(float, header.ch1.rms_noise)
-                    cubic = cast(float, header.ch1.demod_noise)
-                    signal = [(offset + slope * cast(int, y[0]) +
-                               quadratic * cast(int, y[0]) ** 2 +
-                               cubic * cast(int, y[0]) ** 3) / 1e3
-                              for y in iter_unpack('<h', file_content)]
-                else:
-                    # Modulated signal
-                    if header.ch1.config & 1:
-                        offset = cast(float, header.ch1.offset)
-                        slope = cast(float, header.ch1.slope) / 1e3
-                    else:
-                        offset = cast(float, header.ch2.offset)
-                        slope = cast(float, header.ch2.slope) / 1e3
-                    signal = [slope * (cast(int, y[0]) + offset)
-                              for y in iter_unpack('<h', file_content)]
-                return [signal]
-
-            else:
-                # CH1 and CH2 data interleaved
-                offset = cast(float, header.ch1.offset)
-                slope = cast(float, header.ch1.slope) / 1e3
-                signal_1 = [slope * (cast(int, y[0]) + offset)
-                            for y in iter_unpack('<h', file_content)][0::2]
-                offset = cast(float, header.ch2.offset)
-                slope = cast(float, header.ch2.slope) / 1e3
-                signal_2 = [slope * (cast(int, y[0]) + offset)
-                            for y in iter_unpack('<h', file_content)][1::2]
-                return [signal_1, signal_2]
-
-        elif data_width == sizeof(c_uint32):
-            # Demodulated signal
-            if header.ch1.config & 1:
-                slope = cast(float, header.ch1.slope)
-                noise = cast(float, header.ch1.demod_noise)
-            else:
-                slope = cast(float, header.ch2.slope)
-                noise = cast(float, header.ch2.demod_noise)
-            slope *= cast(float, header.normalization) / 1e3
-            signal = [slope * sqrt(y[0] - noise) if y[0] > noise else 0.0
-                      for y in iter_unpack('<L', file_content)]
-            return [signal]
-
-    return [[]]
+    result = []
+    signals = load_signals(file_path)
+    for signal in signals:
+        result.append([pt.y for pt in signal])
+    return result
 
 
 @unique
