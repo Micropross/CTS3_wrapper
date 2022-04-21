@@ -134,19 +134,19 @@ def load_signals(file_path: str) -> List[List[DaqPoint]]:
                     quadratic = cast(float, header.ch1.rms_noise)
                     cubic = cast(float, header.ch1.demod_noise)
                     for y in iter_unpack('<h', file_content):
-                        value = offset + slope * cast(int, y[0]) + \
-                                quadratic * cast(int, y[0]) ** 2 + \
-                                cubic * cast(int, y[0]) ** 3
+                        value = (offset + slope * cast(int, y[0]) +
+                                 quadratic * cast(int, y[0]) ** 2 +
+                                 cubic * cast(int, y[0]) ** 3) / 1e3
                         signal.append(DaqPoint(date, value))
                         date += 1.0 / sampling
                 else:
                     # Modulated signal
                     if header.ch1.config & 1:
                         offset = cast(float, header.ch1.offset)
-                        slope = cast(float, header.ch1.slope)
+                        slope = cast(float, header.ch1.slope) / 1e3
                     else:
                         offset = cast(float, header.ch2.offset)
-                        slope = cast(float, header.ch2.slope)
+                        slope = cast(float, header.ch2.slope) / 1e3
                     for y in iter_unpack('<h', file_content):
                         value = slope * (cast(int, y[0]) + offset)
                         signal.append(DaqPoint(date, value))
@@ -156,9 +156,9 @@ def load_signals(file_path: str) -> List[List[DaqPoint]]:
             else:
                 # CH1 and CH2 data interleaved
                 offset_1 = cast(float, header.ch1.offset)
-                slope_1 = cast(float, header.ch1.slope)
+                slope_1 = cast(float, header.ch1.slope) / 1e3
                 offset_2 = cast(float, header.ch2.offset)
-                slope_2 = cast(float, header.ch2.slope)
+                slope_2 = cast(float, header.ch2.slope) / 1e3
 
                 signal_1: List[DaqPoint] = []
                 signal_2: List[DaqPoint] = []
@@ -183,7 +183,7 @@ def load_signals(file_path: str) -> List[List[DaqPoint]]:
             else:
                 slope = cast(float, header.ch2.slope)
                 noise = cast(float, header.ch2.demod_noise)
-            slope *= cast(float, header.normalization)
+            slope *= cast(float, header.normalization) / 1e3
             for y in iter_unpack('<L', file_content):
                 value = slope * sqrt(y[0] - noise) if y[0] > noise else 0.0
                 signal.append(DaqPoint(date, value))
@@ -235,18 +235,18 @@ def load_signal(file_path: str) -> List[List[float]]:
                     slope = cast(float, header.ch1.slope)
                     quadratic = cast(float, header.ch1.rms_noise)
                     cubic = cast(float, header.ch1.demod_noise)
-                    signal = [offset + slope * cast(int, y[0]) +
-                              quadratic * cast(int, y[0]) ** 2 +
-                              cubic * cast(int, y[0]) ** 3
+                    signal = [(offset + slope * cast(int, y[0]) +
+                               quadratic * cast(int, y[0]) ** 2 +
+                               cubic * cast(int, y[0]) ** 3) / 1e3
                               for y in iter_unpack('<h', file_content)]
                 else:
                     # Modulated signal
                     if header.ch1.config & 1:
                         offset = cast(float, header.ch1.offset)
-                        slope = cast(float, header.ch1.slope)
+                        slope = cast(float, header.ch1.slope) / 1e3
                     else:
                         offset = cast(float, header.ch2.offset)
-                        slope = cast(float, header.ch2.slope)
+                        slope = cast(float, header.ch2.slope) / 1e3
                     signal = [slope * (cast(int, y[0]) + offset)
                               for y in iter_unpack('<h', file_content)]
                 return [signal]
@@ -254,11 +254,11 @@ def load_signal(file_path: str) -> List[List[float]]:
             else:
                 # CH1 and CH2 data interleaved
                 offset = cast(float, header.ch1.offset)
-                slope = cast(float, header.ch1.slope)
+                slope = cast(float, header.ch1.slope) / 1e3
                 signal_1 = [slope * (cast(int, y[0]) + offset)
                             for y in iter_unpack('<h', file_content)][0::2]
                 offset = cast(float, header.ch2.offset)
-                slope = cast(float, header.ch2.slope)
+                slope = cast(float, header.ch2.slope) / 1e3
                 signal_2 = [slope * (cast(int, y[0]) + offset)
                             for y in iter_unpack('<h', file_content)][1::2]
                 return [signal_1, signal_2]
@@ -271,7 +271,7 @@ def load_signal(file_path: str) -> List[List[float]]:
             else:
                 slope = cast(float, header.ch2.slope)
                 noise = cast(float, header.ch2.demod_noise)
-            slope *= cast(float, header.normalization)
+            slope *= cast(float, header.normalization) / 1e3
             signal = [slope * sqrt(y[0] - noise) if y[0] > noise else 0.0
                       for y in iter_unpack('<L', file_content)]
             return [signal]
