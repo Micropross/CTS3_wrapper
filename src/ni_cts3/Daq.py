@@ -146,84 +146,85 @@ def load_signals(file_path: str) -> List[List[DaqPoint]]:
         footer = _DaqFooter.from_buffer_copy(f.read(sizeof(_DaqFooter)))
         if footer.metadata_size:
             f.read(footer.metadata_size)
-        signal: List[DaqPoint] = []
-        date = start_date
-        if data_width == sizeof(c_int16):
-            SOURCE_TXRX = 1
-            SOURCE_PHASE = 6
-            SOURCE_VDC = 5
-            if channels == 1:
-                if header.source == SOURCE_PHASE:
-                    # Phase
-                    for y in iter_unpack('<h', file_content):
-                        value = float('nan') if y[0] > 8192 else \
-                                180.0 * cast(int, y[0]) / 8192.0
-                        signal.append(DaqPoint(date, value))
-                        date += 1.0 / sampling
-                elif header.source == SOURCE_VDC:
-                    # Vdc
+
+    signal: List[DaqPoint] = []
+    date = start_date
+    if data_width == sizeof(c_int16):
+        SOURCE_TXRX = 1
+        SOURCE_PHASE = 6
+        SOURCE_VDC = 5
+        if channels == 1:
+            if header.source == SOURCE_PHASE:
+                # Phase
+                for y in iter_unpack('<h', file_content):
+                    value = float('nan') if y[0] > 8192 else \
+                            180.0 * cast(int, y[0]) / 8192.0
+                    signal.append(DaqPoint(date, value))
+                    date += 1.0 / sampling
+            elif header.source == SOURCE_VDC:
+                # Vdc
+                offset = cast(float, header.ch1.offset)
+                slope = cast(float, header.ch1.slope)
+                quadratic = cast(float, header.ch1.rms_noise)
+                cubic = cast(float, header.ch1.demod_noise)
+                for y in iter_unpack('<h', file_content):
+                    value = (offset + slope * cast(int, y[0]) +
+                             quadratic * cast(int, y[0]) ** 2 +
+                             cubic * cast(int, y[0]) ** 3) / 1e3
+                    signal.append(DaqPoint(date, value))
+                    date += 1.0 / sampling
+            else:
+                # Modulated signal
+                if header.ch1.config & 1:
                     offset = cast(float, header.ch1.offset)
                     slope = cast(float, header.ch1.slope)
-                    quadratic = cast(float, header.ch1.rms_noise)
-                    cubic = cast(float, header.ch1.demod_noise)
-                    for y in iter_unpack('<h', file_content):
-                        value = (offset + slope * cast(int, y[0]) +
-                                 quadratic * cast(int, y[0]) ** 2 +
-                                 cubic * cast(int, y[0]) ** 3) / 1e3
-                        signal.append(DaqPoint(date, value))
-                        date += 1.0 / sampling
                 else:
-                    # Modulated signal
-                    if header.ch1.config & 1:
-                        offset = cast(float, header.ch1.offset)
-                        slope = cast(float, header.ch1.slope)
-                    else:
-                        offset = cast(float, header.ch2.offset)
-                        slope = cast(float, header.ch2.slope)
-                    if header.source != SOURCE_TXRX:
-                        slope /= 1e3
-                    for y in iter_unpack('<h', file_content):
-                        value = slope * (cast(int, y[0]) + offset)
-                        signal.append(DaqPoint(date, value))
-                        date += 1.0 / sampling
-                return [signal]
-
-            else:
-                # CH1 and CH2 data interleaved
-                offset_1 = cast(float, header.ch1.offset)
-                slope_1 = cast(float, header.ch1.slope) / 1e3
-                offset_2 = cast(float, header.ch2.offset)
-                slope_2 = cast(float, header.ch2.slope) / 1e3
-
-                signal_1: List[DaqPoint] = []
-                signal_2: List[DaqPoint] = []
-                date = start_date
-                toggle = True
+                    offset = cast(float, header.ch2.offset)
+                    slope = cast(float, header.ch2.slope)
+                if header.source != SOURCE_TXRX:
+                    slope /= 1e3
                 for y in iter_unpack('<h', file_content):
-                    if toggle:
-                        value = slope_1 * (cast(int, y[0]) + offset_1)
-                        signal_1.append(DaqPoint(date, value))
-                    else:
-                        value = slope_2 * (cast(int, y[0]) + offset_2)
-                        signal_2.append(DaqPoint(date, value))
-                    toggle = not toggle
+                    value = slope * (cast(int, y[0]) + offset)
+                    signal.append(DaqPoint(date, value))
                     date += 1.0 / sampling
-                return [signal_1, signal_2]
-
-        elif data_width == sizeof(c_uint32):
-            # Demodulated signal
-            if header.ch1.config & 1:
-                slope = cast(float, header.ch1.slope)
-                noise = cast(float, header.ch1.demod_noise)
-            else:
-                slope = cast(float, header.ch2.slope)
-                noise = cast(float, header.ch2.demod_noise)
-            slope *= cast(float, header.normalization) / 1e3
-            for y in iter_unpack('<L', file_content):
-                value = slope * sqrt(y[0] - noise) if y[0] > noise else 0.0
-                signal.append(DaqPoint(date, value))
-                date += 1.0 / sampling
             return [signal]
+
+        else:
+            # CH1 and CH2 data interleaved
+            offset_1 = cast(float, header.ch1.offset)
+            slope_1 = cast(float, header.ch1.slope) / 1e3
+            offset_2 = cast(float, header.ch2.offset)
+            slope_2 = cast(float, header.ch2.slope) / 1e3
+
+            signal_1: List[DaqPoint] = []
+            signal_2: List[DaqPoint] = []
+            date = start_date
+            toggle = True
+            for y in iter_unpack('<h', file_content):
+                if toggle:
+                    value = slope_1 * (cast(int, y[0]) + offset_1)
+                    signal_1.append(DaqPoint(date, value))
+                else:
+                    value = slope_2 * (cast(int, y[0]) + offset_2)
+                    signal_2.append(DaqPoint(date, value))
+                    date += 1.0 / sampling
+                toggle = not toggle
+            return [signal_1, signal_2]
+
+    elif data_width == sizeof(c_uint32):
+        # Demodulated signal
+        if header.ch1.config & 1:
+            slope = cast(float, header.ch1.slope)
+            noise = cast(float, header.ch1.demod_noise)
+        else:
+            slope = cast(float, header.ch2.slope)
+            noise = cast(float, header.ch2.demod_noise)
+        slope *= cast(float, header.normalization) / 1e3
+        for y in iter_unpack('<L', file_content):
+            value = slope * sqrt(y[0] - noise) if y[0] > noise else 0.0
+            signal.append(DaqPoint(date, value))
+            date += 1.0 / sampling
+        return [signal]
 
     return []
 
