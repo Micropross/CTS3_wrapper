@@ -1,7 +1,6 @@
 import sys
 from platform import processor, architecture
-from os import sep
-from os.path import dirname, abspath, isfile, join
+from pathlib import Path
 from time import sleep
 from atexit import register
 from subprocess import Popen, PIPE, DEVNULL
@@ -37,61 +36,61 @@ class MpDll(CDLL):
 
 
 # Load MPuLib from local path
-_lib_sys: Optional[str] = None
+_lib_sys: Optional[Path] = None
 _lib_name: Optional[str] = None
-_lib_path: str = join(dirname(abspath(__file__)), '.lib')
+_lib_path = Path(__file__).resolve().parent.joinpath('.lib')
 if sys.platform == 'win32':
     class MpWinDll(WinDLL):
         _func_restype_ = c_int16  # type: ignore[assignment]
 
-    _lib_path = join(_lib_path, 'Windows')
+    _lib_path = _lib_path.joinpath('Windows')
     if architecture()[0] == '32bit':
         _lib_name = 'MPuLib-win32.dll'
     else:
         _lib_name = 'MPuLib-win64.dll'
 elif sys.platform == 'cygwin':
-    _lib_path = join(_lib_path, 'Windows')
+    _lib_path = _lib_path.joinpath('Windows')
     if architecture()[0] == '64bit':
         _lib_name = 'MPuLib-win64.dll'
     else:
         raise NotImplementedError('Unsupported cygwin architecture')
 else:
     if sys.platform == 'darwin':
-        _lib_path = join(_lib_path, 'macOS')
+        _lib_path = _lib_path.joinpath('macOS')
         _lib_name = 'libMPuLib.dylib'
     elif sys.platform == 'linux':
         if processor().startswith('armv7'):
             # CTS3 embedded library
-            _lib_path = join(_lib_path, 'Arm')
+            _lib_path = _lib_path.joinpath('Arm')
         else:
-            _lib_path = join(_lib_path, 'Linux')
+            _lib_path = _lib_path.joinpath('Linux')
             if architecture()[0] == '32bit':
-                _lib_path = join(_lib_path, 'x86')
+                _lib_path = _lib_path.joinpath('x86')
             else:
-                _lib_path = join(_lib_path, 'x64')
+                _lib_path = _lib_path.joinpath('x64')
         _lib_name = 'libMPuLib.so'
     else:
         raise NotImplementedError(f'Unsupported platform: {sys.platform}')
-    _lib_sys = join(sep, 'usr', 'lib', _lib_name)
+    _lib_sys = Path('/usr', 'lib', _lib_name)
 
 # Locate library
-_lib_path = join(_lib_path, _lib_name)
-if not isfile(_lib_path):
-    if _lib_sys and isfile(_lib_sys):
+_lib_path = _lib_path.joinpath(_lib_name)
+if not _lib_path.is_file():
+    if _lib_sys and _lib_sys.is_file():
         # Use library located in system path
         _lib_path = _lib_sys
     else:
-        raise FileNotFoundError(f'Library "{_lib_path}" not found')
+        raise FileNotFoundError(f'Library "{str(_lib_path)}" not found')
 
 # Load library
 if sys.platform == 'win32':
-    _MPuLib: MpWinDll = MpWinDll(_lib_path)
+    _MPuLib: MpWinDll = MpWinDll(str(_lib_path))
 else:
-    _MPuLib: MpDll = MpDll(_lib_path)
+    _MPuLib: MpDll = MpDll(str(_lib_path))
 _MPuLib_variadic: Optional[MpDll] = None
 if sys.platform == 'win32' and architecture()[0] == '32bit':
     # Load library for variadic functions
-    _MPuLib_variadic = MpDll(_lib_path)
+    _MPuLib_variadic = MpDll(str(_lib_path))
 
 
 class _FirmwareLog(Thread):
@@ -575,14 +574,14 @@ def MPS_ListVersions(partition: int) -> Dict[str, Union[str, int]]:
         return {'active_partition': current_partition.value}
 
 
-def UpdateFirmware(path: str, partIndex: int,
+def UpdateFirmware(path: Union[str, Path], partIndex: int,
                    call_back: Optional[Callable[[int], int]] =
                    None) -> None:
     """Updates the CTS3 firmware
 
     Parameters
     ----------
-    path : str
+    path : str or Path
         Firmware package path
     partIndex : int
         Index of the partition to update
@@ -590,30 +589,38 @@ def UpdateFirmware(path: str, partIndex: int,
         Update progress call back
     """
     _check_limits(c_uint8, partIndex, 'partIndex')
+    if isinstance(path, Path):
+        file = str(path).encode('ascii')
+    else:
+        file = path.encode('ascii')
     if call_back:
         cmp_func = CFUNCTYPE(c_int32, c_int32)
 
         CTS3Exception._check_error(_MPuLib.UpdateFirmware(
-            path.encode('ascii'),
+            file,
             c_uint8(partIndex),
             cmp_func(call_back)))
     else:
         CTS3Exception._check_error(_MPuLib.UpdateFirmware(
-            path.encode('ascii'),
+            file,
             c_uint8(partIndex),
             None))
 
 
-def ApplyLicenseUpdateFile(path: str) -> None:
+def ApplyLicenseUpdateFile(path: Union[str, Path]) -> None:
     """Applies a license update file
 
     Parameters
     ----------
-    path : str
+    path : str or Path
         License update file path
     """
+    if isinstance(path, Path):
+        file = str(path).encode('ascii')
+    else:
+        file = path.encode('ascii')
     CTS3Exception._check_error(_MPuLib.ApplyLicenseUpdateFile(
-        path.encode('ascii')))
+        file))
 
 
 @unique
@@ -1560,23 +1567,30 @@ def GetDLLParameter(param: LibraryParameter) -> Union[str, float]:
         return float(val.value) / 1e3
 
 
-def SetDLLDebugMode(path: Optional[str]) -> None:
+def SetDLLDebugMode(path: Union[str, Path, None]) -> None:
     """Generates a log file containing remote commands
 
     Parameters
     ----------
-    path : str
+    path : str or Path
         Log file path (None to deactivate)
     """
-    _MPuLib.SetDLLDebugMode.restype = None
-    if path is None or len(path) == 0:
-        _MPuLib.SetDLLDebugMode(
-            c_bool(False),
-            None)
+    if not path:
+        file = None
+    elif isinstance(path, Path):
+        if str(path) != '.':
+            file = str(path).encode('ascii')
+        else:
+            file = None
     else:
-        _MPuLib.SetDLLDebugMode(
-            c_bool(True),
-            path.encode('ascii'))
+        if len(path) == 0:
+            file = None
+        else:
+            file = path.encode('ascii')
+    _MPuLib.SetDLLDebugMode.restype = None
+    _MPuLib.SetDLLDebugMode(
+        c_bool(file is not None),
+        file)
 
 
 def SendFrame(command: Optional[str], timeout: int = -1,
@@ -1759,33 +1773,41 @@ def AbortCoupler(host: Union[str, IPv4Address]) -> None:
         raise TypeError('host must be an instance of str or IPv4Interface')
 
 
-def UploadClientFile(local_path: str, remote_name: str) -> None:
+def UploadClientFile(local_path: Union[str, Path], remote_name: str) -> None:
     """Uploads a file to the CTS3 '/home/default/tmp' directory
 
     Parameters
     ----------
-    local_path : str
+    local_path : str or Path
         Path to file to upload
     remote_name : str
         CTS3 remote file name (will be over-written if already exists)
     """
+    if isinstance(local_path, Path):
+        file = str(local_path).encode('ascii')
+    else:
+        file = local_path.encode('ascii')
     CTS3Exception._check_error(_MPuLib.UploadClientFile(
-        local_path.encode('ascii'),
+        file,
         remote_name.encode('ascii')))
 
 
-def DownloadClientFile(remote_name: str, local_path: str) -> None:
+def DownloadClientFile(remote_name: str, local_path: Union[str, Path]) -> None:
     """Downloads a file from the CTS3 '/home/default/tmp' directory
 
     Parameters
     ----------
     remote_name : str
         CTS3 remote file name
-    local_path : str
+    local_path : str or Path
         Path to file to be downloaded
     """
+    if isinstance(local_path, Path):
+        file = str(local_path).encode('ascii')
+    else:
+        file = local_path.encode('ascii')
     CTS3Exception._check_error(_MPuLib.DownloadClientFile(
         remote_name.encode('ascii'),
-        local_path.encode('ascii')))
+        file))
 
 # endregion

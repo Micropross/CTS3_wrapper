@@ -1,5 +1,6 @@
 from ctypes import c_uint8, c_uint16, c_int32, c_uint32, c_double, byref
 from ctypes import c_void_p, POINTER, create_string_buffer, cast as c_cast
+from pathlib import Path
 from typing import List, Optional, Dict, Union, overload
 from enum import IntEnum, IntFlag, unique
 from . import _MPuLib, _check_limits
@@ -102,7 +103,7 @@ class MeasureSource(IntEnum):
 
 def MPC_StartRFMeasure2(settings: MeasureTriggerSetting, source: MeasureSource,
                         unit: NfcUnit, delay: float, duration: float,
-                        file_name: str = '') -> None:
+                        file_name: Union[str, Path] = '') -> None:
     """Triggers an RF signal acquisition
 
     Parameters
@@ -117,7 +118,7 @@ def MPC_StartRFMeasure2(settings: MeasureTriggerSetting, source: MeasureSource,
         Trigger delay
     duration : float
         Acquisition duration
-    file_name : str, optional
+    file_name : str or Path, optional
         File name (only if settings contains MEAS_TRIG_SETTING_DOWNLOAD)
     """
     if not isinstance(settings, MeasureTriggerSetting):
@@ -132,6 +133,13 @@ def MPC_StartRFMeasure2(settings: MeasureTriggerSetting, source: MeasureSource,
         _unit_autoselect(unit, [delay, duration])
     _check_limits(c_int32, computed_delay, 'delay')
     _check_limits(c_uint32, computed_duration, 'duration')
+    if isinstance(file_name, Path):
+        if str(file_name) != '.':
+            file = str(file_name).encode('ascii')
+        else:
+            file = ''.encode('ascii')
+    else:
+        file = file_name.encode('ascii')
     CTS3Exception._check_error(_MPuLib.MPC_StartRFMeasure2(
         c_uint8(0),
         c_uint32(settings),
@@ -139,7 +147,7 @@ def MPC_StartRFMeasure2(settings: MeasureTriggerSetting, source: MeasureSource,
         c_uint32(computed_unit),
         c_int32(computed_delay),
         c_uint32(computed_duration),
-        file_name.encode('ascii')))
+        file))
 
 
 @unique
@@ -248,7 +256,7 @@ class MeasurementType(IntEnum):
 def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
                                       card_type: TechnologyType,
                                       data_rate: DataRate,
-                                      path: Optional[str] = None) \
+                                      path: Union[str, Path, None] = None) \
         -> Dict[str, Union[float, bool, List[float]]]:
     """Analyzes analog measurements started with MPC_StartRFMeasure2
     and stores the results in a waveform file
@@ -261,7 +269,7 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
         Technology type
     data_rate : DataRate
         Data rate in kb/s
-    path : str, optional
+    path : str or Path, optional
         Path to waveform file
 
     Returns
@@ -313,13 +321,20 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
     measurement_count = c_uint32()
     measurements = c_void_p()
     if path:
+        if isinstance(path, Path):
+            if str(path) != '.':
+                file = str(path).encode('ascii')
+            else:
+                file = ''.encode('ascii')
+        else:
+            file = path.encode('ascii')
         CTS3Exception._check_error(_MPuLib.GetAnalyzedMeasureVoltmeterToFile(
             c_uint8(0),
             c_uint32(measurement_type),
             c_uint32(card_type),
             c_uint32(data_rate),
             c_uint32(0),
-            path.encode('ascii'),
+            file,
             byref(measurement_count),
             byref(measurements)))
     else:

@@ -1,4 +1,5 @@
 from warnings import warn
+from pathlib import Path
 from typing import Dict, Union, Optional, List, Tuple, Callable, overload
 from enum import IntEnum, IntFlag, unique
 from . import _MPuLib, _MPuLib_variadic, _check_limits, _get_connection_string
@@ -4924,22 +4925,26 @@ def BeginDownload(call_back: Callable[[int,
         raise CTS3Exception(CTS3ErrorCode.DLLCOMERROR)
 
 
-def BeginDownloadTo(path: str) -> None:
+def BeginDownloadTo(path: Union[str, Path]) -> None:
     """Starts protocol analyzer events download
 
     Parameters
     ----------
-    path : str
+    path : str or Path
         mplog file path
     """
+    if isinstance(path, Path):
+        log_file = str(path).encode('ascii')
+    else:
+        log_file = path.encode('ascii')
     ret = _MPuLib.BeginDownloadTo(
         c_uint8(0),
-        path.encode('ascii'))
+        log_file)
     if ret == CTS3ErrorCode.RET_UNKNOWN_COMMAND.value:
         # For compatibility with MP500
         ret = _MPuLib.StartDownloadTo(
             c_uint8(0),
-            path.encode('ascii'))
+            log_file)
     CTS3Exception._check_error(ret)
 
 

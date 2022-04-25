@@ -2,6 +2,7 @@ from enum import IntEnum, unique
 from ctypes import c_uint8, c_int16, c_uint16, c_int32, c_uint32, c_uint64
 from ctypes import byref, create_string_buffer, sizeof, Structure
 from ctypes import c_bool, c_char, c_char_p, c_float, c_double
+from pathlib import Path
 from typing import Optional, Dict, Union, List, cast
 from . import _MPuLib, _MPuLib_variadic, _check_limits
 from .MPStatus import CTS3ErrorCode
@@ -85,45 +86,12 @@ class DaqPoint():
         self.y = y
 
 
-def get_signal_unit(file_path: str) -> str:
-    """Gets signal unit from an acquisition file
-
-    Parameters
-    ----------
-    file_path : str
-        Acquisition file
-
-    Returns
-    -------
-    str
-        Signal unit ('V', '°' or '')
-    """
-    with open(file_path, 'rb') as f:
-        header = _DaqHeader.from_buffer_copy(f.read(sizeof(_DaqHeader)))
-        if header.version < 2:
-            raise Exception(f'Unsupported DAQ file version ({header.version})')
-        data_width = int(header.bits_per_sample / 8)
-        if data_width == sizeof(c_uint32):
-            return 'V'
-        elif data_width == sizeof(c_int16):
-            channels = cast(int, header.channels)
-            if channels == 1:
-                SOURCE_TXRX = 1
-                SOURCE_PHASE = 6
-                if header.source == SOURCE_PHASE:
-                    return '°'
-                if header.source == SOURCE_TXRX:
-                    return ''
-            return 'V'
-        return ''
-
-
-def load_signals(file_path: str) -> List[List[DaqPoint]]:
+def load_signals(file_path: Union[str, Path]) -> List[List[DaqPoint]]:
     """Loads DAQ signals from an acquisition file (single mode)
 
     Parameters
     ----------
-    file_path : str
+    file_path : str or Path
         Acquisition file
 
     Returns
@@ -229,12 +197,12 @@ def load_signals(file_path: str) -> List[List[DaqPoint]]:
     return []
 
 
-def load_signal(file_path: str) -> List[List[float]]:
+def load_signal(file_path: Union[str, Path]) -> List[List[float]]:
     """Loads DAQ signals from an acquisition file (single mode)
 
     Parameters
     ----------
-    file_path : str
+    file_path : str or Path
         Acquisition file
 
     Returns
@@ -450,7 +418,7 @@ def Daq_StartStopAcq(acq_mode: DaqAcqMode,
                      download_mode: DaqDownloadMode =
                      DaqDownloadMode.MODE_DOWNLOAD,
                      data_format: Optional[DaqDataFormat] = None,
-                     file_name: str = '') -> None:
+                     file_name: Union[str, Path] = '') -> None:
     """Starts/Stops the acquisition
 
     Parameters
@@ -461,7 +429,7 @@ def Daq_StartStopAcq(acq_mode: DaqAcqMode,
         Download mode (only if acq_mode is MODE_SINGLE or MODE_RUN)
     data_format : DaqDataFormat, optional
         Not used
-    file_name : str, optional
+    file_name : str or Path, optional
         File name (only if acq_mode is MODE_SINGLE or MODE_RUN)
     """
     if not isinstance(acq_mode, DaqAcqMode):
@@ -476,11 +444,18 @@ def Daq_StartStopAcq(acq_mode: DaqAcqMode,
         func_pointer = _MPuLib.Daq_StartStopAcq
     else:
         func_pointer = _MPuLib_variadic.Daq_StartStopAcq
+    if isinstance(file_name, Path):
+        if str(file_name) != '.':
+            file = str(file_name).encode('ascii')
+        else:
+            file = ''.encode('ascii')
+    else:
+        file = file_name.encode('ascii')
     CTS3Exception._check_error(func_pointer(
         c_uint32(acq_mode),
         c_uint32(download_mode),
         c_uint32(0),
-        file_name.encode('ascii')))
+        file))
 
 
 @unique
