@@ -2778,6 +2778,7 @@ class ProtocolParameters(IntEnum):
     CPP_LMA_OUTPUT = 69
     CPP_VDC_INPUT = 70
     CPP_DEMOD_AUTOTHRESHOLD = 71
+    CPP_AUTORANGE_MARGIN = 72
 
 
 @unique
@@ -2946,11 +2947,12 @@ def MPC_ChangeProtocolParameters(param_type: ProtocolParameters,
             byref(int_val),
             c_uint32(4)))
 
-    # ms/mdB parameter
+    # ms/mdB/mV parameter
     elif param_type == ProtocolParameters.CPP_PROTOCOL_STOP_TIMEOUT or \
             param_type == ProtocolParameters.CPP_DAQ_AUTORANGE or \
             param_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE or \
-            param_type == ProtocolParameters.CPP_PLI_STEP:
+            param_type == ProtocolParameters.CPP_PLI_STEP or \
+            param_type == ProtocolParameters.CPP_AUTORANGE_MARGIN:
         if isinstance(param_value, list) or \
                 not isinstance(param_value, float):
             raise TypeError('param_value must be an instance of float')
@@ -3117,11 +3119,12 @@ def MPC_GetProtocolParameters(param_type: ProtocolParameters) \
             byref(param_size)))
         return int_val.value > 0
 
-    # ms/mdB parameter
+    # ms/mdB/mV parameter
     elif param_type == ProtocolParameters.CPP_PROTOCOL_STOP_TIMEOUT or \
             param_type == ProtocolParameters.CPP_DAQ_AUTORANGE or \
             param_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE or \
-            param_type == ProtocolParameters.CPP_PLI_STEP:
+            param_type == ProtocolParameters.CPP_PLI_STEP or \
+            param_type == ProtocolParameters.CPP_AUTORANGE_MARGIN:
         int_val = c_uint32()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
