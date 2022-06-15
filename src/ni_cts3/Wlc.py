@@ -3,6 +3,8 @@ from ctypes import c_uint8, c_uint32, c_double, byref
 from . import _MPuLib
 from .MPException import CTS3Exception
 
+# region Poller
+
 
 def WLC_P_PowerTransfer(duration: float, field: float) -> None:
     """Perform a Wireless Power Transfer phase
@@ -59,6 +61,10 @@ def WLC_P_GetTiming(type: WlcPTiming) -> float:
         c_uint8(type),
         byref(value)))
     return value
+
+# endregion
+
+# region Listener
 
 
 def WLC_L_AntDisconnect(disconnect: bool) -> None:
@@ -160,3 +166,5 @@ def WLC_L_GetTiming(type: WlcLTiming) -> float:
         c_uint8(type),
         byref(value)))
     return value
+
+# endregion

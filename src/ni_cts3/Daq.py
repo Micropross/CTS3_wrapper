@@ -1,9 +1,9 @@
 from enum import IntEnum, unique
+from ctypes import byref, create_string_buffer, sizeof, CFUNCTYPE
 from ctypes import c_uint8, c_int16, c_uint16, c_int32, c_uint32, c_uint64
-from ctypes import byref, create_string_buffer, sizeof, Structure
-from ctypes import c_bool, c_char, c_char_p, c_float, c_double
+from ctypes import Structure, c_bool, c_char, c_char_p, c_float, c_double
 from pathlib import Path
-from typing import Optional, Dict, Union, List, cast
+from typing import Optional, Dict, Union, List, cast, Callable
 from . import _MPuLib, _MPuLib_variadic, _check_limits
 from .MPStatus import CTS3ErrorCode
 from .MPException import CTS3Exception
@@ -646,5 +646,35 @@ def MPS_DaqAutoTest(test_id: DaqAutotestId = DaqAutotestId.TEST_DAQ_ALL) \
             return [test.split('\t') for test in tests_result]
     else:
         raise CTS3Exception(ret)
+
+# endregion
+
+# region Firmware management
+
+
+def Daq_FlashFirmware(partIndex: int,
+                      call_back: Optional[Callable[[int], int]] =
+                      None) -> None:
+    """Flashes DAQ with a specific firmware
+
+    Parameters
+    ----------
+    partIndex : int
+        Index of the partition containing the DAQ firmware
+    call_back : Callable, optional
+        Update progress call back
+    """
+    _check_limits(c_uint8, partIndex, 'partIndex')
+    if call_back:
+        cmp_func = CFUNCTYPE(c_int32, c_int32)
+
+        CTS3Exception._check_error(_MPuLib.Daq_FlashFirmware(
+            c_uint8(partIndex),
+            cmp_func(call_back)))
+    else:
+        CTS3Exception._check_error(_MPuLib.Daq_FlashFirmware(
+            c_uint8(partIndex),
+            None))
+
 
 # endregion
