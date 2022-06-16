@@ -607,6 +607,22 @@ def UpdateFirmware(path: Union[str, Path], partIndex: int,
             None))
 
 
+def GetLastFirmwareUpdateErrorMessageEx() -> str:
+    """Gets the firmware update logs
+
+    Returns
+    -------
+    str
+        Update process logs
+    """
+    max_size = 2 * 1024 * 1024
+    message = create_string_buffer(max_size)
+    CTS3Exception._check_error(_MPuLib.GetLastFirmwareUpdateErrorMessageEx(
+        message,
+        c_uint32(max_size)))
+    return message.value.decode('ascii').strip()
+
+
 def ApplyLicenseUpdateFile(path: Union[str, Path]) -> None:
     """Applies a license update file
 
