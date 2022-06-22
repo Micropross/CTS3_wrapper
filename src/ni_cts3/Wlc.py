@@ -7,14 +7,14 @@ from .MPException import CTS3Exception
 
 
 def WLC_P_PowerTransfer(duration: float, field: float) -> None:
-    """Perform a Wireless Power Transfer phase
+    """Performs a Wireless Power Transfer phase
 
     Parameters
     ----------
     duration : float
-        WPT duration in second
-    value : float
-        WPT field value in volt peak-peak
+        WPT duration in s
+    field : float
+        Charging RF field strength in Vpp
     """
     CTS3Exception._check_error(_MPuLib.WLC_P_PowerTransfer(
         c_double(duration),
@@ -30,14 +30,14 @@ class WlcPTiming(IntEnum):
 
 
 def WLC_P_SetTiming(type: WlcPTiming, value: float) -> None:
-    """Sets poller timing
+    """Sets a WLC Poller timing
 
     Parameters
     ----------
     type : WlcPTiming
-        Timing type
+        Poller timing type
     value : float
-        Timing value
+        Value of the timing to change in s
     """
     if not isinstance(type, WlcPTiming):
         raise TypeError('type must be an instance of WlcPTiming IntEnum')
@@ -47,12 +47,17 @@ def WLC_P_SetTiming(type: WlcPTiming, value: float) -> None:
 
 
 def WLC_P_GetTiming(type: WlcPTiming) -> float:
-    """Gets poller timing
+    """Gets a WLC Poller timing
 
     Parameters
     ----------
     type : WlcPTiming
-        Timing type
+        Poller timing type
+
+    Returns
+    -------
+    float
+        Timing value in s
     """
     if not isinstance(type, WlcPTiming):
         raise TypeError('type must be an instance of WlcPTiming IntEnum')
@@ -60,7 +65,7 @@ def WLC_P_GetTiming(type: WlcPTiming) -> float:
     CTS3Exception._check_error(_MPuLib.WLC_P_GetTiming(
         c_uint8(type),
         byref(value)))
-    return value
+    return value.value
 
 # endregion
 
@@ -68,12 +73,12 @@ def WLC_P_GetTiming(type: WlcPTiming) -> float:
 
 
 def WLC_L_AntDisconnect(disconnect: bool) -> None:
-    """Dis/connect listener antenna
+    """Selects K1 & K2 relays status
 
     Parameters
     ----------
     disconnect : bool
-        True to disconnect, False to connect antenna
+        true to disconnect K1 & K2 relays
     """
     if not isinstance(disconnect, bool):
         raise TypeError('disconnect must be an instance of bool')
@@ -82,33 +87,31 @@ def WLC_L_AntDisconnect(disconnect: bool) -> None:
 
 
 def WLC_L_StopRequest() -> None:
-    """Generate a Stop Request
-    """
-
+    """Generates a Stop Request"""
     CTS3Exception._check_error(_MPuLib.WLC_L_StopRequest())
 
 
-def WLC_L_ImpChange(duration: float) -> None:
-    """Generate a Impedance Change
+def WLC_L_ImpPulse(duration: float) -> None:
+    """Generates an Impedance Pulse
 
     Parameters
     ----------
     duration : float
-        Impedance change duration in seconds
+        Pulse duration in s
     """
-    CTS3Exception._check_error(_MPuLib.WLC_L_ImpChange(
+    CTS3Exception._check_error(_MPuLib.WLC_L_ImpPulse(
         c_double(duration)))
 
 
-def WLC_L_ImpPulse(duration: float) -> None:
-    """Generate a Impedance Pulse
+def WLC_L_ImpChange(duration: float) -> None:
+    """Generates an Impedance Change
 
     Parameters
     ----------
     duration : float
-        Impedance pulse duration in seconds
+        Impedance change duration in s
     """
-    CTS3Exception._check_error(_MPuLib.WLC_L_ImpPulse(
+    CTS3Exception._check_error(_MPuLib.WLC_L_ImpChange(
         c_double(duration)))
 
 
@@ -118,9 +121,9 @@ def WLC_L_SetVic(v_nic: float, v_ic: float) -> None:
     Parameters
     ----------
     v_nic : float
-        Voltage during no impedance change in Volt
+        Voltage during No Impedance Change in V
     v_ic : float
-        Voltage during impedance change in Volt
+        Voltage during Impedance Change in V
     """
     CTS3Exception._check_error(_MPuLib.WLC_L_SetVic(
         c_double(v_nic),
@@ -135,14 +138,14 @@ class WlcLTiming(IntEnum):
 
 
 def WLC_L_SetTiming(type: WlcLTiming, value: float) -> None:
-    """Sets listener timing
+    """Sets a WLC Listener timing
 
     Parameters
     ----------
     type : WlcLTiming
-        Timing type
+        Listener timing type
     value : float
-        Timing value
+        Value of the timing to change in s
     """
     if not isinstance(type, WlcLTiming):
         raise TypeError('type must be an instance of WlcLTiming IntEnum')
@@ -152,12 +155,17 @@ def WLC_L_SetTiming(type: WlcLTiming, value: float) -> None:
 
 
 def WLC_L_GetTiming(type: WlcLTiming) -> float:
-    """Gets listener timing
+    """Gets a WLC Listener timing
 
     Parameters
     ----------
     type : WlcLTiming
-        Timing type
+        Listener timing type
+
+    Returns
+    -------
+    float
+        Timing value in s
     """
     if not isinstance(type, WlcLTiming):
         raise TypeError('type must be an instance of WlcLTiming IntEnum')
@@ -165,6 +173,6 @@ def WLC_L_GetTiming(type: WlcLTiming) -> float:
     CTS3Exception._check_error(_MPuLib.WLC_L_GetTiming(
         c_uint8(type),
         byref(value)))
-    return value
+    return value.value
 
 # endregion
