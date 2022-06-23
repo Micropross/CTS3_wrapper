@@ -17,8 +17,10 @@ class VdcRange(IntEnum):
     VDC_RANGE_12V = 1
 
 
-def MPC_GetVDCIn(duration: float,
-                 voltmeter_range: VdcRange = VdcRange.VDC_RANGE_24V) -> float:
+def MPC_GetVDCIn(
+        duration: float,
+        voltmeter_range: VdcRange = VdcRange.VDC_RANGE_24V
+        ) -> float:
     """Performs a maximum voltage measurement on AUX 1 or VDC IN connector
 
     Parameters
@@ -47,8 +49,11 @@ def MPC_GetVDCIn(duration: float,
     return vdc.value / 1e3
 
 
-def MPC_GetVOV(integration_time: float, timeout: float,
-               voltmeter_range: VdcRange = VdcRange.VDC_RANGE_24V) -> float:
+def MPC_GetVOV(
+        integration_time: float,
+        timeout: float,
+        voltmeter_range: VdcRange = VdcRange.VDC_RANGE_24V
+        ) -> float:
     """Performs an integrated voltage measurement on AUX 1 or VDC IN connector
 
     Parameters
@@ -101,9 +106,15 @@ class MeasureSource(IntEnum):
     MEAS_SOURCE_PHASE = 5
 
 
-def MPC_StartRFMeasure2(settings: MeasureTriggerSetting, source: MeasureSource,
-                        unit: NfcUnit, delay: float, duration: float,
-                        file_name: Union[str, Path] = '') -> None:
+def MPC_StartRFMeasure2(
+        settings: MeasureTriggerSetting,
+        source: MeasureSource,
+        unit: NfcUnit,
+        delay: float,
+        duration: float,
+        file_name: Union[str,
+                         Path] = ''
+        ) -> None:
     """Triggers an RF signal acquisition
 
     Parameters
@@ -129,8 +140,8 @@ def MPC_StartRFMeasure2(settings: MeasureTriggerSetting, source: MeasureSource,
     if not isinstance(unit, NfcUnit):
         raise TypeError('unit must be an instance of NfcUnit IntEnum')
     # Unit auto-selection
-    computed_unit, [computed_delay, computed_duration] = \
-        _unit_autoselect(unit, [delay, duration])
+    computed_unit, [computed_delay, computed_duration] = (
+        _unit_autoselect(unit, [delay, duration]))
     _check_limits(c_int32, computed_delay, 'delay')
     _check_limits(c_uint32, computed_duration, 'duration')
     if isinstance(file_name, Path):
@@ -185,8 +196,9 @@ class MeasurementConnector(IntEnum):
     CONNECTOR_RES_FREQ = 2
 
 
-def MPC_SwitchResonanceFrequencyConnector(connector: MeasurementConnector) \
-        -> None:
+def MPC_SwitchResonanceFrequencyConnector(
+        connector: MeasurementConnector
+        ) -> None:
     """Changes the connector currently selected to perform a measurement
 
     Parameters
@@ -213,7 +225,9 @@ class VoltmeterRange(IntEnum):
     VOLTMETER_RANGE_10000 = 10000
 
 
-def MPC_SelectVoltmeterRange(voltmeter_range: VoltmeterRange) -> None:
+def MPC_SelectVoltmeterRange(
+        voltmeter_range: VoltmeterRange
+        ) -> None:
     """Selects the voltmeter range on ANALOG IN connector
 
     Parameters
@@ -253,11 +267,14 @@ class MeasurementType(IntEnum):
     SCINFC_MEASTYPE_VDC = 3
 
 
-def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
-                                      card_type: TechnologyType,
-                                      data_rate: DataRate,
-                                      path: Union[str, Path, None] = None) \
-        -> Dict[str, Union[float, bool, List[float]]]:
+def GetAnalyzedMeasureVoltmeterToFile(
+        measurement_type: MeasurementType,
+        card_type: TechnologyType,
+        data_rate: DataRate,
+        path: Union[str,
+                    Path,
+                    None] = None
+        ) -> Dict[str, Union[float, bool, List[float]]]:
     """Analyzes analog measurements started with MPC_StartRFMeasure2
     and stores the results in a waveform file
 
@@ -351,8 +368,8 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
         ptr = c_cast(measurements, POINTER(c_int32 * measurement_count.value))
         values = [i for i in ptr.contents]
         if measurement_type == MeasurementType.SCINFC_MEASTYPE_PCD_WAVEFORM:
-            if card_type == TechnologyType.TYPE_A and \
-                    data_rate == DataRate.DATARATE_106KB:
+            if (card_type == TechnologyType.TYPE_A and
+                    data_rate == DataRate.DATARATE_106KB):
                 t5 = []
                 for i in range(16, 16 + values[15]):
                     t5 += [values[i] / 1e9]
@@ -374,8 +391,8 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
                         't5': t5,
                         'modulation_index': values[16 + len(t5)] / 1e6,
                         'modulation_depth': values[17 + len(t5)] / 1e6}
-            elif card_type == TechnologyType.TYPE_A and \
-                    data_rate > DataRate.DATARATE_106KB:
+            elif (card_type == TechnologyType.TYPE_A and
+                    data_rate > DataRate.DATARATE_106KB):
                 return {'t1': values[0] / 1e9,
                         't5': values[1] / 1e9,
                         't6': values[2] / 1e9,
@@ -394,8 +411,8 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
                         'high_state_noise_floor': values[15] / 1e6,
                         'monotonic_falling_edge': values[16] > 0,
                         'monotonic_rising_edge': values[17] > 0}
-            elif card_type == TechnologyType.TYPE_B or \
-                    card_type == TechnologyType.TYPE_FELICA:
+            elif (card_type == TechnologyType.TYPE_B or
+                    card_type == TechnologyType.TYPE_FELICA):
                 return {'falling_time': values[0] / 1e9,
                         'rising_time': values[1] / 1e9,
                         'monotonic_falling_edge': values[2] > 0,
@@ -434,8 +451,8 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
                 return {}
         elif measurement_type == MeasurementType.SCINFC_MEASTYPE_PICC_LMA:
             return {'lma': values[0] / 1e6}
-        elif measurement_type == \
-                MeasurementType.SCINFC_MEASTYPE_PCD_FIELD_STRENGTH:
+        elif (measurement_type ==
+                MeasurementType.SCINFC_MEASTYPE_PCD_FIELD_STRENGTH):
             return {'field_strength': values[0] / 1e6}
         else:
             return {}
@@ -443,8 +460,10 @@ def GetAnalyzedMeasureVoltmeterToFile(measurement_type: MeasurementType,
         return {}
 
 
-def MPC_StoreCoeffAlignStandard(measure_type: MeasurementType,
-                                coefficient: float) -> None:
+def MPC_StoreCoeffAlignStandard(
+        measure_type: MeasurementType,
+        coefficient: float
+        ) -> None:
     """Stores a measurement compensation factor into dual antenna EEPROM
 
     Parameters
@@ -481,13 +500,16 @@ def MPC_GetRFFrequency() -> int:
 
 
 @overload
-def MPC_GetRFFrequency(resolution: FrequencyResolution,
-                       timeout: float) -> int:
+def MPC_GetRFFrequency(
+        resolution: FrequencyResolution,
+        timeout: float
+        ) -> int:
     ...
 
 
-def MPC_GetRFFrequency(resolution=None,  # type: ignore[no-untyped-def]
-                       timeout=None):
+def MPC_GetRFFrequency(  # type: ignore[no-untyped-def]
+        resolution=None,
+        timeout=None):
     """Performs a carrier frequency measurement
 
     Parameters
@@ -518,7 +540,9 @@ def MPC_GetRFFrequency(resolution=None,  # type: ignore[no-untyped-def]
 # region Data rate measurement
 
 
-def MPC_GetDatarate(card_type: TechnologyType) -> int:
+def MPC_GetDatarate(
+        card_type: TechnologyType
+        ) -> int:
     """Measures the last received frame data rate
 
     Parameters
@@ -546,9 +570,11 @@ def MPC_GetDatarate(card_type: TechnologyType) -> int:
 # region Impedance measurement
 
 
-def MPC_ImpedanceSelfCompensation(connector: MeasurementConnector,
-                                  channel: int,
-                                  label: Optional[str]) -> None:
+def MPC_ImpedanceSelfCompensation(
+        connector: MeasurementConnector,
+        channel: int,
+        label: Optional[str]
+        ) -> None:
     """Performs cable impedance compensation
 
     Parameters
@@ -576,7 +602,9 @@ def MPC_ImpedanceSelfCompensation(connector: MeasurementConnector,
             label.encode('ascii')))
 
 
-def MPC_ImpedanceLoadCable(label: Optional[str]) -> None:
+def MPC_ImpedanceLoadCable(
+        label: Optional[str]
+        ) -> None:
     """Loads cable compensation information
 
     Parameters
@@ -610,7 +638,9 @@ def MPC_ImpedanceListCables() -> List[str]:
     return list_string.split(';') if len(list_string) else []
 
 
-def MPC_ImpedanceDeleteCable(label: str) -> None:
+def MPC_ImpedanceDeleteCable(
+        label: str
+        ) -> None:
     """Removes cable compensation information from database
 
     Parameters
@@ -623,11 +653,15 @@ def MPC_ImpedanceDeleteCable(label: str) -> None:
         label.encode('ascii')))
 
 
-def MPC_ImpedanceAdapterCompensation(label: str, meas_load: complex,
-                                     meas_short: complex, meas_open: complex,
-                                     ref_load: complex, ref_short: complex = 0,
-                                     ref_open: complex = complex('inf')) \
-                                     -> None:
+def MPC_ImpedanceAdapterCompensation(
+        label: str,
+        meas_load: complex,
+        meas_short: complex,
+        meas_open: complex,
+        ref_load: complex,
+        ref_short: complex = 0,
+        ref_open: complex = complex('inf')
+        ) -> None:
     """Performs adapter impedance compensation
 
     Parameters
@@ -663,7 +697,9 @@ def MPC_ImpedanceAdapterCompensation(label: str, meas_load: complex,
         c_double(ref_open.imag)))
 
 
-def MPC_ImpedanceLoadAdapter(label: Optional[str]) -> None:
+def MPC_ImpedanceLoadAdapter(
+        label: Optional[str]
+        ) -> None:
     """Loads adapter compensation information
 
     Parameters
@@ -694,7 +730,9 @@ def MPC_ImpedanceListAdapters() -> List[str]:
     return list_string.split(';') if len(list_string) else []
 
 
-def MPC_ImpedanceDeleteAdapter(label: str) -> None:
+def MPC_ImpedanceDeleteAdapter(
+        label: str
+        ) -> None:
     """Removes adapter compensation information from database
 
     Parameters
@@ -715,23 +753,25 @@ class ImpedanceConfiguration(IntEnum):
 
 
 @overload
-def MPC_MeasureImpedance(config: bool = True, average: int = 1) \
-        -> Dict[str, Union[float, complex]]:
+def MPC_MeasureImpedance(
+        config: bool = True,
+        average: int = 1
+        ) -> Dict[str, Union[float, complex]]:
     ...
 
 
 @overload
-def MPC_MeasureImpedance(config: ImpedanceConfiguration =
-                         ImpedanceConfiguration.WITH_CABLE,
-                         average: int = 1) \
-        -> Dict[str, Union[float, complex]]:
+def MPC_MeasureImpedance(
+        config: ImpedanceConfiguration = ImpedanceConfiguration.WITH_CABLE,
+        average: int = 1
+        ) -> Dict[str, Union[float, complex]]:
     ...
 
 
 def MPC_MeasureImpedance(  # type: ignore[no-untyped-def]
-                         config=ImpedanceConfiguration.WITH_CABLE,
-                         average=1) \
-        -> Dict[str, Union[float, complex]]:
+        config=ImpedanceConfiguration.WITH_CABLE,
+        average=1
+        ) -> Dict[str, Union[float, complex]]:
     """Performs an impedance measurement
 
     Parameters
@@ -797,13 +837,14 @@ class ResonanceMethod(IntEnum):
     RESONANCE_NFC = 2
 
 
-def MPC_ResonanceFrequency(method: ResonanceMethod,
-                           power_dbm: float,
-                           step: float,
-                           freq_min: float,
-                           freq_max: float,
-                           average: int = 1) \
-        -> Dict[str, Union[int, float]]:
+def MPC_ResonanceFrequency(
+        method: ResonanceMethod,
+        power_dbm: float,
+        step: float,
+        freq_min: float,
+        freq_max: float,
+        average: int = 1
+        ) -> Dict[str, Union[int, float]]:
     """Performs a resonance frequency measurement
 
     Parameters
@@ -862,8 +903,9 @@ class ResFreqMeasureType(IntEnum):
     RF_IMAGINARY_PART = 2
 
 
-def MPC_GetMeasureResFreq(measure_type: ResFreqMeasureType =
-                          ResFreqMeasureType.RF_REAL_PART) -> List[float]:
+def MPC_GetMeasureResFreq(
+        measure_type: ResFreqMeasureType = ResFreqMeasureType.RF_REAL_PART
+        ) -> List[float]:
     """Reads resonance frequency measured values
 
     Parameters
@@ -897,11 +939,13 @@ def MPC_GetMeasureResFreq(measure_type: ResFreqMeasureType =
 
 # region S11 measurement
 
-def MPC_S11StartMeasurement(frequency_min: float,
-                            frequency_max: float,
-                            step: float,
-                            power_dbm: float,
-                            average: int = 1) -> None:
+def MPC_S11StartMeasurement(
+        frequency_min: float,
+        frequency_max: float,
+        step: float,
+        power_dbm: float,
+        average: int = 1
+        ) -> None:
     """Starts as S11 measurement
 
     Parameters
@@ -943,8 +987,9 @@ class S11MeasureType(IntEnum):
     S11_IMAGINARY_PART = 2
 
 
-def MPC_GetMeasureS11(measure_type: S11MeasureType =
-                      S11MeasureType.S11_RETURN_LOSS) -> List[float]:
+def MPC_GetMeasureS11(
+        measure_type: S11MeasureType = S11MeasureType.S11_RETURN_LOSS
+        ) -> List[float]:
     """Reads S11 measured values
 
     Parameters
@@ -974,7 +1019,9 @@ def MPC_GetMeasureS11(measure_type: S11MeasureType =
         return []
 
 
-def MPC_GetS11(frequency: float = 0.0) -> Dict[str, Union[float, complex]]:
+def MPC_GetS11(
+        frequency: float = 0.0
+        ) -> Dict[str, Union[float, complex]]:
     """Gets the S11 value at a specific frequency
 
     Parameters
@@ -1018,8 +1065,8 @@ def MPC_GetS11(frequency: float = 0.0) -> Dict[str, Union[float, complex]]:
         byref(real_at_frequency),
         byref(imaginary_at_frequency),
         byref(module_at_frequency))
-    if ret == CTS3ErrorCode.ERR_RESONANCE_FREQUENCY_MEASUREMENT.value and \
-            frequency > 0.0:
+    if (ret == CTS3ErrorCode.ERR_RESONANCE_FREQUENCY_MEASUREMENT.value and
+            frequency > 0.0):
         return {'dbm_at_frequency': dbm_at_frequency.value,
                 'impedance_at_frequency': complex(real_at_frequency.value,
                                                   imaginary_at_frequency.value)
@@ -1052,8 +1099,9 @@ class CalibrationCoil(IntEnum):
     RFFIELD_ASSEMBLY_2 = 2
 
 
-def MPC_GetRFField(coil: CalibrationCoil =
-                   CalibrationCoil.RFFIELD_ASSEMBLY_1) -> float:
+def MPC_GetRFField(
+        coil: CalibrationCoil = CalibrationCoil.RFFIELD_ASSEMBLY_1
+        ) -> float:
     """Measures the field strength on ANALOG IN connector
 
     Parameters

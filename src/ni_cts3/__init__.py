@@ -108,7 +108,10 @@ class _FirmwareLog(Thread):
         Log redirection subprocess
     """
 
-    def __init__(self, host: str, started: Event):
+    def __init__(
+            self,
+            host: str,
+            started: Event):
         """Inits _FirmwareLog Thread
 
         Parameters
@@ -127,7 +130,9 @@ class _FirmwareLog(Thread):
         self.running = False
         Thread.__init__(self, daemon=True)
 
-    def run(self) -> None:
+    def run(
+            self
+            ) -> None:
         """Starts log redirection"""
         # Follow log and read last entry
         log_cmd = 'journalctl --unit=tgapp --follow --lines=1 --output=cat'
@@ -144,9 +149,9 @@ class _FirmwareLog(Thread):
                                      stderr=DEVNULL)
                 else:
                     # Running from remote environment, open SSH connection
-                    ssh_cmd = 'ssh -Tnq -l default -o ' + \
-                              'StrictHostKeyChecking=no ' + self.host
-                    self.log = Popen(split(ssh_cmd + ' ' + log_cmd),
+                    ssh_cmd = ('ssh -Tnq -l default -o '
+                               f'StrictHostKeyChecking=no {self.host}')
+                    self.log = Popen(split(f'{ssh_cmd} {log_cmd}'),
                                      bufsize=1,
                                      universal_newlines=True,
                                      encoding='ascii',
@@ -166,7 +171,9 @@ class _FirmwareLog(Thread):
         except Exception:
             self.running = False
 
-    def stop(self) -> None:
+    def stop(
+            self
+            ) -> None:
         """Stops log redirection"""
         if self.running:
             self.running = False
@@ -175,9 +182,15 @@ class _FirmwareLog(Thread):
             Thread.join(self)
 
 
-def _check_limits(c_type: Union[Type[c_uint8], Type[c_uint16], Type[c_uint32],
-                                Type[c_int16], Type[c_int32]],
-                  int_value: int, var_name: str) -> None:
+def _check_limits(
+        c_type: Union[Type[c_uint8],
+                      Type[c_uint16],
+                      Type[c_uint32],
+                      Type[c_int16],
+                      Type[c_int32]],
+        int_value: int,
+        var_name: str
+        ) -> None:
     """Checks if integer value is within C type integer range
 
     Parameters
@@ -194,13 +207,15 @@ def _check_limits(c_type: Union[Type[c_uint8], Type[c_uint16], Type[c_uint32],
     signed_limit = 2 ** (bit_size - 1)
     if signed:
         if int_value < -signed_limit or int_value > signed_limit - 1:
-            raise OverflowError(var_name + ' is out of range')
+            raise OverflowError(f'{var_name} is out of range')
     else:
         if int_value < 0 or int_value > 2 * signed_limit - 1:
-            raise OverflowError(var_name + ' is out of range')
+            raise OverflowError(f'{var_name} is out of range')
 
 
-def GetErrorMessageFromCode(error_code: int) -> str:
+def GetErrorMessageFromCode(
+        error_code: int
+        ) -> str:
     """Converts an error code into an error message
 
     Parameters
@@ -222,7 +237,9 @@ def GetErrorMessageFromCode(error_code: int) -> str:
     return f'Unknown error code 0x{error_code:04X}'
 
 
-def GetMifareErrorMessageFromCode(error_code: int) -> str:
+def GetMifareErrorMessageFromCode(
+        error_code: int
+        ) -> str:
     """Converts a MIFARE error code into an error message
 
     Parameters
@@ -259,7 +276,8 @@ def _get_connection_string() -> str:
         Connection string
     """
     host_name = create_string_buffer(128)
-    ret = CTS3ErrorCode(_MPuLib.GetConnectionString(host_name))
+    ret = CTS3ErrorCode(_MPuLib.GetConnectionString(
+        host_name))
     if ret == CTS3ErrorCode.RET_OK:
         return host_name.value.decode('ascii')
     return ''
@@ -315,9 +333,12 @@ class ResourceBlockingMode(IntEnum):
     OVERRIDE = 3
 
 
-def MPOS_OpenResource(resource_id: Union[int, ResourceType, None] = None,
-                      blocking_mode: ResourceBlockingMode =
-                      ResourceBlockingMode.NOT_BLOCKING) -> None:
+def MPOS_OpenResource(
+        resource_id: Union[int,
+                           ResourceType,
+                           None] = None,
+        blocking_mode: ResourceBlockingMode = ResourceBlockingMode.NOT_BLOCKING
+        ) -> None:
     """Opens a resource
 
     Parameters
@@ -336,7 +357,8 @@ def MPOS_OpenResource(resource_id: Union[int, ResourceType, None] = None,
             c_uint32(ResourceType.CTS3_DAQ_RESOURCE_ID),
             c_uint8(0),
             c_uint32(blocking_mode))
-        if ret_code != 27:  # For compatiblity with MP500
+        if (ret_code != 27 and  # For compatiblity with MP500
+                ret_code != CTS3ErrorCode.RET_COUPLER_NOT_DETECTED.value):
             CTS3Exception._check_error(ret_code)
         ret_code = _MPuLib.MPOS_OpenResource(
             c_uint32(MPOS_GetResourceID()),
@@ -354,8 +376,11 @@ def MPOS_OpenResource(resource_id: Union[int, ResourceType, None] = None,
             c_uint32(blocking_mode)))
 
 
-def MPOS_CloseResource(resource_id: Union[int, ResourceType, None] =
-                       None) -> None:
+def MPOS_CloseResource(
+        resource_id: Union[int,
+                           ResourceType,
+                           None] = None
+        ) -> None:
     """Closes a resource
 
     Parameters
@@ -368,23 +393,24 @@ def MPOS_CloseResource(resource_id: Union[int, ResourceType, None] =
         ret = CTS3ErrorCode(_MPuLib.MPOS_CloseResource(
             c_uint32(MPOS_GetResourceID()),
             c_uint8(0)))
-        if ret != CTS3ErrorCode.RET_OK and \
-                ret != CTS3ErrorCode.RET_RESOURCE_NOT_OPEN:
+        if (ret != CTS3ErrorCode.RET_OK and
+                ret != CTS3ErrorCode.RET_RESOURCE_NOT_OPEN):
             raise CTS3Exception(ret)
         ret = CTS3ErrorCode(_MPuLib.MPOS_CloseResource(
             c_uint32(ResourceType.CTS3_DAQ_RESOURCE_ID),
             c_uint8(0)))
-        if ret != CTS3ErrorCode.RET_OK and \
-                ret != CTS3ErrorCode.RET_RESOURCE_INVALID_ID and \
-                ret != CTS3ErrorCode.RET_RESOURCE_NOT_OPEN:
+        if (ret != CTS3ErrorCode.RET_OK and
+                ret != CTS3ErrorCode.RET_RESOURCE_INVALID_ID and
+                ret != CTS3ErrorCode.RET_RESOURCE_NOT_OPEN and
+                ret != CTS3ErrorCode.RET_COUPLER_NOT_DETECTED):
             raise CTS3Exception(ret)
     else:
         _check_limits(c_uint32, resource_id, 'resource_id')
         ret = CTS3ErrorCode(_MPuLib.MPOS_CloseResource(
             c_uint32(resource_id),
             c_uint8(0)))
-        if ret != CTS3ErrorCode.RET_OK and \
-                ret != CTS3ErrorCode.RET_RESOURCE_NOT_OPEN:
+        if (ret != CTS3ErrorCode.RET_OK and
+                ret != CTS3ErrorCode.RET_RESOURCE_NOT_OPEN):
             raise CTS3Exception(ret)
 
 
@@ -466,7 +492,10 @@ class EEConfig(IntEnum):
     EEC_WINUSB_DRIVER = 6
 
 
-def MPS_EESetConfig(config: EEConfig, value: bool) -> None:
+def MPS_EESetConfig(
+        config: EEConfig,
+        value: bool
+        ) -> None:
     """Sets product configuration
 
     Parameters
@@ -484,7 +513,9 @@ def MPS_EESetConfig(config: EEConfig, value: bool) -> None:
         c_uint32(1) if value else c_uint32(0)))
 
 
-def MPS_EEGetConfig(config: EEConfig) -> bool:
+def MPS_EEGetConfig(
+        config: EEConfig
+        ) -> bool:
     """Gets product configuration
 
     Parameters
@@ -507,7 +538,9 @@ def MPS_EEGetConfig(config: EEConfig) -> bool:
     return value.value > 0
 
 
-def MPS_SelectActivePartition(partition: int) -> None:
+def MPS_SelectActivePartition(
+        partition: int
+        ) -> None:
     """Selects the partition to activate on the next reboot
 
     Parameters
@@ -534,7 +567,9 @@ def MPS_GetActivePartition() -> int:
     return partition.value
 
 
-def MPS_ListVersions(partition: int) -> Dict[str, Union[str, int]]:
+def MPS_ListVersions(
+        partition: int
+        ) -> Dict[str, Union[str, int]]:
     """Reads the firmware version present on a partition
 
     Parameters
@@ -574,9 +609,12 @@ def MPS_ListVersions(partition: int) -> Dict[str, Union[str, int]]:
         return {'active_partition': current_partition.value}
 
 
-def UpdateFirmware(path: Union[str, Path], partIndex: int,
-                   call_back: Optional[Callable[[int], int]] =
-                   None) -> None:
+def UpdateFirmware(
+        path: Union[str,
+                    Path],
+        partIndex: int,
+        call_back: Optional[Callable[[int], int]] = None
+        ) -> None:
     """Updates the CTS3 firmware
 
     Parameters
@@ -623,7 +661,10 @@ def GetLastFirmwareUpdateErrorMessageEx() -> str:
     return message.value.decode('ascii').strip()
 
 
-def ApplyLicenseUpdateFile(path: Union[str, Path]) -> None:
+def ApplyLicenseUpdateFile(
+        path: Union[str,
+                    Path]
+        ) -> None:
     """Applies a license update file
 
     Parameters
@@ -649,8 +690,10 @@ class CpuAutotestId(IntEnum):
     TEST_CPU_LOAD = 4
 
 
-def MPS_CPUAutoTest(test_id: CpuAutotestId = CpuAutotestId.TEST_CPU_ALL,
-                    parameter: int = 0) -> List[List[str]]:
+def MPS_CPUAutoTest(
+        test_id: CpuAutotestId = CpuAutotestId.TEST_CPU_ALL,
+        parameter: int = 0
+        ) -> List[List[str]]:
     """Performs CPU self-test
 
     Parameters
@@ -670,9 +713,9 @@ def MPS_CPUAutoTest(test_id: CpuAutotestId = CpuAutotestId.TEST_CPU_ALL,
         raise TypeError('test_id must be an instance of CpuAutotestId IntEnum')
     _check_limits(c_uint32, parameter, 'parameter')
     restore_log = False
-    if test_id == CpuAutotestId.TEST_CPU_ALL or \
+    if (test_id == CpuAutotestId.TEST_CPU_ALL or
             (test_id == CpuAutotestId.TEST_FLASH and
-                (parameter & 0xF == 0 or parameter & 0xF == 6)):
+             (parameter & 0xF == 0 or parameter & 0xF == 6))):
         # Close 'default' user connection to allow user data partition analysis
         host = _get_connection_string()
         if len(host) > 0 and host in _logs_dict:
@@ -686,8 +729,8 @@ def MPS_CPUAutoTest(test_id: CpuAutotestId = CpuAutotestId.TEST_CPU_ALL,
         byref(result)))
     if restore_log:
         _log_start()
-    if (ret >= CTS3ErrorCode.RET_FAIL and ret <= CTS3ErrorCode.RET_WARNING) \
-            or ret == CTS3ErrorCode.RET_OK:
+    if ((ret >= CTS3ErrorCode.RET_FAIL and ret <= CTS3ErrorCode.RET_WARNING)
+            or ret == CTS3ErrorCode.RET_OK):
         if result.value is None:
             return [['']]
         else:
@@ -697,7 +740,11 @@ def MPS_CPUAutoTest(test_id: CpuAutotestId = CpuAutotestId.TEST_CPU_ALL,
         raise CTS3Exception(ret)
 
 
-def MPS_ResetHard(resource_id: Union[int, ResourceType, None] = None) -> None:
+def MPS_ResetHard(
+        resource_id: Union[int,
+                           ResourceType,
+                           None] = None
+        ) -> None:
     """Resets application to its default state
 
     Parameters
@@ -735,9 +782,10 @@ def MPS_NetworkGetAddress() -> Dict[str, Union[IPv4Interface, IPv4Address]]:
             'gateway_address': IPv4Address(gateway_address.value)}
 
 
-def MPS_NetworkSetAddress(ip_interface: Optional[IPv4Interface],
-                          gateway_address: Optional[IPv4Address] = None) \
-                         -> None:
+def MPS_NetworkSetAddress(
+        ip_interface: Optional[IPv4Interface],
+        gateway_address: Optional[IPv4Address] = None
+        ) -> None:
     """Sets the network configuration
 
     Parameters
@@ -771,7 +819,9 @@ def MPS_NetworkSetAddress(ip_interface: Optional[IPv4Interface],
                 c_uint32(int(gateway_address))))
 
 
-def MPS_NetworkSetUsbAddress(ip_interface: IPv4Interface) -> None:
+def MPS_NetworkSetUsbAddress(
+        ip_interface: IPv4Interface
+        ) -> None:
     """Sets the USB network base address
 
     Parameters
@@ -794,7 +844,9 @@ class TemperatureSensor(IntEnum):
     DaqBoardSensor = 2
 
 
-def MPS_ProbeTemperature(sensor: TemperatureSensor) -> float:
+def MPS_ProbeTemperature(
+        sensor: TemperatureSensor
+        ) -> float:
     """Gets board temperature
 
     Parameters
@@ -815,7 +867,9 @@ def MPS_ProbeTemperature(sensor: TemperatureSensor) -> float:
         c_uint8(sensor)))
 
 
-def MPS_Beep(duration: float) -> None:
+def MPS_Beep(
+        duration: float
+        ) -> None:
     """Beeps the internal buzzer
 
     Parameters
@@ -840,7 +894,9 @@ class LicenseId(IntEnum):
     LICENSE_TERMINAL = 29
 
 
-def MPS_CouplerCheckLicense(embedded_license: LicenseId) -> bool:
+def MPS_CouplerCheckLicense(
+        embedded_license: LicenseId
+        ) -> bool:
     """Checks embedded license validity
 
     Parameters
@@ -881,7 +937,9 @@ def GetLastSystemErrorMessageEx() -> str:
     return message.value.decode('ascii').strip()
 
 
-def GetRemoteHelp(remote: Optional[str] = None) -> Dict[str, str]:
+def GetRemoteHelp(
+        remote: Optional[str] = None
+        ) -> Dict[str, str]:
     """Gets remote command help message
 
     Parameters
@@ -942,7 +1000,9 @@ def Shutdown() -> None:
 # region Timers and time delay
 
 
-def MPS_DoTempo(delay: float) -> None:
+def MPS_DoTempo(
+        delay: float
+        ) -> None:
     """Waits for a delay
 
     Parameters
@@ -1016,7 +1076,9 @@ def MPS_GetTime() -> datetime:
     return local_time
 
 
-def MPS_SetTime(time: datetime = datetime.now().astimezone()) -> None:
+def MPS_SetTime(
+        time: datetime = datetime.now().astimezone()
+        ) -> None:
     """Sets system time
 
     Parameters
@@ -1055,7 +1117,9 @@ def MPS_GetTimeZone() -> str:
     return time_zone.value.decode('ascii')
 
 
-def MPS_SetTimeZone(time_zone: Optional[str] = None) -> None:
+def MPS_SetTimeZone(
+        time_zone: Optional[str] = None
+        ) -> None:
     """Sets time zone
 
     Parameters
@@ -1089,7 +1153,9 @@ def MPS_GetDate() -> datetime:
     return MPS_GetTime()
 
 
-def MPS_SetDate(date: datetime = datetime.now().astimezone()) -> None:
+def MPS_SetDate(
+        date: datetime = datetime.now().astimezone()
+        ) -> None:
     """Sets system date
 
     Parameters
@@ -1117,7 +1183,9 @@ class LedColor(IntEnum):
     LED_CYAN = 7
 
 
-def MPS_LedOn(color: LedColor) -> None:
+def MPS_LedOn(
+        color: LedColor
+        ) -> None:
     """Switches AUX CPU LED on
 
     Parameters
@@ -1142,7 +1210,10 @@ def MPS_LedOff() -> None:
 # region I²C
 
 
-def MPS_I2cAuxWrite(slave_address: int, data: bytes) -> None:
+def MPS_I2cAuxWrite(
+        slave_address: int,
+        data: bytes
+        ) -> None:
     """Writes to I²C AUX 2 front connector
 
     Parameters
@@ -1162,7 +1233,10 @@ def MPS_I2cAuxWrite(slave_address: int, data: bytes) -> None:
         data))
 
 
-def MPS_I2cAuxRead(slave_address: int, data_length: int) -> bytes:
+def MPS_I2cAuxRead(
+        slave_address: int,
+        data_length: int
+        ) -> bytes:
     """Reads from I²C AUX 2 front connector
 
     Parameters
@@ -1188,7 +1262,10 @@ def MPS_I2cAuxRead(slave_address: int, data_length: int) -> bytes:
     return data[:size.value]
 
 
-def MPS_I2cAux1Write(slave_address: int, data: bytes) -> None:
+def MPS_I2cAux1Write(
+        slave_address: int,
+        data: bytes
+        ) -> None:
     """Writes to I²C AUX 1 front connector
 
     Parameters
@@ -1208,7 +1285,10 @@ def MPS_I2cAux1Write(slave_address: int, data: bytes) -> None:
         data))
 
 
-def MPS_I2cAux1Read(slave_address: int, data_length: int) -> bytes:
+def MPS_I2cAux1Read(
+        slave_address: int,
+        data_length: int
+        ) -> bytes:
     """Reads from I²C AUX 1 front connector
 
     Parameters
@@ -1257,11 +1337,13 @@ class SerialParity(IntEnum):
     SERIAL_ODDP = 2
 
 
-def MPS_PortInit(baud_rate: Baudrate = Baudrate.BAUDS_115200,
-                 parity: SerialParity = SerialParity.SERIAL_NOP,
-                 stop_bits: int = 1,
-                 data_bits: int = 8,
-                 xon_xoff: bool = False) -> None:
+def MPS_PortInit(
+        baud_rate: Baudrate = Baudrate.BAUDS_115200,
+        parity: SerialParity = SerialParity.SERIAL_NOP,
+        stop_bits: int = 1,
+        data_bits: int = 8,
+        xon_xoff: bool = False
+        ) -> None:
     """Initializes serial port on AUX.CPU front connector
 
     Parameters
@@ -1298,7 +1380,9 @@ def MPS_PortInit(baud_rate: Baudrate = Baudrate.BAUDS_115200,
         c_uint8(flag)))
 
 
-def MPS_PortSend(tx_frame: bytes) -> None:
+def MPS_PortSend(
+        tx_frame: bytes
+        ) -> None:
     """Sends data over serial port
 
     Parameters
@@ -1315,7 +1399,9 @@ def MPS_PortSend(tx_frame: bytes) -> None:
         c_uint16(len(tx_frame))))
 
 
-def MPS_PortReceive(data_count: Optional[int] = None) -> bytes:
+def MPS_PortReceive(
+        data_count: Optional[int] = None
+        ) -> bytes:
     """Reads data from serial port
 
     Parameters
@@ -1356,7 +1442,9 @@ class PortStatusType(IntEnum):
     PS_TXBUFF_COUNT = 2
 
 
-def MPS_PortStatusEx(status_type: PortStatusType) -> int:
+def MPS_PortStatusEx(
+        status_type: PortStatusType
+        ) -> int:
     """Gets port buffer status
 
     Parameters
@@ -1394,7 +1482,10 @@ class AuxRelay(IntEnum):
     RELAY5 = 5
 
 
-def MPC_SetRelay(relay_number: AuxRelay, state: bool) -> None:
+def MPC_SetRelay(
+        relay_number: AuxRelay,
+        state: bool
+        ) -> None:
     """Drives a CMOS output on the HDMI connector
 
     Parameters
@@ -1424,12 +1515,13 @@ class EmbeddedScriptMode(IntFlag):
     EMBEDDED_REMOTE_OUTPUT = 2
 
 
-def LaunchEmbeddedScript(script_command: str,
-                         timeout: float,
-                         option: EmbeddedScriptMode =
-                         EmbeddedScriptMode.EMBEDDED_WAIT_TERMINATION,
-                         call_back: Optional[Callable[[bytes], int]] =
-                         None) -> int:
+def LaunchEmbeddedScript(
+        script_command: str,
+        timeout: float,
+        option: EmbeddedScriptMode =
+        EmbeddedScriptMode.EMBEDDED_WAIT_TERMINATION,
+        call_back: Optional[Callable[[bytes], int]] = None
+        ) -> int:
     """Launches an embedded script
 
     Parameters
@@ -1467,9 +1559,11 @@ def LaunchEmbeddedScript(script_command: str,
     return retCode.value
 
 
-def StartEmbeddedApplication(application_path: str, args: str,
-                             call_back: Optional[Callable[[bytes], int]]
-                             = None) -> None:
+def StartEmbeddedApplication(
+        application_path: str,
+        args: str,
+        call_back: Optional[Callable[[bytes], int]] = None
+        ) -> None:
     """Launches an embedded C program within the firmware environment
 
     Parameters
@@ -1493,8 +1587,11 @@ def StartEmbeddedApplication(application_path: str, args: str,
 # region MPuLib Specific
 
 
-def OpenCommunication(host: Union[str, IPv4Address],
-                      log: bool = True) -> None:
+def OpenCommunication(
+        host: Union[str,
+                    IPv4Address],
+        log: bool = True
+        ) -> None:
     """Opens the communication channel to a CTS3
 
     Parameters
@@ -1535,7 +1632,10 @@ class LibraryParameter(IntEnum):
     DAQ_TIMEOUT = 14
 
 
-def SetDLLParameter(param: LibraryParameter, value: float) -> None:
+def SetDLLParameter(
+        param: LibraryParameter,
+        value: float
+        ) -> None:
     """Sets MPuLib parameter
 
     Parameters
@@ -1555,7 +1655,9 @@ def SetDLLParameter(param: LibraryParameter, value: float) -> None:
         c_uint32(value_ms)))
 
 
-def GetDLLParameter(param: LibraryParameter) -> Union[str, float]:
+def GetDLLParameter(
+        param: LibraryParameter
+        ) -> Union[str, float]:
     """Gets MPuLib parameter
 
     Parameters
@@ -1576,14 +1678,17 @@ def GetDLLParameter(param: LibraryParameter) -> Union[str, float]:
         c_uint32(param),
         byref(val)))
     if param == LibraryParameter.DLL_VERSION:
-        return str(val.value >> 24) + '.' + str((val.value >> 16) & 0xFF) + \
-            '.' + str((val.value >> 8) & 0xFF) + '.' + \
-            str(val.value & 0xFF)
+        return (f'{val.value >> 24}.{(val.value >> 16) & 0xFF}.'
+                f'{(val.value >> 8) & 0xFF}.{val.value & 0xFF}')
     else:
         return float(val.value) / 1e3
 
 
-def SetDLLDebugMode(path: Union[str, Path, None]) -> None:
+def SetDLLDebugMode(
+        path: Union[str,
+                    Path,
+                    None]
+        ) -> None:
     """Generates a log file containing remote commands
 
     Parameters
@@ -1609,8 +1714,11 @@ def SetDLLDebugMode(path: Union[str, Path, None]) -> None:
         file)
 
 
-def SendFrame(command: Optional[str], timeout: int = -1,
-              asynchronous_tx: bool = False) -> Optional[str]:
+def SendFrame(
+        command: Optional[str],
+        timeout: int = -1,
+        asynchronous_tx: bool = False
+        ) -> Optional[str]:
     """Sends a remote command to the connected CTS3
 
     Parameters
@@ -1670,7 +1778,9 @@ class LibraryMode(IntEnum):
     ADDRESSED = 2
 
 
-def SetDLLMode(mode: LibraryMode) -> None:
+def SetDLLMode(
+        mode: LibraryMode
+        ) -> None:
     """Sets MPuLib working mode
 
     Parameters
@@ -1703,7 +1813,9 @@ def USBEnumerateDevices() -> List[str]:
     return list_string.splitlines() if len(list_string) else []
 
 
-def UsbResetInterface(host: Optional[str] = None) -> None:
+def UsbResetInterface(
+        host: Optional[str] = None
+        ) -> None:
     """Resets WinUSB driver interface
 
     Parameters
@@ -1714,9 +1826,13 @@ def UsbResetInterface(host: Optional[str] = None) -> None:
     if sys.platform == 'win32':
         _MPuLib.UsbResetInterface.restype = None
         if host is None:
-            _MPuLib.UsbResetInterface(None, c_uint32(0))
+            _MPuLib.UsbResetInterface(
+                None,
+                c_uint32(0))
         else:
-            _MPuLib.UsbResetInterface(host.encode('ascii'), c_uint32(0))
+            _MPuLib.UsbResetInterface(
+                host.encode('ascii'),
+                c_uint32(0))
 
 
 def TCPEnumerateDevices() -> Dict[str, IPv4Address]:
@@ -1755,7 +1871,9 @@ def USBEnumerateDevices2() -> List[str]:
     return USBEnumerateDevices()
 
 
-def SelectActiveDevice(active_device: int) -> None:
+def SelectActiveDevice(
+        active_device: int
+        ) -> None:
     """Selects the device to send the commands to
 
     Parameters
@@ -1769,7 +1887,10 @@ def SelectActiveDevice(active_device: int) -> None:
         c_uint32(active_device)))
 
 
-def AbortCoupler(host: Union[str, IPv4Address]) -> None:
+def AbortCoupler(
+        host: Union[str,
+                    IPv4Address]
+        ) -> None:
     """Aborts current command execution
 
     Parameters
@@ -1789,7 +1910,11 @@ def AbortCoupler(host: Union[str, IPv4Address]) -> None:
         raise TypeError('host must be an instance of str or IPv4Interface')
 
 
-def UploadClientFile(local_path: Union[str, Path], remote_name: str) -> None:
+def UploadClientFile(
+        local_path: Union[str,
+                          Path],
+        remote_name: str
+        ) -> None:
     """Uploads a file to the CTS3 '/home/default/tmp' directory
 
     Parameters
@@ -1808,7 +1933,11 @@ def UploadClientFile(local_path: Union[str, Path], remote_name: str) -> None:
         remote_name.encode('ascii')))
 
 
-def DownloadClientFile(remote_name: str, local_path: Union[str, Path]) -> None:
+def DownloadClientFile(
+        remote_name: str,
+        local_path: Union[str,
+                          Path]
+        ) -> None:
     """Downloads a file from the CTS3 '/home/default/tmp' directory
 
     Parameters

@@ -115,9 +115,13 @@ class Type2TagSimulatorEvent(IntFlag):
 # region Simulation initialization
 
 
-def MPC_Set14443AInitParameters(atqa: bytes, uid: bytes,
-                                sak: Union[bytes, int],
-                                ats: Optional[bytes]) -> None:
+def MPC_Set14443AInitParameters(
+        atqa: bytes,
+        uid: bytes,
+        sak: Union[bytes,
+                   int],
+        ats: Optional[bytes]
+        ) -> None:
     """Initializes Type A simulation parameters
 
     Parameters
@@ -168,7 +172,9 @@ def MPC_Set14443AInitParameters(atqa: bytes, uid: bytes,
             ats))
 
 
-def MPC_Set14443BInitParameters(atqb: bytes) -> None:
+def MPC_Set14443BInitParameters(
+        atqb: bytes
+        ) -> None:
     """Initializes Type B simulation parameters
 
     Parameters
@@ -185,8 +191,10 @@ def MPC_Set14443BInitParameters(atqb: bytes) -> None:
         atqb))
 
 
-def MPC_Set15693InitParameters(data_rate: VicinityDataRate,
-                               sub_carrier: VicinitySubCarrier) -> None:
+def MPC_Set15693InitParameters(
+        data_rate: VicinityDataRate,
+        sub_carrier: VicinitySubCarrier
+        ) -> None:
     """Initializes Vicinity simulation parameters
 
     Parameters
@@ -208,12 +216,17 @@ def MPC_Set15693InitParameters(data_rate: VicinityDataRate,
         c_uint8(sub_carrier)))
 
 
-def MPC_SetNFCInitParameters(mode: NfcMode, data_rate: NfcDataRate,
-                             masked_events: Optional[NfcSimulatorEvent],
-                             sens_res: Optional[bytes],
-                             sel_res: Union[bytes, int, None],
-                             nfc_id: Optional[bytes],
-                             atr_res: bytes) -> None:
+def MPC_SetNFCInitParameters(
+        mode: NfcMode,
+        data_rate: NfcDataRate,
+        masked_events: Optional[NfcSimulatorEvent],
+        sens_res: Optional[bytes],
+        sel_res: Union[bytes,
+                       int,
+                       None],
+        nfc_id: Optional[bytes],
+        atr_res: bytes
+        ) -> None:
     """Initializes NFC simulation parameters
 
     Parameters
@@ -238,8 +251,8 @@ def MPC_SetNFCInitParameters(mode: NfcMode, data_rate: NfcDataRate,
     if not isinstance(data_rate, NfcDataRate):
         raise TypeError('data_rate must be an instance of NfcDataRate IntEnum')
 
-    if masked_events is not None and \
-            not isinstance(masked_events, NfcSimulatorEvent):
+    if (masked_events is not None and
+            not isinstance(masked_events, NfcSimulatorEvent)):
         raise TypeError('masked_events must be an instance of '
                         'NfcSimulatorEvent IntFlag')
 
@@ -286,10 +299,14 @@ def MPC_SetNFCInitParameters(mode: NfcMode, data_rate: NfcDataRate,
         atr_res))
 
 
-def MPC_SetSParameterInit(pcd_to_picc_bitrate: Union[bytes, int],
-                          picc_to_pcd_bitrate: Union[bytes, int],
-                          framing_option_picc_to_pcd: Union[bytes, int]) \
-                         -> None:
+def MPC_SetSParameterInit(
+        pcd_to_picc_bitrate: Union[bytes,
+                                   int],
+        picc_to_pcd_bitrate: Union[bytes,
+                                   int],
+        framing_option_picc_to_pcd: Union[bytes,
+                                          int]
+        ) -> None:
     """Initializes S(PARAMETERS) blocks answer
 
     Parameters
@@ -345,9 +362,13 @@ def MPC_SetSParameterInit(pcd_to_picc_bitrate: Union[bytes, int],
         c_uint8(0)))
 
 
-def MPC_SetT2TInitParameters(masked_events: Optional[Type2TagSimulatorEvent],
-                             sens_res: bytes, sel_res: Union[bytes, int],
-                             nfc_id: bytes) -> None:
+def MPC_SetT2TInitParameters(
+        masked_events: Optional[Type2TagSimulatorEvent],
+        sens_res: bytes,
+        sel_res: Union[bytes,
+                       int],
+        nfc_id: bytes
+        ) -> None:
     """Initializes NFC Forum Type 2 Tag simulation parameters
 
     Parameters
@@ -361,8 +382,8 @@ def MPC_SetT2TInitParameters(masked_events: Optional[Type2TagSimulatorEvent],
     nfc_id : bytes
         NFCID1 to answer
     """
-    if masked_events is not None and \
-            not isinstance(masked_events, Type2TagSimulatorEvent):
+    if (masked_events is not None and
+            not isinstance(masked_events, Type2TagSimulatorEvent)):
         raise TypeError('masked_events must be an instance of '
                         'Type2TagSimulatorEvent IntFlag')
     if not isinstance(sens_res, bytes) or len(sens_res) != 2:
@@ -408,7 +429,9 @@ class _TypeARATSStruct(Structure):
                 ('crc_1', c_uint8),
                 ('crc_2', c_uint8)]
 
-    def get_bytes(self) -> bytes:
+    def get_bytes(
+            self
+            ) -> bytes:
         """Converts RATS into bytes
 
         Returns
@@ -477,8 +500,8 @@ def MPC_GetSParam() -> Optional[bytes]:
     return s_param[:length.value]
 
 
-def MPC_GetBufferedRawFrame() -> \
-        Optional[Dict[str, Union[bytes, TechnologyType]]]:
+def MPC_GetBufferedRawFrame(
+        ) -> Optional[Dict[str, Union[bytes, TechnologyType]]]:
     """Gets received frame
 
     Returns
@@ -536,7 +559,9 @@ class _APDUHeader(Structure):
                 ('p2', c_uint8),
                 ('p3', c_uint8)]
 
-    def get_bytes(self) -> bytes:
+    def get_bytes(
+            self
+            ) -> bytes:
         """Converts APDU header into bytes
 
         Returns
@@ -582,7 +607,10 @@ class _TypeNFC_ATR_REQ(Structure):
                 ('ppi', c_uint8),
                 ('general_bytes', c_uint8 * 238)]
 
-    def get_bytes(self, length: int) -> bytes:
+    def get_bytes(
+            self,
+            length: int
+            ) -> bytes:
         """Converts ATR_REQ into bytes
 
         Returns
@@ -621,7 +649,9 @@ class _TypeNFC_PSL_REQ(Structure):
                 ('brs', c_uint8),
                 ('fsl', c_uint8)]
 
-    def get_bytes(self) -> bytes:
+    def get_bytes(
+            self
+            ) -> bytes:
         """Converts PSL_REQ into bytes
 
         Returns
@@ -655,7 +685,9 @@ class _TypeNFC_WUP_REQ(Structure):
     _fields_ = [('nfc_id3i', c_uint8 * 10),
                 ('didi', c_uint8)]
 
-    def get_bytes(self) -> bytes:
+    def get_bytes(
+            self
+            ) -> bytes:
         """Converts WUP_REQ into bytes
 
         Returns
@@ -734,7 +766,9 @@ class _TypeAPPSStruct(Structure):
                 ('crc1', c_uint8),
                 ('crc2', c_uint8)]
 
-    def get_bytes(self) -> bytes:
+    def get_bytes(
+            self
+            ) -> bytes:
         """Converts PPS into bytes
 
         Returns
@@ -771,7 +805,11 @@ def MPC_GetPPSRequest() -> Optional[bytes]:
 # region Frames transmission
 
 
-def MPS_SendRAPDU(apdu: Optional[bytes], status: Union[int, bytes]) -> None:
+def MPS_SendRAPDU(
+        apdu: Optional[bytes],
+        status: Union[int,
+                      bytes]
+        ) -> None:
     """Sends response APDU
 
     Parameters
@@ -807,8 +845,12 @@ def MPS_SendRAPDU(apdu: Optional[bytes], status: Union[int, bytes]) -> None:
             c_uint16(status_word)))
 
 
-def MPC_SendNFC_PSL_RES(did: Union[int, bytes] = 0xFF,
-                        crc: Union[int, bytes] = 0) -> None:
+def MPC_SendNFC_PSL_RES(
+        did: Union[int,
+                   bytes] = 0xFF,
+        crc: Union[int,
+                   bytes] = 0
+        ) -> None:
     """Sends PSL_RES response
 
     Parameters
@@ -843,8 +885,12 @@ def MPC_SendNFC_PSL_RES(did: Union[int, bytes] = 0xFF,
         byref(c_uint16(crc_value))))
 
 
-def MPC_SendNFC_DSL_RES(did: Union[int, bytes] = 0xFF,
-                        crc: Union[int, bytes] = 0) -> None:
+def MPC_SendNFC_DSL_RES(
+        did: Union[int,
+                   bytes] = 0xFF,
+        crc: Union[int,
+                   bytes] = 0
+        ) -> None:
     """Sends DSL_RES response
 
     Parameters
@@ -879,8 +925,12 @@ def MPC_SendNFC_DSL_RES(did: Union[int, bytes] = 0xFF,
         byref(c_uint16(crc_value))))
 
 
-def MPC_SendNFC_RLS_RES(did: Union[int, bytes] = 0xFF,
-                        crc: Union[int, bytes] = 0) -> None:
+def MPC_SendNFC_RLS_RES(
+        did: Union[int,
+                   bytes] = 0xFF,
+        crc: Union[int,
+                   bytes] = 0
+        ) -> None:
     """Sends RLS_RES response
 
     Parameters
@@ -915,8 +965,12 @@ def MPC_SendNFC_RLS_RES(did: Union[int, bytes] = 0xFF,
         byref(c_uint16(crc_value))))
 
 
-def MPC_SendNFC_WUP_RES(did: Union[int, bytes] = 0xFF,
-                        crc: Union[int, bytes] = 0) -> None:
+def MPC_SendNFC_WUP_RES(
+        did: Union[int,
+                   bytes] = 0xFF,
+        crc: Union[int,
+                   bytes] = 0
+        ) -> None:
     """Sends WUP_RES response
 
     Parameters
@@ -951,7 +1005,10 @@ def MPC_SendNFC_WUP_RES(did: Union[int, bytes] = 0xFF,
         byref(c_uint16(crc_value))))
 
 
-def MPC_SendNFCTimeoutExtensionRequest(rtox: Union[int, bytes]) -> None:
+def MPC_SendNFCTimeoutExtensionRequest(
+        rtox: Union[int,
+                    bytes]
+        ) -> None:
     """Sends Response Timeout Extension PDU
 
     Parameters
@@ -973,11 +1030,17 @@ def MPC_SendNFCTimeoutExtensionRequest(rtox: Union[int, bytes]) -> None:
         c_uint8(rtox_value)))
 
 
-def MPC_SendNFC_DEP_RES(pfb: Union[int, bytes],
-                        data: Optional[bytes],
-                        did: Union[int, bytes] = 0xFF,
-                        nad: Union[int, bytes] = 0xFF,
-                        crc: Union[int, bytes] = 0) -> None:
+def MPC_SendNFC_DEP_RES(
+        pfb: Union[int,
+                   bytes],
+        data: Optional[bytes],
+        did: Union[int,
+                   bytes] = 0xFF,
+        nad: Union[int,
+                   bytes] = 0xFF,
+        crc: Union[int,
+                   bytes] = 0
+        ) -> None:
     """Sends DEP_RES response
 
     Parameters
@@ -1042,7 +1105,9 @@ def MPC_SendNFC_DEP_RES(pfb: Union[int, bytes],
         byref(c_uint16(crc_value))))
 
 
-def MPC_SendNFC_RUserData(data: bytes) -> None:
+def MPC_SendNFC_RUserData(
+        data: bytes
+        ) -> None:
     """Sends data using DEP protocol
 
     Parameters
@@ -1058,7 +1123,9 @@ def MPC_SendNFC_RUserData(data: bytes) -> None:
         data))
 
 
-def MPC_SendPPSResponse(pps: Optional[bytes] = None) -> None:
+def MPC_SendPPSResponse(
+        pps: Optional[bytes] = None
+        ) -> None:
     """Sends Type A PPS response
 
     Parameters
@@ -1087,7 +1154,10 @@ class WtxRequestMode(IntEnum):
     WTX_MS = 3
 
 
-def MPS_SendWTXRequest(unit: WtxRequestMode, value: int) -> None:
+def MPS_SendWTXRequest(
+        unit: WtxRequestMode,
+        value: int
+        ) -> None:
     """Sends S(WTX) request
 
     Parameters
@@ -1120,13 +1190,16 @@ class _SimulatorProtocol(IntEnum):
     CL_TAG_TYPE2_SIMULATOR = 1 << 20
 
 
-def MPS_SimWaitNStart(mode: CardEmulationMode,
-                      event_mask: Union[IsoSimulatorEvent,
-                                        FeliCaSimulatorEvent,
-                                        VicinitySimulatorEvent,
-                                        NfcSimulatorEvent,
-                                        Type2TagSimulatorEvent],
-                      start_spy: bool, timeout: float = 0) -> None:
+def MPS_SimWaitNStart(
+        mode: CardEmulationMode,
+        event_mask: Union[IsoSimulatorEvent,
+                          FeliCaSimulatorEvent,
+                          VicinitySimulatorEvent,
+                          NfcSimulatorEvent,
+                          Type2TagSimulatorEvent],
+        start_spy: bool,
+        timeout: float = 0
+        ) -> None:
     """Starts simulator
 
     Parameters
@@ -1179,12 +1252,14 @@ def MPS_SimStop() -> None:
         c_uint32(0)))
 
 
-def MPS_WaitSimEvent(timeout: float) -> Union[None,
-                                              IsoSimulatorEvent,
-                                              FeliCaSimulatorEvent,
-                                              VicinitySimulatorEvent,
-                                              NfcSimulatorEvent,
-                                              Type2TagSimulatorEvent]:
+def MPS_WaitSimEvent(
+        timeout: float
+        ) -> Union[None,
+                   IsoSimulatorEvent,
+                   FeliCaSimulatorEvent,
+                   VicinitySimulatorEvent,
+                   NfcSimulatorEvent,
+                   Type2TagSimulatorEvent]:
     """Waits for a simulator event
 
     Parameters
@@ -1241,13 +1316,18 @@ class SimulatorParameter(IntEnum):
     SIM_INITRULE_MASK = 39
 
 
-def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
-                            parameter_value: Union[int, bytes, bool, None,
-                                                   IsoSimulatorEvent,
-                                                   Type2TagSimulatorEvent,
-                                                   FeliCaSimulatorEvent,
-                                                   VicinitySimulatorEvent,
-                                                   NfcSimulatorEvent]) -> None:
+def MPS_ChangeSimParameters(
+        parameter_type: SimulatorParameter,
+        parameter_value: Union[int,
+                               bytes,
+                               bool,
+                               None,
+                               IsoSimulatorEvent,
+                               Type2TagSimulatorEvent,
+                               FeliCaSimulatorEvent,
+                               VicinitySimulatorEvent,
+                               NfcSimulatorEvent]
+        ) -> None:
     """Changes simulator parameter
 
     Parameters
@@ -1265,11 +1345,11 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
 
     # Events mask parameter
     if parameter_type == SimulatorParameter.SIM_EVENTS_MASK:
-        if not isinstance(parameter_value, IsoSimulatorEvent) and \
-                not isinstance(parameter_value, FeliCaSimulatorEvent) and \
-                not isinstance(parameter_value, VicinitySimulatorEvent) and \
-                not isinstance(parameter_value, NfcSimulatorEvent) and \
-                not isinstance(parameter_value, Type2TagSimulatorEvent):
+        if (not isinstance(parameter_value, IsoSimulatorEvent) and
+                not isinstance(parameter_value, FeliCaSimulatorEvent) and
+                not isinstance(parameter_value, VicinitySimulatorEvent) and
+                not isinstance(parameter_value, NfcSimulatorEvent) and
+                not isinstance(parameter_value, Type2TagSimulatorEvent)):
             raise TypeError('event must be an instance of '
                             'IsoSimulatorEvent IntFlag, '
                             'FeliCaSimulatorEvent IntFlag, '
@@ -1301,9 +1381,9 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
                 c_uint32(4)))
 
     # Boolean parameter
-    elif parameter_type == SimulatorParameter.SIM_AUTO_WTX or \
-            parameter_type == SimulatorParameter.SIM_MUTE_ATN or \
-            parameter_type == SimulatorParameter.SIM_STRICT_RFU:
+    elif (parameter_type == SimulatorParameter.SIM_AUTO_WTX or
+            parameter_type == SimulatorParameter.SIM_MUTE_ATN or
+            parameter_type == SimulatorParameter.SIM_STRICT_RFU):
         CTS3Exception._check_error(_MPuLib.MPS_ChangeSimParameters(
             c_uint8(0),
             c_uint32(parameter_type),
@@ -1311,10 +1391,10 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
             c_uint32(1)))
 
     # int or 2-byte parameter
-    elif parameter_type == SimulatorParameter.SIM_ATS_CRC or \
-            parameter_type == SimulatorParameter.SIM_ATR_RES_CRC or \
-            parameter_type == SimulatorParameter.SIM_WUP_RES_CRC or \
-            parameter_type == SimulatorParameter.SIM_POLL_RES_CRC:
+    elif (parameter_type == SimulatorParameter.SIM_ATS_CRC or
+            parameter_type == SimulatorParameter.SIM_ATR_RES_CRC or
+            parameter_type == SimulatorParameter.SIM_WUP_RES_CRC or
+            parameter_type == SimulatorParameter.SIM_POLL_RES_CRC):
         if parameter_value is None:
             CTS3Exception._check_error(_MPuLib.MPS_ChangeSimParameters(
                 c_uint8(0),
@@ -1361,8 +1441,8 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
             c_uint32(parameter_type),
             byref(c_uint8(parameter_value)),
             c_uint32(1)))
-    elif parameter_type == SimulatorParameter.SIM_NFC_MAX_NAK or \
-            parameter_type == SimulatorParameter.SIM_NFC_MAX_ATN:
+    elif (parameter_type == SimulatorParameter.SIM_NFC_MAX_NAK or
+            parameter_type == SimulatorParameter.SIM_NFC_MAX_ATN):
         if not isinstance(parameter_value, int):
             raise TypeError('parameter_value must be an instance of int')
         _check_limits(c_uint32, parameter_value, 'parameter_value')
@@ -1373,8 +1453,9 @@ def MPS_ChangeSimParameters(parameter_type: SimulatorParameter,
             c_uint32(4)))
 
 
-def MPS_GetSimParameters(parameter_type: SimulatorParameter) \
-        -> Union[int, bytes, bool, IsoSimulatorEvent, None]:
+def MPS_GetSimParameters(
+        parameter_type: SimulatorParameter
+        ) -> Union[int, bytes, bool, IsoSimulatorEvent, None]:
     """Changes simulator parameter
 
     Parameters
@@ -1405,10 +1486,10 @@ def MPS_GetSimParameters(parameter_type: SimulatorParameter) \
         return val[param_size.value]
 
     # c_uint16 parameter
-    elif parameter_type == SimulatorParameter.SIM_ATS_CRC or \
-            parameter_type == SimulatorParameter.SIM_ATR_RES_CRC or \
-            parameter_type == SimulatorParameter.SIM_WUP_RES_CRC or \
-            parameter_type == SimulatorParameter.SIM_POLL_RES_CRC:
+    elif (parameter_type == SimulatorParameter.SIM_ATS_CRC or
+            parameter_type == SimulatorParameter.SIM_ATR_RES_CRC or
+            parameter_type == SimulatorParameter.SIM_WUP_RES_CRC or
+            parameter_type == SimulatorParameter.SIM_POLL_RES_CRC):
         int16_val = c_uint16()
         CTS3Exception._check_error(_MPuLib.MPS_GetSimParameters(
             c_uint8(0),
@@ -1421,9 +1502,9 @@ def MPS_GetSimParameters(parameter_type: SimulatorParameter) \
         return bytes([int16_val.value >> 8, int16_val.value & 0xFF])
 
     # boolean parameter
-    elif parameter_type == SimulatorParameter.SIM_AUTO_WTX or \
-            parameter_type == SimulatorParameter.SIM_MUTE_ATN or \
-            parameter_type == SimulatorParameter.SIM_STRICT_RFU:
+    elif (parameter_type == SimulatorParameter.SIM_AUTO_WTX or
+            parameter_type == SimulatorParameter.SIM_MUTE_ATN or
+            parameter_type == SimulatorParameter.SIM_STRICT_RFU):
         int8_val = c_uint8()
         CTS3Exception._check_error(_MPuLib.MPS_GetSimParameters(
             c_uint8(0),
@@ -1487,7 +1568,11 @@ class IoClCrcFilter_index():
         Frame index
     """
 
-    def __init__(self, crc: Union[int, bytes], index: int):
+    def __init__(
+            self,
+            crc: Union[int,
+                       bytes],
+            index: int):
         """Inits IoClCrcFilter_index
 
         Parameters
@@ -1527,10 +1612,13 @@ class IoClCrcFilter_pattern():
         Matching pattern index
     """
 
-    def __init__(self, crc: Union[int, bytes],
-                 pattern: bytes,
-                 mask: Optional[bytes] = None,
-                 index: int = 1):
+    def __init__(
+            self,
+            crc: Union[int,
+                       bytes],
+            pattern: bytes,
+            mask: Optional[bytes] = None,
+            index: int = 1):
         """Inits IoClCrcFilter_pattern
 
         Parameters
@@ -1577,7 +1665,9 @@ class IoClFrameSuppFilter_index():
     index : int
         Frame index
     """
-    def __init__(self, index: int):
+    def __init__(
+            self,
+            index: int):
         """Inits IoClFrameSuppFilter_index
 
         Parameters
@@ -1601,9 +1691,11 @@ class IoClFrameSuppFilter_pattern():
         Matching pattern index
     """
 
-    def __init__(self, pattern: bytes,
-                 mask: Optional[bytes] = None,
-                 index: int = 1):
+    def __init__(
+            self,
+            pattern: bytes,
+            mask: Optional[bytes] = None,
+            index: int = 1):
         """Inits IoClFrameSuppFilter_pattern
 
         Parameters
@@ -1653,10 +1745,12 @@ class _IoClFrameSuppFilter(Structure):
                 ('pattern', c_uint8 * 256)]
 
 
-def MPS_AddFilter(filter: Union[IoClCrcFilter_index,
-                                IoClCrcFilter_pattern,
-                                IoClFrameSuppFilter_index,
-                                IoClFrameSuppFilter_pattern]) -> None:
+def MPS_AddFilter(
+        filter: Union[IoClCrcFilter_index,
+                      IoClCrcFilter_pattern,
+                      IoClFrameSuppFilter_index,
+                      IoClFrameSuppFilter_pattern]
+        ) -> None:
     """Adds a simulation filter
 
     Parameters
@@ -1708,8 +1802,8 @@ def MPS_AddFilter(filter: Union[IoClCrcFilter_index,
                         'IoClCrcFilter_pattern, IoClFrameSuppFilter_index '
                         'or IoClFrameSuppFilter_pattern')
 
-    if isinstance(filter, IoClCrcFilter_index) or \
-            isinstance(filter, IoClCrcFilter_pattern):
+    if (isinstance(filter, IoClCrcFilter_index) or
+            isinstance(filter, IoClCrcFilter_pattern)):
         CTS3Exception._check_error(_MPuLib.MPS_AddFilter(
             c_uint8(0),
             c_uint32(0),
@@ -1753,8 +1847,10 @@ class ActionConditionDataPattern():
         Frame pattern mask
     """
 
-    def __init__(self, pattern: bytes,
-                 mask: Optional[bytes] = None):
+    def __init__(
+            self,
+            pattern: bytes,
+            mask: Optional[bytes] = None):
         """Inits ActionConditionDataPattern
 
         Parameters
@@ -1777,14 +1873,17 @@ class ActionConditionDataPattern():
         self.mask = mask
 
 
-def MPS_SimAddRule(event_mask: Union[IsoSimulatorEvent,
-                                     FeliCaSimulatorEvent,
-                                     VicinitySimulatorEvent,
-                                     NfcSimulatorEvent,
-                                     Type2TagSimulatorEvent],
-                   delay: float, execute_count: Optional[int],
-                   pattern_condition: Optional[ActionConditionDataPattern],
-                   remote_command: str) -> int:
+def MPS_SimAddRule(
+        event_mask: Union[IsoSimulatorEvent,
+                          FeliCaSimulatorEvent,
+                          VicinitySimulatorEvent,
+                          NfcSimulatorEvent,
+                          Type2TagSimulatorEvent],
+        delay: float,
+        execute_count: Optional[int],
+        pattern_condition: Optional[ActionConditionDataPattern],
+        remote_command: str
+        ) -> int:
     """Adds a simulation rule
 
     Parameters
@@ -1879,7 +1978,9 @@ def MPS_SimAddRule(event_mask: Union[IsoSimulatorEvent,
     return rule_id.value
 
 
-def MPS_SimRemoveRule(rule_id: int) -> None:
+def MPS_SimRemoveRule(
+        rule_id: int
+        ) -> None:
     """Removes a simulation rule
 
     Parameters

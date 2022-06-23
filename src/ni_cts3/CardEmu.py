@@ -17,9 +17,9 @@ class CardEmulationMode(IntEnum):
     SIM_MODE_DAQ2 = 5
 
 
-def MPC_ChannelOpen(mode: CardEmulationMode =
-                    CardEmulationMode.SIM_MODE_ANALOG_IN) \
-                    -> None:
+def MPC_ChannelOpen(
+        mode: CardEmulationMode = CardEmulationMode.SIM_MODE_ANALOG_IN
+        ) -> None:
     """Opens card emulation
 
     Parameters
@@ -43,9 +43,10 @@ class CardEmulationChannelDirection(IntEnum):
     CHANNEL_PURGE_TX_RX = 3
 
 
-def MPC_ChannelFlush(direction: CardEmulationChannelDirection =
-                     CardEmulationChannelDirection.CHANNEL_PURGE_TX_RX) \
-                     -> None:
+def MPC_ChannelFlush(
+        direction: CardEmulationChannelDirection =
+        CardEmulationChannelDirection.CHANNEL_PURGE_TX_RX
+        ) -> None:
     """Flushes card emulation channel
 
     Parameters
@@ -76,7 +77,9 @@ class NfcLoad(IntEnum):
     ANTENNA_LOAD_820 = 820
 
 
-def MPC_SelectLoadAntennaNfc(load: NfcLoad) -> None:
+def MPC_SelectLoadAntennaNfc(
+        load: NfcLoad
+        ) -> None:
     """Selects the electro-magnetic load on NFC antenna
 
     Parameters
@@ -91,8 +94,10 @@ def MPC_SelectLoadAntennaNfc(load: NfcLoad) -> None:
         c_uint16(load)))
 
 
-def MPC_SetLMAForCardEmulation(low_voltage: float,
-                               high_voltage: float) -> None:
+def MPC_SetLMAForCardEmulation(
+        low_voltage: float,
+        high_voltage: float
+        ) -> None:
     """Selects LMA voltage value
 
     Parameters
@@ -112,8 +117,10 @@ def MPC_SetLMAForCardEmulation(low_voltage: float,
         c_int32(high_voltage_mV)))
 
 
-def MPC_SetLMAForEMD(low_voltage: float,
-                     high_voltage: float) -> None:
+def MPC_SetLMAForEMD(
+        low_voltage: float,
+        high_voltage: float
+        ) -> None:
     """Selects LMA voltage value during EMD generation
 
     Parameters
@@ -144,7 +151,9 @@ class SubcarrierFrequency(IntEnum):
     SubCarrier6780 = 6780
 
 
-def MPC_SetUpReferencePICC(subcarrier: Optional[SubcarrierFrequency]) -> None:
+def MPC_SetUpReferencePICC(
+        subcarrier: Optional[SubcarrierFrequency]
+        ) -> None:
     """Generates a sub-carrier frequency
 
     Parameters
@@ -167,7 +176,9 @@ def MPC_SetUpReferencePICC(subcarrier: Optional[SubcarrierFrequency]) -> None:
             c_uint32(subcarrier)))
 
 
-def MPC_SetPCDPauseMax(pause_duration_fc: float) -> None:
+def MPC_SetPCDPauseMax(
+        pause_duration_fc: float
+        ) -> None:
     """Selects the maximum allowed duration of PCD Type A pause
 
     Parameters
@@ -183,7 +194,9 @@ def MPC_SetPCDPauseMax(pause_duration_fc: float) -> None:
         c_uint16(pause_duration_10fc)))
 
 
-def MPC_SetDetectionPCDModulation(ask_filter: int) -> None:
+def MPC_SetDetectionPCDModulation(
+        ask_filter: int
+        ) -> None:
     """Changes the PCD ASK detection filter characteristics
 
     Parameters
@@ -214,9 +227,13 @@ def MPC_RfFieldOffDetected() -> bool:
     return field.value > 0
 
 
-def MPC_WaitTypeAActiveState(atqa: bytes, uid: bytes,
-                             sak: Union[bytes, int],
-                             timeout: float) -> None:
+def MPC_WaitTypeAActiveState(
+        atqa: bytes,
+        uid: bytes,
+        sak: Union[bytes,
+                   int],
+        timeout: float
+        ) -> None:
     """Waits for Type A activation
 
     Parameters
@@ -255,8 +272,9 @@ def MPC_WaitTypeAActiveState(atqa: bytes, uid: bytes,
         c_uint32(timeout_ms)))
 
 
-def MPC_WaitAndGetFrame(timeout: float) \
-        -> Dict[str, Union[bytes, TechnologyType]]:
+def MPC_WaitAndGetFrame(
+        timeout: float
+        ) -> Dict[str, Union[bytes, TechnologyType]]:
     """Waits for an incoming frame
 
     Parameters
@@ -287,8 +305,9 @@ def MPC_WaitAndGetFrame(timeout: float) \
             'rx_type': TechnologyType(card_type.value)}
 
 
-def MPC_WaitAndGetFrameTypeA106ModeBit(timeout: float) \
-        -> Dict[str, Union[bytes, int]]:
+def MPC_WaitAndGetFrameTypeA106ModeBit(
+        timeout: float
+        ) -> Dict[str, Union[bytes, int]]:
     """Waits for a Type A 106kb/s incoming frame
 
     Parameters
@@ -320,7 +339,10 @@ def MPC_WaitAndGetFrameTypeA106ModeBit(timeout: float) \
             'rx_bits_number': rx_bits.value}
 
 
-def MPC_SendRawFrameType(card_type: TechnologyType, frame: bytes) -> None:
+def MPC_SendRawFrameType(
+        card_type: TechnologyType,
+        frame: bytes
+        ) -> None:
     """Transmits a frame
 
     Parameters
@@ -343,8 +365,10 @@ def MPC_SendRawFrameType(card_type: TechnologyType, frame: bytes) -> None:
         c_uint32(len(frame))))
 
 
-def MPC_SendRawFrameTypeWithCRC(card_type: TechnologyType,
-                                frame: bytes) -> None:
+def MPC_SendRawFrameTypeWithCRC(
+        card_type: TechnologyType,
+        frame: bytes
+        ) -> None:
     """Transmits a frame
 
     Parameters
@@ -367,8 +391,11 @@ def MPC_SendRawFrameTypeWithCRC(card_type: TechnologyType,
         c_uint32(len(frame))))
 
 
-def MPC_TransmitFrameA(frame: bytes, bits_number: Optional[int] = None,
-                       parity: bool = True) -> None:
+def MPC_TransmitFrameA(
+        frame: bytes,
+        bits_number: Optional[int] = None,
+        parity: bool = True
+        ) -> None:
     """Transmits a Type A 106kb/s frame
 
     Parameters
@@ -392,8 +419,10 @@ def MPC_TransmitFrameA(frame: bytes, bits_number: Optional[int] = None,
         c_int32(1) if parity else c_int32(0)))
 
 
-def MPS_SimSetDesyncPattern(t1_fc: Optional[float],
-                            t2_fc: Optional[float]) -> None:
+def MPS_SimSetDesyncPattern(
+        t1_fc: Optional[float],
+        t2_fc: Optional[float]
+        ) -> None:
     """Enables NFC Desync Pattern for following FeliCa frames
 
     Parameters
@@ -423,8 +452,10 @@ def MPS_SimSetDesyncPattern(t1_fc: Optional[float],
             c_uint32(0)))
 
 
-def MPS_SimChangeDataRate(picc_datarate: DataRate,
-                          pcd_datarate: DataRate) -> None:
+def MPS_SimChangeDataRate(
+        picc_datarate: DataRate,
+        pcd_datarate: DataRate
+        ) -> None:
     """Selects PICC and PCD data rates
 
     Parameters
@@ -446,8 +477,10 @@ def MPS_SimChangeDataRate(picc_datarate: DataRate,
         c_uint16(pcd_datarate)))
 
 
-def MPC_SelectVICCDataRate(data_rate: VicinityDataRate,
-                           sub_carrier: VicinitySubCarrier) -> None:
+def MPC_SelectVICCDataRate(
+        data_rate: VicinityDataRate,
+        sub_carrier: VicinitySubCarrier
+        ) -> None:
     """Selects the VICC data rate
 
     Parameters
@@ -469,7 +502,9 @@ def MPC_SelectVICCDataRate(data_rate: VicinityDataRate,
         c_uint8(sub_carrier)))
 
 
-def MPS_SimVicinityEofMode(enabled: bool) -> None:
+def MPS_SimVicinityEofMode(
+        enabled: bool
+        ) -> None:
     """Enables Vicinity isolated EOF reception mode
 
     Parameters
@@ -482,7 +517,10 @@ def MPS_SimVicinityEofMode(enabled: bool) -> None:
         c_uint32(1) if enabled else c_uint32(0)))
 
 
-def MPS_SimSetFdt(fdt1_clk: int, fdt2_clk: int) -> None:
+def MPS_SimSetFdt(
+        fdt1_clk: int,
+        fdt2_clk: int
+        ) -> None:
     """Selects the FDT
 
     Parameters
@@ -518,7 +556,9 @@ class IqlmMode(IntEnum):
     IQLM_MODE_SETUP = 1
 
 
-def MPC_IQLMStart(mode: IqlmMode = IqlmMode.IQLM_MODE_DYNAMIC) -> None:
+def MPC_IQLMStart(
+        mode: IqlmMode = IqlmMode.IQLM_MODE_DYNAMIC
+        ) -> None:
     """Starts IQ load modulation regulation
 
     Parameters
@@ -533,8 +573,9 @@ def MPC_IQLMStart(mode: IqlmMode = IqlmMode.IQLM_MODE_DYNAMIC) -> None:
         c_uint8(mode)))
 
 
-def MPC_IQLoadModulationStart(mode: IqlmMode = IqlmMode.IQLM_MODE_DYNAMIC) \
-        -> None:
+def MPC_IQLoadModulationStart(
+        mode: IqlmMode = IqlmMode.IQLM_MODE_DYNAMIC
+        ) -> None:
     """Starts IQ load modulation regulation
 
     Parameters
@@ -547,7 +588,9 @@ def MPC_IQLoadModulationStart(mode: IqlmMode = IqlmMode.IQLM_MODE_DYNAMIC) \
     return MPC_IQLMStart(mode)
 
 
-def MPC_IQLMSuspendControlLoop(suspend: bool) -> None:
+def MPC_IQLMSuspendControlLoop(
+        suspend: bool
+        ) -> None:
     """Suspends IQ load modulation regulation
 
     Parameters
@@ -561,7 +604,9 @@ def MPC_IQLMSuspendControlLoop(suspend: bool) -> None:
         c_uint32(0)))
 
 
-def MPC_IQLoadModulationSuspendControlLoop(suspend: bool) -> None:
+def MPC_IQLoadModulationSuspendControlLoop(
+        suspend: bool
+        ) -> None:
     """Suspends IQ load modulation regulation
 
     Parameters
@@ -588,7 +633,10 @@ def MPC_IQLoadModulationStop() -> None:
     return MPC_IQLMStop()
 
 
-def MPC_IQLMSetHR(amplitude: float, phase: float) -> None:
+def MPC_IQLMSetHR(
+        amplitude: float,
+        phase: float
+        ) -> None:
     """Sets loading effect
 
     Parameters
@@ -609,7 +657,10 @@ def MPC_IQLMSetHR(amplitude: float, phase: float) -> None:
         c_uint32(0)))
 
 
-def MPC_IQLoadModulationSetHR(amplitude: float, phase: float) -> None:
+def MPC_IQLoadModulationSetHR(
+        amplitude: float,
+        phase: float
+        ) -> None:
     """Sets loading effect
 
     Parameters
@@ -624,9 +675,13 @@ def MPC_IQLoadModulationSetHR(amplitude: float, phase: float) -> None:
     return MPC_IQLMSetHR(amplitude, phase)
 
 
-def MPC_IQLMSidebands(lower_amplitude: float, lower_phase: float,
-                      upper_amplitude: float, upper_phase: float,
-                      offset: float) -> None:
+def MPC_IQLMSidebands(
+        lower_amplitude: float,
+        lower_phase: float,
+        upper_amplitude: float,
+        upper_phase: float,
+        offset: float
+        ) -> None:
     """Sets side bands
 
     Parameters
@@ -661,9 +716,13 @@ def MPC_IQLMSidebands(lower_amplitude: float, lower_phase: float,
         c_int32(offset_mV)))
 
 
-def MPC_IQLoadModulationSidebands(lower_amplitude: float, lower_phase: float,
-                                  upper_amplitude: float, upper_phase: float,
-                                  offset: float) -> None:
+def MPC_IQLoadModulationSidebands(
+        lower_amplitude: float,
+        lower_phase: float,
+        upper_amplitude: float,
+        upper_phase: float,
+        offset: float
+        ) -> None:
     """Sets side bands
 
     Parameters
@@ -695,8 +754,11 @@ class IqlmParameter(IntEnum):
     CP_IQLM_MODULATION_INHIBIT = 7
 
 
-def MPC_IQLMChangeParameters(parameter: IqlmParameter,
-                             value: Union[float, bool]) -> None:
+def MPC_IQLMChangeParameters(
+        parameter: IqlmParameter,
+        value: Union[float,
+                     bool]
+        ) -> None:
     """Changes IQ load modulation regulation parameter
 
     Parameters
@@ -721,8 +783,11 @@ def MPC_IQLMChangeParameters(parameter: IqlmParameter,
         c_uint32(0)))
 
 
-def MPC_IQLoadModulationChangeParameters(parameter: IqlmParameter,
-                                         value: Union[float, bool]) -> None:
+def MPC_IQLoadModulationChangeParameters(
+        parameter: IqlmParameter,
+        value: Union[float,
+                     bool]
+        ) -> None:
     """Changes IQ load modulation regulation parameter
 
     Parameters
@@ -750,8 +815,11 @@ class IqlmCondition(IntEnum):
     IQLM_PHASE_DRIFT_CONDITION_B2 = 6
 
 
-def MPC_IQLMPhaseDrift(frequency_drift: float, condition: IqlmCondition,
-                       data_rate: DataRate) -> None:
+def MPC_IQLMPhaseDrift(
+        frequency_drift: float,
+        condition: IqlmCondition,
+        data_rate: DataRate
+        ) -> None:
     """Selects phase drift
 
     Parameters
@@ -777,9 +845,11 @@ def MPC_IQLMPhaseDrift(frequency_drift: float, condition: IqlmCondition,
         data_rate))
 
 
-def MPC_IQLoadModulationPhaseDrift(frequency_drift: float,
-                                   condition: IqlmCondition,
-                                   data_rate: DataRate) -> None:
+def MPC_IQLoadModulationPhaseDrift(
+        frequency_drift: float,
+        condition: IqlmCondition,
+        data_rate: DataRate
+        ) -> None:
     """Selects phase drift
 
     Parameters
@@ -824,8 +894,8 @@ def MPC_IQLMGetStatus() -> Dict[str, Union[IqlmPhaseStatus, float]]:
             'frequency': freq.value}
 
 
-def MPC_IQLoadModulationGetStatus() \
-        -> Dict[str, Union[IqlmPhaseStatus, float]]:
+def MPC_IQLoadModulationGetStatus(
+        ) -> Dict[str, Union[IqlmPhaseStatus, float]]:
     """Gets IQ load modulation regulation status
 
     Returns

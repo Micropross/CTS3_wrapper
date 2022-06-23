@@ -11,10 +11,12 @@ from ctypes import byref, POINTER, CFUNCTYPE, Structure
 from ctypes import Union as C_Union
 
 
-_callback_dict: Dict[str, Optional[Callable[[int,
-                                   int,
-                                   POINTER(c_uint8),  # type: ignore[misc]
-                                   int], int]]] = {}
+_callback_dict: Dict[str,
+                     Optional[Callable[[int,
+                                        int,
+                                        POINTER(c_uint8),  # type: ignore[misc]
+                                        int],
+                                       int]]] = {}
 
 
 class EventHeader(Structure):
@@ -64,7 +66,9 @@ class Header(C_Union):
     _fields_ = [('events', EventHeader),
                 ('analog', AnalogHeader)]
 
-    def get_bytes(self) -> bytes:
+    def get_bytes(
+            self
+            ) -> bytes:
         """Converts header into bytes
 
         Returns
@@ -87,8 +91,10 @@ class NfcUnit(IntEnum):
     UNIT_SAMPLES = 8
 
 
-def _unit_autoselect(unit: NfcUnit, values: List[float]) \
-        -> Tuple[NfcUnit, List[int]]:
+def _unit_autoselect(
+        unit: NfcUnit,
+        values: List[float]
+        ) -> Tuple[NfcUnit, List[int]]:
     """Converts float values to best-fitted 32-bit integer values and unit
 
     Parameters
@@ -149,7 +155,9 @@ class TechnologyType(IntEnum):
     TYPE_FELICA_212 = 8
 
 
-def MPC_SelectType(card_type: TechnologyType) -> None:
+def MPC_SelectType(
+        card_type: TechnologyType
+        ) -> None:
     """Selects the PICC technology type
 
     Parameters
@@ -165,7 +173,9 @@ def MPC_SelectType(card_type: TechnologyType) -> None:
         c_uint8(card_type)))
 
 
-def MPC_SelectModulationASK(ask: float) -> None:
+def MPC_SelectModulationASK(
+        ask: float
+        ) -> None:
     """Selects ASK modulation index
 
     Parameters
@@ -196,8 +206,11 @@ class FieldUnit(IntEnum):
     UNIT_DBM_RANGE_33DBM = 15
 
 
-def MPC_SelectFieldStrength(unit: FieldUnit, value: float,
-                            max_duration: Optional[float] = None) -> None:
+def MPC_SelectFieldStrength(
+        unit: FieldUnit,
+        value: float,
+        max_duration: Optional[float] = None
+        ) -> None:
     """Applies a field on the Tx connector
 
     Parameters
@@ -231,11 +244,11 @@ def MPC_SelectFieldStrength(unit: FieldUnit, value: float,
             c_uint8(FieldUnit.UNIT_PER_MILLE),
             c_int16(value_pm),
             c_uint32(max_duration_ms)))
-    elif unit == FieldUnit.UNIT_PER_MILLE or \
-            unit == FieldUnit.UNIT_DBM_RANGE_11DBM or \
-            unit == FieldUnit.UNIT_DBM_RANGE_29DBM or \
-            unit == FieldUnit.UNIT_DBM_RANGE_31DBM or \
-            unit == FieldUnit.UNIT_DBM_RANGE_33DBM:
+    elif (unit == FieldUnit.UNIT_PER_MILLE or
+            unit == FieldUnit.UNIT_DBM_RANGE_11DBM or
+            unit == FieldUnit.UNIT_DBM_RANGE_29DBM or
+            unit == FieldUnit.UNIT_DBM_RANGE_31DBM or
+            unit == FieldUnit.UNIT_DBM_RANGE_33DBM):
         value_pm = round(value)
         _check_limits(c_int16, value_pm, 'value')
         CTS3Exception._check_error(_MPuLib.MPC_SelectFieldStrengthEx(
@@ -253,8 +266,9 @@ def MPC_SelectFieldStrength(unit: FieldUnit, value: float,
             c_uint32(max_duration_ms)))
 
 
-def MPC_SetupFindFieldStrength(expected_voltage: float) \
-        -> Dict[str, Union[float, int]]:
+def MPC_SetupFindFieldStrength(
+        expected_voltage: float
+        ) -> Dict[str, Union[float, int]]:
     """Reaches Vov by adjusting RF field strength
 
     Parameters
@@ -282,7 +296,9 @@ def MPC_SetupFindFieldStrength(expected_voltage: float) \
             'field_per_mille': field.value}
 
 
-def MPC_SelectCarrier(frequency: float) -> None:
+def MPC_SelectCarrier(
+        frequency: float
+        ) -> None:
     """Selects the carrier frequency
 
     Parameters
@@ -293,7 +309,9 @@ def MPC_SelectCarrier(frequency: float) -> None:
     MPC_SelectCarrierExt(frequency)
 
 
-def MPC_SelectCarrierExt(frequency: float) -> None:
+def MPC_SelectCarrierExt(
+        frequency: float
+        ) -> None:
     """Selects the carrier frequency
 
     Parameters
@@ -306,8 +324,10 @@ def MPC_SelectCarrierExt(frequency: float) -> None:
         c_double(frequency)))
 
 
-def MPC_SelectFallAndRiseTime(falling_time: float,
-                              rising_time: float) -> None:
+def MPC_SelectFallAndRiseTime(
+        falling_time: float,
+        rising_time: float
+        ) -> None:
     """Selects modulation rising and falling time
 
     Parameters
@@ -327,7 +347,9 @@ def MPC_SelectFallAndRiseTime(falling_time: float,
         c_uint16(rising_time_ns)))
 
 
-def MPC_SelectFieldRiseTime(rising_time: float) -> None:
+def MPC_SelectFieldRiseTime(
+        rising_time: float
+        ) -> None:
     """Selects the RF field rising time
 
     Parameters
@@ -342,11 +364,14 @@ def MPC_SelectFieldRiseTime(rising_time: float) -> None:
         c_uint32(rising_time_us)))
 
 
-def MPC_PiccResetSlow(falling_time: float, low_time: float,
-                      rising_time: float, delay: float,
-                      tx_frame: bytes,
-                      tx_bits_number: Optional[int] = None) \
-        -> Dict[str, Union[int, bytes]]:
+def MPC_PiccResetSlow(
+        falling_time: float,
+        low_time: float,
+        rising_time: float,
+        delay: float,
+        tx_frame: bytes,
+        tx_bits_number: Optional[int] = None
+        ) -> Dict[str, Union[int, bytes]]:
     """Performs an RF field reset and then exchanges command
 
     Parameters
@@ -414,7 +439,9 @@ def MPC_PiccResetSlow(falling_time: float, low_time: float,
             'rx_bits_number': rx_bits.value}
 
 
-def MPC_ForceModulationASK(activate: bool) -> None:
+def MPC_ForceModulationASK(
+        activate: bool
+        ) -> None:
     """Sets the field value to its ASK modulated state
 
     Parameters
@@ -427,7 +454,9 @@ def MPC_ForceModulationASK(activate: bool) -> None:
         c_bool(activate)))
 
 
-def MPC_SetFWTETU(fwt_etu: int) -> None:
+def MPC_SetFWTETU(
+        fwt_etu: int
+        ) -> None:
     """Sets Frame Waiting Time duration
 
     Parameters
@@ -441,7 +470,9 @@ def MPC_SetFWTETU(fwt_etu: int) -> None:
         c_uint32(fwt_etu)))
 
 
-def MPC_SetFWTus(fwt: float) -> None:
+def MPC_SetFWTus(
+        fwt: float
+        ) -> None:
     """Sets Frame Waiting Time duration
 
     Parameters
@@ -468,8 +499,10 @@ class DataRate(IntEnum):
     DATARATE_6780KB = 6780
 
 
-def MPC_SelectDataRate(pcd_data_rate: DataRate,
-                       picc_data_rate: DataRate) -> None:
+def MPC_SelectDataRate(
+        pcd_data_rate: DataRate,
+        picc_data_rate: DataRate
+        ) -> None:
     """Selects data rate
 
     Parameters
@@ -491,9 +524,10 @@ def MPC_SelectDataRate(pcd_data_rate: DataRate,
         c_uint16(picc_data_rate)))
 
 
-def MPC_ExchangeCmd(tx_frame: bytes,
-                    tx_bits_number: Optional[int] = None) \
-        -> Dict[str, Union[bytes, int]]:
+def MPC_ExchangeCmd(
+        tx_frame: bytes,
+        tx_bits_number: Optional[int] = None
+        ) -> Dict[str, Union[bytes, int]]:
     """Exchanges a low level command
 
     Parameters
@@ -543,7 +577,9 @@ def MPC_DeselectSequence() -> None:
         c_uint8(0)))
 
 
-def MPC_SendFrameProtocol(tx_frame: bytes) -> bytes:
+def MPC_SendFrameProtocol(
+        tx_frame: bytes
+        ) -> bytes:
     """Exchanges an ISO14443-4 frame
 
     Parameters
@@ -570,8 +606,12 @@ def MPC_SendFrameProtocol(tx_frame: bytes) -> bytes:
     return data[:length.value]
 
 
-def MPC_SendAPDU(header: Union[bytes, int], lc_field: Optional[bytes] = None,
-                 le: Optional[int] = 0) -> Dict[str, Union[bytes, int]]:
+def MPC_SendAPDU(
+        header: Union[bytes,
+                      int],
+        lc_field: Optional[bytes] = None,
+        le: Optional[int] = 0
+        ) -> Dict[str, Union[bytes, int]]:
     """Sends an Application Protocol Data Unit command
 
     Parameters
@@ -641,7 +681,9 @@ def MPC_SendAPDU(header: Union[bytes, int], lc_field: Optional[bytes] = None,
             'status_word': status_word.value}
 
 
-def MPC_SendSBlockParameters(tx_frame: bytes) -> bytes:
+def MPC_SendSBlockParameters(
+        tx_frame: bytes
+        ) -> bytes:
     """Sends an S(PARAMETERS) block
 
     Parameters
@@ -668,7 +710,10 @@ def MPC_SendSBlockParameters(tx_frame: bytes) -> bytes:
     return data[:length.value]
 
 
-def MPC_SetTxDelay(tx_delay: float, unit: NfcUnit) -> None:
+def MPC_SetTxDelay(
+        tx_delay: float,
+        unit: NfcUnit
+        ) -> None:
     """Selects delay between Rx frame and following Tx frame
 
     Parameters
@@ -700,7 +745,9 @@ def MPC_SendOneModulation() -> None:
 # region Type A
 
 
-def MPC_SelectPauseWidth(pause: float) -> None:
+def MPC_SelectPauseWidth(
+        pause: float
+        ) -> None:
     """Selects Type A pause width
 
     Parameters
@@ -765,7 +812,9 @@ def MPC_AnticollA() -> Dict[str, bytes]:
     return {'uid': uid[:length.value], 'sak': bytes([sak.value])}
 
 
-def MPC_SelectCardA(uid: bytes) -> bytes:
+def MPC_SelectCardA(
+        uid: bytes
+        ) -> bytes:
     """Selects a Type A PICC based on its UID
 
     Parameters
@@ -811,7 +860,9 @@ def MPC_HaltA() -> None:
         c_uint8(0)))
 
 
-def MPC_SendRATS(rats: Optional[bytes] = None) -> bytes:
+def MPC_SendRATS(
+        rats: Optional[bytes] = None
+        ) -> bytes:
     """Sends an RATS command
 
     Parameters
@@ -844,8 +895,14 @@ def MPC_SendRATS(rats: Optional[bytes] = None) -> bytes:
     return data[:length.value]
 
 
-def MPC_SendPPS(cid: Union[int, bytes], dri: Union[int, bytes],
-                dsi: Union[int, bytes]) -> None:
+def MPC_SendPPS(
+        cid: Union[int,
+                   bytes],
+        dri: Union[int,
+                   bytes],
+        dsi: Union[int,
+                   bytes]
+        ) -> None:
     """Sends a PPS command
 
     Parameters
@@ -891,9 +948,10 @@ def MPC_SendPPS(cid: Union[int, bytes], dri: Union[int, bytes],
         c_uint8(dsi_value)))
 
 
-def MPC_ExchangeCmdRawA(tx_frame: Optional[bytes],
-                        tx_bits_number: Optional[int] = None) \
-        -> Dict[str, Union[bytes, int]]:
+def MPC_ExchangeCmdRawA(
+        tx_frame: Optional[bytes],
+        tx_bits_number: Optional[int] = None
+        ) -> Dict[str, Union[bytes, int]]:
     """Exchanges 106 kb/s sequences
 
     Parameters
@@ -932,9 +990,12 @@ def MPC_ExchangeCmdRawA(tx_frame: Optional[bytes],
             'rx_bits_number': rx_bits.value}
 
 
-def MPC_PowerOnGetFrameFromSpecialTagA(unit: FieldUnit, value: int,
-                                       timeout: float, nb_id_to_get: int) \
-        -> Dict[str, Union[bytes, int]]:
+def MPC_PowerOnGetFrameFromSpecialTagA(
+        unit: FieldUnit,
+        value: int,
+        timeout: float,
+        nb_id_to_get: int
+        ) -> Dict[str, Union[bytes, int]]:
     """Switches the RF field on and gets the data transmitted
     by an NFC tag in read-only TTF mode
 
@@ -973,11 +1034,11 @@ def MPC_PowerOnGetFrameFromSpecialTagA(unit: FieldUnit, value: int,
             c_uint32(nb_id_to_get),
             data,
             byref(rx_bits)))
-    elif unit == FieldUnit.UNIT_PER_MILLE or \
-            unit == FieldUnit.UNIT_DBM_RANGE_11DBM or \
-            unit == FieldUnit.UNIT_DBM_RANGE_29DBM or \
-            unit == FieldUnit.UNIT_DBM_RANGE_31DBM or \
-            unit == FieldUnit.UNIT_DBM_RANGE_33DBM:
+    elif (unit == FieldUnit.UNIT_PER_MILLE or
+            unit == FieldUnit.UNIT_DBM_RANGE_11DBM or
+            unit == FieldUnit.UNIT_DBM_RANGE_29DBM or
+            unit == FieldUnit.UNIT_DBM_RANGE_31DBM or
+            unit == FieldUnit.UNIT_DBM_RANGE_33DBM):
         value_pm = round(value)
         _check_limits(c_int16, value_pm, 'value')
         CTS3Exception._check_error(_MPuLib.MPC_PowerOnGetFrameFromSpecialTagA(
@@ -1011,7 +1072,9 @@ def MPC_PowerOnGetFrameFromSpecialTagA(unit: FieldUnit, value: int,
 # region Type B
 
 
-def MPC_RequestB(slots_number: int) -> bytes:
+def MPC_RequestB(
+        slots_number: int
+        ) -> bytes:
     """Sends a Type B REQ command
 
     Parameters
@@ -1035,7 +1098,9 @@ def MPC_RequestB(slots_number: int) -> bytes:
     return data[:length.value]
 
 
-def MPC_RequestBFree(reqb: bytes) -> bytes:
+def MPC_RequestBFree(
+        reqb: bytes
+        ) -> bytes:
     """Sends a Type B REQ command
 
     Parameters
@@ -1062,7 +1127,9 @@ def MPC_RequestBFree(reqb: bytes) -> bytes:
     return data[:length.value]
 
 
-def MPC_WakeUpB(slots_number: int) -> bytes:
+def MPC_WakeUpB(
+        slots_number: int
+        ) -> bytes:
     """Sends a Type B WUP command
 
     Parameters
@@ -1086,7 +1153,9 @@ def MPC_WakeUpB(slots_number: int) -> bytes:
     return data[:length.value]
 
 
-def MPC_SlotMarkerCmd(slot_number: int) -> bytes:
+def MPC_SlotMarkerCmd(
+        slot_number: int
+        ) -> bytes:
     """Sends a Type B Slot-MARKER command
 
     Parameters
@@ -1110,7 +1179,9 @@ def MPC_SlotMarkerCmd(slot_number: int) -> bytes:
     return data[:length.value]
 
 
-def MPC_HaltB(identifier: bytes) -> None:
+def MPC_HaltB(
+        identifier: bytes
+        ) -> None:
     """Sends a Type B HLT command
 
     Parameters
@@ -1125,7 +1196,9 @@ def MPC_HaltB(identifier: bytes) -> None:
         identifier))
 
 
-def MPC_SendATTRIB(attrib: bytes) -> bytes:
+def MPC_SendATTRIB(
+        attrib: bytes
+        ) -> bytes:
     """Sends a Type B ATTRIB command
 
     Parameters
@@ -1152,7 +1225,10 @@ def MPC_SendATTRIB(attrib: bytes) -> bytes:
     return data[:length.value]
 
 
-def MPC_SelectETUWidthTX(etu_logic_0: int, etu_logic_1: int) -> None:
+def MPC_SelectETUWidthTX(
+        etu_logic_0: int,
+        etu_logic_1: int
+        ) -> None:
     """Selects the duration of logic '0' and '1' states for all Type B bits
 
     Parameters
@@ -1174,9 +1250,14 @@ def MPC_SelectETUWidthTX(etu_logic_0: int, etu_logic_1: int) -> None:
 # region FeliCa
 
 
-def MPC_FelicaPolling(system_code: Union[bytes, int],
-                      request_code: Union[bytes, int],
-                      time_slot: Union[bytes, int]) -> bytes:
+def MPC_FelicaPolling(
+        system_code: Union[bytes,
+                           int],
+        request_code: Union[bytes,
+                            int],
+        time_slot: Union[bytes,
+                         int]
+        ) -> bytes:
     """Performs a polling request
 
     Parameters
@@ -1234,9 +1315,14 @@ def MPC_FelicaPolling(system_code: Union[bytes, int],
     return data[:length.value]
 
 
-def MPC_FELICA_Polling(system_code: Union[bytes, int],
-                       request_code: Union[bytes, int],
-                       time_slot: Union[bytes, int]) -> bytes:
+def MPC_FELICA_Polling(
+        system_code: Union[bytes,
+                           int],
+        request_code: Union[bytes,
+                            int],
+        time_slot: Union[bytes,
+                         int]
+        ) -> bytes:
     """Performs a polling request
 
     Parameters
@@ -1269,7 +1355,10 @@ class FelicaService():
         Access Attribute
     """
 
-    def __init__(self, service_number: int, access_attribute: int):
+    def __init__(
+            self,
+            service_number: int,
+            access_attribute: int):
         """Inits FelicaService
 
         Parameters
@@ -1286,7 +1375,9 @@ class FelicaService():
         self.service_number = service_number
         self.access_attribute = access_attribute
 
-    def _get_int(self) -> int:
+    def _get_int(
+            self
+            ) -> int:
         """Converts FelicaService to 16-bit integer
 
         Returns
@@ -1315,9 +1406,12 @@ class FelicaBlock():
         Block Number
     """
 
-    def __init__(self, access_mode: int, service_order: int,
-                 block_number: int,
-                 two_byte_block: Optional[bool] = None):
+    def __init__(
+            self,
+            access_mode: int,
+            service_order: int,
+            block_number: int,
+            two_byte_block: Optional[bool] = None):
         """Inits FelicaBlock
 
         Parameters
@@ -1348,7 +1442,9 @@ class FelicaBlock():
         self.service_order = service_order
         self.block_number = block_number
 
-    def _get_int(self) -> int:
+    def _get_int(
+            self
+            ) -> int:
         """Converts FelicaBlock to 32-bit integer
 
         Returns
@@ -1368,21 +1464,27 @@ class FelicaBlock():
 
 
 @overload
-def MPC_FelicaCheck(idm: bytes, service_codes: List[FelicaService],
-                    blocks: List[FelicaBlock]) \
-        -> Dict[str, Union[bytes, int, List[bytes]]]:
+def MPC_FelicaCheck(
+        idm: bytes,
+        service_codes: List[FelicaService],
+        blocks: List[FelicaBlock]
+        ) -> Dict[str, Union[bytes, int, List[bytes]]]:
     ...
 
 
 @overload
-def MPC_FelicaCheck(idm: bytes, service_codes: List[int],
-                    blocks: List[int]) \
-        -> Dict[str, Union[bytes, int, List[bytes]]]:
+def MPC_FelicaCheck(
+        idm: bytes,
+        service_codes: List[int],
+        blocks: List[int]
+        ) -> Dict[str, Union[bytes, int, List[bytes]]]:
     ...
 
 
-def MPC_FelicaCheck(idm,  # type: ignore[no-untyped-def]
-                    service_codes, blocks):
+def MPC_FelicaCheck(  # type: ignore[no-untyped-def]
+        idm,
+        service_codes,
+        blocks):
     """Reads FeliCa memory blocks
 
     Parameters
@@ -1459,9 +1561,11 @@ def MPC_FelicaCheck(idm,  # type: ignore[no-untyped-def]
             'data': data_list}
 
 
-def MPC_FELICA_Read_Without_Encryption(idm: bytes, service_codes: List[int],
-                                       blocks: List[int]) \
-        -> Dict[str, Union[bytes, int, List[bytes]]]:
+def MPC_FELICA_Read_Without_Encryption(
+        idm: bytes,
+        service_codes: List[int],
+        blocks: List[int]
+        ) -> Dict[str, Union[bytes, int, List[bytes]]]:
     """Reads FeliCa memory blocks
 
     Parameters
@@ -1487,20 +1591,30 @@ def MPC_FELICA_Read_Without_Encryption(idm: bytes, service_codes: List[int],
 
 
 @overload
-def MPC_FelicaUpdate(idm: bytes, service_codes: List[FelicaService],
-                     blocks: List[FelicaBlock],
-                     data: List[bytes]) -> Dict[str, Union[bytes, int]]:
+def MPC_FelicaUpdate(
+        idm: bytes,
+        service_codes: List[FelicaService],
+        blocks: List[FelicaBlock],
+        data: List[bytes]
+        ) -> Dict[str, Union[bytes, int]]:
     ...
 
 
 @overload
-def MPC_FelicaUpdate(idm: bytes, service_codes: List[int], blocks: List[int],
-                     data: List[bytes]) -> Dict[str, Union[bytes, int]]:
+def MPC_FelicaUpdate(
+        idm: bytes,
+        service_codes: List[int],
+        blocks: List[int],
+        data: List[bytes]
+        ) -> Dict[str, Union[bytes, int]]:
     ...
 
 
-def MPC_FelicaUpdate(idm,  # type: ignore[no-untyped-def]
-                     service_codes, blocks, data):
+def MPC_FelicaUpdate(  # type: ignore[no-untyped-def]
+        idm,
+        service_codes,
+        blocks,
+        data):
     """Writes FeliCa memory blocks
 
     Parameters
@@ -1531,8 +1645,8 @@ def MPC_FelicaUpdate(idm,  # type: ignore[no-untyped-def]
         raise TypeError('blocks must be an instance of '
                         'FelicaBlock list or int list')
     _check_limits(c_uint8, len(blocks), 'blocks')
-    if not isinstance(data, list) or \
-            any(not isinstance(i, bytes) or len(i) != 16 for i in data):
+    if (not isinstance(data, list) or
+            any(not isinstance(i, bytes) or len(i) != 16 for i in data)):
         raise TypeError('blocks_data must be an instance of 16-byte list')
 
     services_list = (c_uint16 * len(service_codes))()
@@ -1575,11 +1689,12 @@ def MPC_FelicaUpdate(idm,  # type: ignore[no-untyped-def]
             'status2': status2.value}
 
 
-def MPC_FELICA_Write_Without_Encryption(idm: bytes,
-                                        service_codes: List[int],
-                                        blocks: List[int],
-                                        data: List[bytes]) \
-        -> Dict[str, Union[bytes, int]]:
+def MPC_FELICA_Write_Without_Encryption(
+        idm: bytes,
+        service_codes: List[int],
+        blocks: List[int],
+        data: List[bytes]
+        ) -> Dict[str, Union[bytes, int]]:
     """Writes FeliCa memory blocks
 
     Parameters
@@ -1609,7 +1724,9 @@ def MPC_FELICA_Write_Without_Encryption(idm: bytes,
 # region MIFARE Ultralight
 
 
-def MPC_MFULReadPage(page_number: int) -> bytes:
+def MPC_MFULReadPage(
+        page_number: int
+        ) -> bytes:
     """Reads MIFARE UltraLight C page content
 
     Parameters
@@ -1631,7 +1748,10 @@ def MPC_MFULReadPage(page_number: int) -> bytes:
     return data
 
 
-def MPC_MFULWritePage(page_number: int, page_content: bytes) -> None:
+def MPC_MFULWritePage(
+        page_number: int,
+        page_content: bytes
+        ) -> None:
     """Writes MIFARE UltraLight C page content
 
     Parameters
@@ -1650,7 +1770,10 @@ def MPC_MFULWritePage(page_number: int, page_content: bytes) -> None:
         page_content))
 
 
-def MPC_MFULCAuthenticate(key1: bytes, key2: bytes) -> None:
+def MPC_MFULCAuthenticate(
+        key1: bytes,
+        key2: bytes
+        ) -> None:
     """Authenticates a MIFARE UltraLight C
 
     Parameters
@@ -1671,7 +1794,10 @@ def MPC_MFULCAuthenticate(key1: bytes, key2: bytes) -> None:
         c_uint32(0)))
 
 
-def MPC_MFULCWriteKey(key1: bytes, key2: bytes) -> None:
+def MPC_MFULCWriteKey(
+        key1: bytes,
+        key2: bytes
+        ) -> None:
     """Updates MIFARE UltraLight C keys
 
     Parameters
@@ -1702,8 +1828,11 @@ class MifareKey(IntEnum):
     KEYB = 1
 
 
-def CLP_Authentication_2(key_mode: MifareKey, sector: int,
-                         key_address: int) -> None:
+def CLP_Authentication_2(
+        key_mode: MifareKey,
+        sector: int,
+        key_address: int
+        ) -> None:
     """Performs authentication sequence
 
     Parameters
@@ -1735,7 +1864,9 @@ def CLP_Halt() -> None:
         c_uint8(0)))
 
 
-def CLP_Read(block_number: int) -> bytes:
+def CLP_Read(
+        block_number: int
+        ) -> bytes:
     """Reads a block
 
     Parameters
@@ -1758,7 +1889,10 @@ def CLP_Read(block_number: int) -> bytes:
     return data
 
 
-def CLP_Write(block_number: int, data: bytes) -> None:
+def CLP_Write(
+        block_number: int,
+        data: bytes
+        ) -> None:
     """Writes a block
 
     Parameters
@@ -1778,7 +1912,10 @@ def CLP_Write(block_number: int, data: bytes) -> None:
         data))
 
 
-def CLP_Increment(block_number: int, value: int) -> None:
+def CLP_Increment(
+        block_number: int,
+        value: int
+        ) -> None:
     """Increments block value in register
 
     Parameters
@@ -1797,7 +1934,10 @@ def CLP_Increment(block_number: int, value: int) -> None:
         c_uint32(value)))
 
 
-def CLP_Decrement(block_number: int, value: int) -> None:
+def CLP_Decrement(
+        block_number: int,
+        value: int
+        ) -> None:
     """Decrements block value in register
 
     Parameters
@@ -1816,7 +1956,10 @@ def CLP_Decrement(block_number: int, value: int) -> None:
         c_uint32(value)))
 
 
-def CLP_Decrement_Transfer(block_number: int, value: int) -> None:
+def CLP_Decrement_Transfer(
+        block_number: int,
+        value: int
+        ) -> None:
     """Decrements block value and updates block content
 
     Parameters
@@ -1835,7 +1978,9 @@ def CLP_Decrement_Transfer(block_number: int, value: int) -> None:
         c_uint32(value)))
 
 
-def CLP_Restore(block_number: int) -> None:
+def CLP_Restore(
+        block_number: int
+        ) -> None:
     """Restores register value with block content
 
     Parameters
@@ -1850,7 +1995,9 @@ def CLP_Restore(block_number: int) -> None:
         c_uint8(block_number)))
 
 
-def CLP_Transfer(block_number: int) -> None:
+def CLP_Transfer(
+        block_number: int
+        ) -> None:
     """Transfers register content to specific block
 
     Parameters
@@ -1865,7 +2012,11 @@ def CLP_Transfer(block_number: int) -> None:
         c_uint8(block_number)))
 
 
-def CLP_LoadKey(key_mode: MifareKey, sector: int, key: bytes) -> None:
+def CLP_LoadKey(
+        key_mode: MifareKey,
+        sector: int,
+        key: bytes
+        ) -> None:
     """Loads keys
 
     Parameters
@@ -1892,8 +2043,12 @@ def CLP_LoadKey(key_mode: MifareKey, sector: int, key: bytes) -> None:
         str_key.encode('ascii')))
 
 
-def CLP_Authentication_3(key_mode: MifareKey, sector: int,
-                         key_address: int, snr: bytes) -> None:
+def CLP_Authentication_3(
+        key_mode: MifareKey,
+        sector: int,
+        key_address: int,
+        snr: bytes
+        ) -> None:
     """Performs authentication sequence when chip UID is known
 
     Parameters
@@ -1933,7 +2088,9 @@ class MifareUidOption(IntEnum):
     UIDF3 = 0x60
 
 
-def CLP_PersonalizeUIDUsage(option: MifareUidOption) -> None:
+def CLP_PersonalizeUIDUsage(
+        option: MifareUidOption
+        ) -> None:
     """Selects UID option for personalization
 
     Parameters
@@ -1978,9 +2135,11 @@ class VicinitySubCarrier(IntEnum):
     TWO_SUBCARRIERS = 2
 
 
-def MPC_SelectVCCommunication(mode: VicinityCodingMode,
-                              data_rate: VicinityDataRate,
-                              sub_carrier: VicinitySubCarrier) -> None:
+def MPC_SelectVCCommunication(
+        mode: VicinityCodingMode,
+        data_rate: VicinityDataRate,
+        sub_carrier: VicinitySubCarrier
+        ) -> None:
     """Selects Vicinity data rate
 
     Parameters
@@ -2008,7 +2167,9 @@ def MPC_SelectVCCommunication(mode: VicinityCodingMode,
         c_uint8(sub_carrier)))
 
 
-def MPC_SelectPauseWidthVicinity(pause: float) -> None:
+def MPC_SelectPauseWidthVicinity(
+        pause: float
+        ) -> None:
     """Selects Vicinity pause width
 
     Parameters
@@ -2023,7 +2184,9 @@ def MPC_SelectPauseWidthVicinity(pause: float) -> None:
         c_uint16(pause_ns)))
 
 
-def MPC_ExchangeCmdVicinity(tx_frame: bytes) -> bytes:
+def MPC_ExchangeCmdVicinity(
+        tx_frame: bytes
+        ) -> bytes:
     """Exchanges a Vicinity frame
 
     Parameters
@@ -2050,8 +2213,12 @@ def MPC_ExchangeCmdVicinity(tx_frame: bytes) -> bytes:
     return data[:length.value]
 
 
-def MPC_VcInventory(slot: int, afi: Optional[Union[bytes, int]],
-                    mask: bytes) -> Dict[str, Union[bytes, int]]:
+def MPC_VcInventory(
+        slot: int,
+        afi: Optional[Union[bytes,
+                            int]],
+        mask: bytes
+        ) -> Dict[str, Union[bytes, int]]:
     """Sends an inventory command
 
     Parameters
@@ -2136,9 +2303,14 @@ class VicinityOption(IntEnum):
     VicinityOptionDelayedEof = 1
 
 
-def MPC_VcGenericCommand(timeout: float, flag: VicinityFlag,
-                         option: VicinityOption, command: Union[bytes, int],
-                         tx_data: bytes) -> Dict[str, Union[bytes, int]]:
+def MPC_VcGenericCommand(
+        timeout: float,
+        flag: VicinityFlag,
+        option: VicinityOption,
+        command: Union[bytes,
+                       int],
+        tx_data: bytes
+        ) -> Dict[str, Union[bytes, int]]:
     """Sends a Vicinity command
 
     Parameters
@@ -2196,8 +2368,10 @@ def MPC_VcGenericCommand(timeout: float, flag: VicinityFlag,
             'response_flag': response_flag.value}
 
 
-def MPC_VcReadSingleBlock(flag: VicinityFlag, block_number: int) \
-        -> Dict[str, Union[bytes, int]]:
+def MPC_VcReadSingleBlock(
+        flag: VicinityFlag,
+        block_number: int
+        ) -> Dict[str, Union[bytes, int]]:
     """Sends a Read Single Block command
 
     Parameters
@@ -2235,8 +2409,10 @@ def MPC_VcReadSingleBlock(flag: VicinityFlag, block_number: int) \
             'response_flag': response_flag.value}
 
 
-def MPC_VcExtendedReadSingleBlock(flag: VicinityFlag, block_number: int) \
-        -> Dict[str, Union[bytes, int]]:
+def MPC_VcExtendedReadSingleBlock(
+        flag: VicinityFlag,
+        block_number: int
+        ) -> Dict[str, Union[bytes, int]]:
     """Sends an Extended Read Single Block command
 
     Parameters
@@ -2274,9 +2450,11 @@ def MPC_VcExtendedReadSingleBlock(flag: VicinityFlag, block_number: int) \
             'response_flag': response_flag.value}
 
 
-def MPC_VcReadMultipleBlock(flag: VicinityFlag, first_block_number: int,
-                            blocks_number: int) \
-        -> Dict[str, Union[bytes, int, List[int]]]:
+def MPC_VcReadMultipleBlock(
+        flag: VicinityFlag,
+        first_block_number: int,
+        blocks_number: int
+        ) -> Dict[str, Union[bytes, int, List[int]]]:
     """Sends a Read Multiple blocks command
 
     Parameters
@@ -2320,10 +2498,11 @@ def MPC_VcReadMultipleBlock(flag: VicinityFlag, first_block_number: int,
             'response_flag': response_flag.value}
 
 
-def MPC_VcExtendedReadMultipleBlock(flag: VicinityFlag,
-                                    first_block_number: int,
-                                    blocks_number: int) \
-        -> Dict[str, Union[bytes, int, List[int]]]:
+def MPC_VcExtendedReadMultipleBlock(
+        flag: VicinityFlag,
+        first_block_number: int,
+        blocks_number: int
+        ) -> Dict[str, Union[bytes, int, List[int]]]:
     """Sends an Extended Read Multiple Blocks command
 
     Parameters
@@ -2367,8 +2546,11 @@ def MPC_VcExtendedReadMultipleBlock(flag: VicinityFlag,
             'response_flag': response_flag.value}
 
 
-def MPC_VcWriteSingleBlock(flag: VicinityFlag, block_number: int,
-                           data: bytes) -> int:
+def MPC_VcWriteSingleBlock(
+        flag: VicinityFlag,
+        block_number: int,
+        data: bytes
+        ) -> int:
     """Sends a Write Single Block command
 
     Parameters
@@ -2402,8 +2584,11 @@ def MPC_VcWriteSingleBlock(flag: VicinityFlag, block_number: int,
     return response_flag.value
 
 
-def MPC_VcWriteExtendedSingleBlock(flag: VicinityFlag, block_number: int,
-                                   data: bytes) -> int:
+def MPC_VcWriteExtendedSingleBlock(
+        flag: VicinityFlag,
+        block_number: int,
+        data: bytes
+        ) -> int:
     """Sends an Extended Write Single Block command
 
     Parameters
@@ -2437,7 +2622,10 @@ def MPC_VcWriteExtendedSingleBlock(flag: VicinityFlag, block_number: int,
     return response_flag.value
 
 
-def MPC_VcLockSingleBlock(flag: VicinityFlag, block_number: int) -> int:
+def MPC_VcLockSingleBlock(
+        flag: VicinityFlag,
+        block_number: int
+        ) -> int:
     """Sends a Lock Single Block command
 
     Parameters
@@ -2464,8 +2652,10 @@ def MPC_VcLockSingleBlock(flag: VicinityFlag, block_number: int) -> int:
     return response_flag.value
 
 
-def MPC_VcExtendedLockSingleBlock(flag: VicinityFlag, block_number: int) \
-        -> int:
+def MPC_VcExtendedLockSingleBlock(
+        flag: VicinityFlag,
+        block_number: int
+        ) -> int:
     """Sends an Extended Lock Single Block command
 
     Parameters
@@ -2492,7 +2682,9 @@ def MPC_VcExtendedLockSingleBlock(flag: VicinityFlag, block_number: int) \
     return response_flag.value
 
 
-def MPC_VcResetToReady(flag: VicinityFlag) -> int:
+def MPC_VcResetToReady(
+        flag: VicinityFlag
+        ) -> int:
     """Sends a Reset To Ready command
 
     Parameters
@@ -2552,9 +2744,11 @@ def MPC_VcGetLastAnswer() -> bytes:
 # region Modulation shape
 
 
-def MPC_SetModulationShape(pattern_index: int,
-                           falling_edge_per_mille: List[int],
-                           rising_edge_per_mille: List[int]) -> None:
+def MPC_SetModulationShape(
+        pattern_index: int,
+        falling_edge_per_mille: List[int],
+        rising_edge_per_mille: List[int]
+        ) -> None:
     """Loads custom rising and falling edges
 
     Parameters
@@ -2567,12 +2761,12 @@ def MPC_SetModulationShape(pattern_index: int,
         Rising edge points
     """
     _check_limits(c_uint8, pattern_index, 'pattern_index')
-    if not isinstance(falling_edge_per_mille, list) or \
-            any(not isinstance(i, int) for i in falling_edge_per_mille):
+    if (not isinstance(falling_edge_per_mille, list) or
+            any(not isinstance(i, int) for i in falling_edge_per_mille)):
         raise TypeError('falling_edge_per_mille must be an instance of'
                         ' integers list')
-    if not isinstance(rising_edge_per_mille, list) or \
-            any(not isinstance(i, int) for i in rising_edge_per_mille):
+    if (not isinstance(rising_edge_per_mille, list) or
+            any(not isinstance(i, int) for i in rising_edge_per_mille)):
         raise TypeError('rising_edge_per_mille must be an instance of'
                         ' integers list')
     falling = (c_uint16 * len(falling_edge_per_mille))()
@@ -2600,8 +2794,10 @@ class ModulationShapeMode(IntEnum):
     CUSTOMIZED_MOD_150_MHZ = 5
 
 
-def MPC_SelectModulationGeneration(pattern_index: int,
-                                   mode: ModulationShapeMode) -> None:
+def MPC_SelectModulationGeneration(
+        pattern_index: int,
+        mode: ModulationShapeMode
+        ) -> None:
     """Selects the customizable modulation mode or the classical linear mode
 
     Parameters
@@ -2627,8 +2823,12 @@ class ModulationItem(IntEnum):
     PATTERN_CHARACTER = 1
 
 
-def MPC_SelectModulationPattern(item_type: ModulationItem, pattern_index: int,
-                                start: int, duration: int) -> None:
+def MPC_SelectModulationPattern(
+        item_type: ModulationItem,
+        pattern_index: int,
+        start: int,
+        duration: int
+        ) -> None:
     """Applies a modulation edge shape
     Parameters
     ----------
@@ -2655,7 +2855,10 @@ def MPC_SelectModulationPattern(item_type: ModulationItem, pattern_index: int,
         c_uint32(duration)))
 
 
-def MPC_FastFallingEdge(delay_fc: float, duration_fc: float) -> None:
+def MPC_FastFallingEdge(
+        delay_fc: float,
+        duration_fc: float
+        ) -> None:
     """Inverts sine wave signal to improve falling edge duration
 
     Parameters
@@ -2680,7 +2883,9 @@ def MPC_FastFallingEdge(delay_fc: float, duration_fc: float) -> None:
 # region Deaf time
 
 
-def MPC_SetDeafTime(deaf_time: float) -> None:
+def MPC_SetDeafTime(
+        deaf_time: float
+        ) -> None:
     """Sets the deaf time
 
     Parameters
@@ -2699,7 +2904,9 @@ def MPC_SetDeafTime(deaf_time: float) -> None:
 # region Anti tearing
 
 
-def MPS_AntiTearing(clock_count: int) -> None:
+def MPS_AntiTearing(
+        clock_count: int
+        ) -> None:
     """Deactivates RF field during communication
 
     Parameters
@@ -2789,11 +2996,15 @@ class ConnectorState(IntEnum):
     CONNECTOR_SMA = 2
 
 
-def MPC_ChangeProtocolParameters(param_type: ProtocolParameters,
-                                 param_value: Union[int, float, bool,
-                                                    ConnectorState,
-                                                    List[int],
-                                                    List[float]]) -> None:
+def MPC_ChangeProtocolParameters(
+        param_type: ProtocolParameters,
+        param_value: Union[int,
+                           float,
+                           bool,
+                           ConnectorState,
+                           List[int],
+                           List[float]]
+        ) -> None:
     """Changes a protocol parameter
 
     Parameters
@@ -2807,8 +3018,8 @@ def MPC_ChangeProtocolParameters(param_type: ProtocolParameters,
     if not isinstance(param_type, ProtocolParameters):
         raise TypeError('param_type must be an instance of '
                         'ProtocolParameters IntEnum')
-    if param_type == ProtocolParameters.CPP_CURRENT_CID or \
-            param_type == ProtocolParameters.CPP_CURRENT_NAD:
+    if (param_type == ProtocolParameters.CPP_CURRENT_CID or
+            param_type == ProtocolParameters.CPP_CURRENT_NAD):
         if not isinstance(param_value, int):
             raise TypeError('param_value must be an instance of int')
         int_val = c_uint32(param_value)
@@ -2819,11 +3030,10 @@ def MPC_ChangeProtocolParameters(param_type: ProtocolParameters,
             c_uint32(1)))
 
     # List parameter
-    elif param_type == ProtocolParameters.CPP_FRAME_TYPE_B or \
-            param_type == ProtocolParameters.CPP_FRAME_FELICA_OPTION or \
-            param_type == ProtocolParameters.CPP_FRAME_TYPE_F_CLK:
-        if not isinstance(param_value, list) or \
-                len(param_value) != 4:
+    elif (param_type == ProtocolParameters.CPP_FRAME_TYPE_B or
+            param_type == ProtocolParameters.CPP_FRAME_FELICA_OPTION or
+            param_type == ProtocolParameters.CPP_FRAME_TYPE_F_CLK):
+        if not isinstance(param_value, list) or len(param_value) != 4:
             raise TypeError('param_value must be an instance of'
                             ' 4-int list')
         list_u16_val = (4 * c_uint16)()
@@ -2914,32 +3124,30 @@ def MPC_ChangeProtocolParameters(param_type: ProtocolParameters,
             c_uint32(3)))
 
     # Boolean parameter
-    elif param_type == ProtocolParameters.CPP_CID or \
-            param_type == ProtocolParameters.CPP_NAD or \
-            param_type == ProtocolParameters.CPP_PROTOCOL_ERROR_MANAGEMENT or \
-            param_type == ProtocolParameters.CPP_TX_PARITY or \
-            param_type == ProtocolParameters.CPP_RX_PARITY or \
-            param_type == ProtocolParameters.CPP_ANTI_EMD or \
-            param_type == ProtocolParameters.CPP_CONFIG_ANTI_EMD or \
-            param_type == ProtocolParameters.CPP_VERIFY_PICC_14443_TIMING or \
-            param_type == ProtocolParameters.CPP_SFGT or \
-            param_type == ProtocolParameters.CPP_CE_REVERSE_POLARITY or \
-            param_type == ProtocolParameters.\
-            CPP_ACTIVE_TARGET_MUTE_BEHAVIOR or \
-            param_type == ProtocolParameters.CPP_FELICA_BIT_CODING_REVERSE or \
-            param_type == ProtocolParameters.\
-            CPP_RF_FIELD_STRENGTH_COMPATIBILITY or \
-            param_type == ProtocolParameters.CPP_CE_SET_IQLM_ENABLE or \
-            param_type == ProtocolParameters.CPP_MODE_NO_EOF or \
-            param_type == ProtocolParameters.\
-            CPP_REJECT_INVERTED_MODULATION or \
-            param_type == ProtocolParameters.CPP_ALLOW_TA1_RFU or \
-            param_type == ProtocolParameters.CPP_DISABLE_ATQA_CHECK or \
-            param_type == ProtocolParameters.CPP_RF_FIELD_LOCK_ANTENNA or \
-            param_type == ProtocolParameters.CPP_NFC_ACTIVE_FDT_MODE or \
-            param_type == ProtocolParameters.CPP_ASK_FILTER_106 or \
-            param_type == ProtocolParameters.CPP_NFC_MAX_LR_VALUE_NFCFORUM or \
-            param_type == ProtocolParameters.CPP_DEMOD_AUTOTHRESHOLD:
+    elif (param_type == ProtocolParameters.CPP_CID or
+            param_type == ProtocolParameters.CPP_NAD or
+            param_type == ProtocolParameters.CPP_PROTOCOL_ERROR_MANAGEMENT or
+            param_type == ProtocolParameters.CPP_TX_PARITY or
+            param_type == ProtocolParameters.CPP_RX_PARITY or
+            param_type == ProtocolParameters.CPP_ANTI_EMD or
+            param_type == ProtocolParameters.CPP_CONFIG_ANTI_EMD or
+            param_type == ProtocolParameters.CPP_VERIFY_PICC_14443_TIMING or
+            param_type == ProtocolParameters.CPP_SFGT or
+            param_type == ProtocolParameters.CPP_CE_REVERSE_POLARITY or
+            param_type == ProtocolParameters.CPP_ACTIVE_TARGET_MUTE_BEHAVIOR or
+            param_type == ProtocolParameters.CPP_FELICA_BIT_CODING_REVERSE or
+            param_type == (
+                ProtocolParameters.CPP_RF_FIELD_STRENGTH_COMPATIBILITY) or
+            param_type == ProtocolParameters.CPP_CE_SET_IQLM_ENABLE or
+            param_type == ProtocolParameters.CPP_MODE_NO_EOF or
+            param_type == ProtocolParameters.CPP_REJECT_INVERTED_MODULATION or
+            param_type == ProtocolParameters.CPP_ALLOW_TA1_RFU or
+            param_type == ProtocolParameters.CPP_DISABLE_ATQA_CHECK or
+            param_type == ProtocolParameters.CPP_RF_FIELD_LOCK_ANTENNA or
+            param_type == ProtocolParameters.CPP_NFC_ACTIVE_FDT_MODE or
+            param_type == ProtocolParameters.CPP_ASK_FILTER_106 or
+            param_type == ProtocolParameters.CPP_NFC_MAX_LR_VALUE_NFCFORUM or
+            param_type == ProtocolParameters.CPP_DEMOD_AUTOTHRESHOLD):
         int_val = c_uint32(1) if param_value else c_uint32(0)
         CTS3Exception._check_error(_MPuLib.MPC_ChangeProtocolParameters(
             c_uint8(0),
@@ -2948,13 +3156,13 @@ def MPC_ChangeProtocolParameters(param_type: ProtocolParameters,
             c_uint32(4)))
 
     # ms/mdB/mV parameter
-    elif param_type == ProtocolParameters.CPP_PROTOCOL_STOP_TIMEOUT or \
-            param_type == ProtocolParameters.CPP_DAQ_AUTORANGE or \
-            param_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE or \
-            param_type == ProtocolParameters.CPP_PLI_STEP or \
-            param_type == ProtocolParameters.CPP_AUTORANGE_MARGIN:
-        if isinstance(param_value, list) or \
-                not isinstance(param_value, float):
+    elif (param_type == ProtocolParameters.CPP_PROTOCOL_STOP_TIMEOUT or
+            param_type == ProtocolParameters.CPP_DAQ_AUTORANGE or
+            param_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE or
+            param_type == ProtocolParameters.CPP_PLI_STEP or
+            param_type == ProtocolParameters.CPP_AUTORANGE_MARGIN):
+        if (isinstance(param_value, list) or
+                not isinstance(param_value, float)):
             raise TypeError('param_value must be an instance of float')
         value_ms = round(param_value * 1e3)
         _check_limits(c_uint32, value_ms, 'param_value')
@@ -2967,8 +3175,8 @@ def MPC_ChangeProtocolParameters(param_type: ProtocolParameters,
 
     # µs parameter
     elif param_type == ProtocolParameters.CPP_FRAME_FDT:
-        if isinstance(param_value, list) or \
-                not isinstance(param_value, float):
+        if (isinstance(param_value, list) or
+                not isinstance(param_value, float)):
             raise TypeError('param_value must be an instance of float')
         value_us = round(param_value * 1e6)
         _check_limits(c_uint32, value_us, 'param_value')
@@ -2980,8 +3188,8 @@ def MPC_ChangeProtocolParameters(param_type: ProtocolParameters,
             c_uint32(4)))
 
     # ConnectorState parameter
-    elif param_type == ProtocolParameters.CPP_LMA_OUTPUT or \
-            param_type == ProtocolParameters.CPP_VDC_INPUT:
+    elif (param_type == ProtocolParameters.CPP_LMA_OUTPUT or
+            param_type == ProtocolParameters.CPP_VDC_INPUT):
         if not isinstance(param_value, ConnectorState):
             raise TypeError('param_value must be an instance of'
                             ' ConnectorState IntEnum')
@@ -3005,8 +3213,9 @@ def MPC_ChangeProtocolParameters(param_type: ProtocolParameters,
             c_uint32(4)))
 
 
-def MPC_GetProtocolParameters(param_type: ProtocolParameters) \
-        -> Union[int, float, bool, ConnectorState, List[int], List[float]]:
+def MPC_GetProtocolParameters(
+        param_type: ProtocolParameters
+        ) -> Union[int, float, bool, ConnectorState, List[int], List[float]]:
     """Gets a protocol parameter
 
     Parameters
@@ -3023,8 +3232,8 @@ def MPC_GetProtocolParameters(param_type: ProtocolParameters) \
         raise TypeError('param_type must be an instance of '
                         'ProtocolParameters IntEnum')
     param_size = c_uint32()
-    if param_type == ProtocolParameters.CPP_CURRENT_CID or \
-            param_type == ProtocolParameters.CPP_CURRENT_NAD:
+    if (param_type == ProtocolParameters.CPP_CURRENT_CID or
+            param_type == ProtocolParameters.CPP_CURRENT_NAD):
         int8_val = c_uint8()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
@@ -3035,9 +3244,9 @@ def MPC_GetProtocolParameters(param_type: ProtocolParameters) \
         return int8_val.value
 
     # List parameter
-    elif param_type == ProtocolParameters.CPP_FRAME_TYPE_B or \
-            param_type == ProtocolParameters.CPP_FRAME_FELICA_OPTION or \
-            param_type == ProtocolParameters.CPP_FRAME_TYPE_F_CLK:
+    elif (param_type == ProtocolParameters.CPP_FRAME_TYPE_B or
+            param_type == ProtocolParameters.CPP_FRAME_FELICA_OPTION or
+            param_type == ProtocolParameters.CPP_FRAME_TYPE_F_CLK):
         list_u16_val = (4 * c_uint16)()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
@@ -3084,32 +3293,30 @@ def MPC_GetProtocolParameters(param_type: ProtocolParameters) \
         return [float(list_u32_val[i]) / 1e6 for i in range(3)]
 
     # Boolean parameter
-    elif param_type == ProtocolParameters.CPP_CID or \
-            param_type == ProtocolParameters.CPP_NAD or \
-            param_type == ProtocolParameters.CPP_PROTOCOL_ERROR_MANAGEMENT or \
-            param_type == ProtocolParameters.CPP_TX_PARITY or \
-            param_type == ProtocolParameters.CPP_RX_PARITY or \
-            param_type == ProtocolParameters.CPP_ANTI_EMD or \
-            param_type == ProtocolParameters.CPP_CONFIG_ANTI_EMD or \
-            param_type == ProtocolParameters.CPP_VERIFY_PICC_14443_TIMING or \
-            param_type == ProtocolParameters.CPP_SFGT or \
-            param_type == ProtocolParameters.CPP_CE_REVERSE_POLARITY or \
-            param_type == ProtocolParameters.\
-            CPP_ACTIVE_TARGET_MUTE_BEHAVIOR or \
-            param_type == ProtocolParameters.CPP_FELICA_BIT_CODING_REVERSE or \
-            param_type == ProtocolParameters.\
-            CPP_RF_FIELD_STRENGTH_COMPATIBILITY or \
-            param_type == ProtocolParameters.CPP_CE_SET_IQLM_ENABLE or \
-            param_type == ProtocolParameters.CPP_MODE_NO_EOF or \
-            param_type == ProtocolParameters.\
-            CPP_REJECT_INVERTED_MODULATION or \
-            param_type == ProtocolParameters.CPP_ALLOW_TA1_RFU or \
-            param_type == ProtocolParameters.CPP_DISABLE_ATQA_CHECK or \
-            param_type == ProtocolParameters.CPP_RF_FIELD_LOCK_ANTENNA or \
-            param_type == ProtocolParameters.CPP_NFC_ACTIVE_FDT_MODE or \
-            param_type == ProtocolParameters.CPP_ASK_FILTER_106 or \
-            param_type == ProtocolParameters.CPP_NFC_MAX_LR_VALUE_NFCFORUM or \
-            param_type == ProtocolParameters.CPP_DEMOD_AUTOTHRESHOLD:
+    elif (param_type == ProtocolParameters.CPP_CID or
+            param_type == ProtocolParameters.CPP_NAD or
+            param_type == ProtocolParameters.CPP_PROTOCOL_ERROR_MANAGEMENT or
+            param_type == ProtocolParameters.CPP_TX_PARITY or
+            param_type == ProtocolParameters.CPP_RX_PARITY or
+            param_type == ProtocolParameters.CPP_ANTI_EMD or
+            param_type == ProtocolParameters.CPP_CONFIG_ANTI_EMD or
+            param_type == ProtocolParameters.CPP_VERIFY_PICC_14443_TIMING or
+            param_type == ProtocolParameters.CPP_SFGT or
+            param_type == ProtocolParameters.CPP_CE_REVERSE_POLARITY or
+            param_type == ProtocolParameters.CPP_ACTIVE_TARGET_MUTE_BEHAVIOR or
+            param_type == ProtocolParameters.CPP_FELICA_BIT_CODING_REVERSE or
+            param_type == (
+                ProtocolParameters.CPP_RF_FIELD_STRENGTH_COMPATIBILITY) or
+            param_type == ProtocolParameters.CPP_CE_SET_IQLM_ENABLE or
+            param_type == ProtocolParameters.CPP_MODE_NO_EOF or
+            param_type == ProtocolParameters.CPP_REJECT_INVERTED_MODULATION or
+            param_type == ProtocolParameters.CPP_ALLOW_TA1_RFU or
+            param_type == ProtocolParameters.CPP_DISABLE_ATQA_CHECK or
+            param_type == ProtocolParameters.CPP_RF_FIELD_LOCK_ANTENNA or
+            param_type == ProtocolParameters.CPP_NFC_ACTIVE_FDT_MODE or
+            param_type == ProtocolParameters.CPP_ASK_FILTER_106 or
+            param_type == ProtocolParameters.CPP_NFC_MAX_LR_VALUE_NFCFORUM or
+            param_type == ProtocolParameters.CPP_DEMOD_AUTOTHRESHOLD):
         int_val = c_uint32()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
@@ -3120,11 +3327,11 @@ def MPC_GetProtocolParameters(param_type: ProtocolParameters) \
         return int_val.value > 0
 
     # ms/mdB/mV parameter
-    elif param_type == ProtocolParameters.CPP_PROTOCOL_STOP_TIMEOUT or \
-            param_type == ProtocolParameters.CPP_DAQ_AUTORANGE or \
-            param_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE or \
-            param_type == ProtocolParameters.CPP_PLI_STEP or \
-            param_type == ProtocolParameters.CPP_AUTORANGE_MARGIN:
+    elif (param_type == ProtocolParameters.CPP_PROTOCOL_STOP_TIMEOUT or
+            param_type == ProtocolParameters.CPP_DAQ_AUTORANGE or
+            param_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE or
+            param_type == ProtocolParameters.CPP_PLI_STEP or
+            param_type == ProtocolParameters.CPP_AUTORANGE_MARGIN):
         int_val = c_uint32()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
@@ -3146,8 +3353,8 @@ def MPC_GetProtocolParameters(param_type: ProtocolParameters) \
         return float(int_val.value) / 1e6
 
     # ConnectorState parameter
-    elif param_type == ProtocolParameters.CPP_LMA_OUTPUT or \
-            param_type == ProtocolParameters.CPP_VDC_INPUT:
+    elif (param_type == ProtocolParameters.CPP_LMA_OUTPUT or
+            param_type == ProtocolParameters.CPP_VDC_INPUT):
         int_val = c_uint32()
         CTS3Exception._check_error(_MPuLib.MPC_GetProtocolParameters(
             c_uint8(0),
@@ -3182,7 +3389,9 @@ class RxChannel(IntEnum):
     RX_CHANNEL_DAQ_CH2 = 4
 
 
-def MPC_SelectRxChannel(channel: RxChannel) -> None:
+def MPC_SelectRxChannel(
+        channel: RxChannel
+        ) -> None:
     """Selects the reception channel
 
     Parameters
@@ -3211,7 +3420,10 @@ class RxGainType(IntEnum):
     RX_GAIN_TYPE_SENSITIVITY_RX_TX = 2
 
 
-def MPC_SelectRxGainExt(gain_type: RxGainType, value: int) -> None:
+def MPC_SelectRxGainExt(
+        gain_type: RxGainType,
+        value: int
+        ) -> None:
     """Changes reception channel gain or sub-carrier detection threshold
 
     Parameters
@@ -3264,7 +3476,9 @@ def MPC_GetDemodThreshold() -> Dict[str, int]:
             'average': average.value}
 
 
-def MPC_ForceGainExtRx(gain: int) -> None:
+def MPC_ForceGainExtRx(
+        gain: int
+        ) -> None:
     """Sets current reception gain
 
     Parameters
@@ -3304,7 +3518,10 @@ class TestType(IntEnum):
 
 
 @overload
-def MPC_Test(test_type: TestType, delay: float) -> bytes:
+def MPC_Test(
+        test_type: TestType,
+        delay: float
+        ) -> bytes:
     # TEST_REQA_REQB, TEST_REQB_REQA, TEST_POWERON_REQA,
     # TEST_POWERON_REQB, TEST_REQA_REQA, TEST_REQB_REQB,
     # TEST_WUPA_WUPB, TEST_WUPB_WUPA
@@ -3312,52 +3529,90 @@ def MPC_Test(test_type: TestType, delay: float) -> bytes:
 
 
 @overload
-def MPC_Test(test_type: TestType, reset_time: float,
-             time_1: float, time_2: float) -> bytes:
+def MPC_Test(
+        test_type: TestType,
+        reset_time: float,
+        time_1: float,
+        time_2: float
+        ) -> bytes:
     # TEST_SPECIAL_GET_ATS
     ...
 
 
 @overload
-def MPC_Test(test_type: TestType, tx_bits_1: int, tx_frame_1: bytes,
-             tx_bits_2: int, tx_frame_2: bytes,
-             delay: float) -> Dict[str, Union[int, bytes]]:
+def MPC_Test(
+        test_type: TestType,
+        tx_bits_1: int,
+        tx_frame_1: bytes,
+        tx_bits_2: int,
+        tx_frame_2: bytes,
+        delay: float
+        ) -> Dict[str, Union[int, bytes]]:
     # TEST_FDT_PICCPCD_A, TEST_FDT_PICCPCD_B, TEST_FDT_PICCPCD_FELICA
     ...
 
 
 @overload
-def MPC_Test(test_type: TestType, param: Union[int, float], delay: float,
-             tx_bits: int, tx_frame: bytes) -> Dict[str, Union[int, bytes]]:
+def MPC_Test(
+        test_type: TestType,
+        param: Union[int,
+                     float],
+        delay: float,
+        tx_bits: int,
+        tx_frame: bytes
+        ) -> Dict[str, Union[int, bytes]]:
     # TEST_POWER_OFF_ON_CMD, TEST_TON_EXCHANGE_AFTER_DELAY_TOFF
     ...
 
 
 @overload
-def MPC_Test(test_type: TestType, ask: int, time_1: float, time_2: float,
-             tx_bits: int, tx_frame: bytes) -> Dict[str, Union[int, bytes]]:
+def MPC_Test(
+        test_type: TestType,
+        ask: int,
+        time_1: float,
+        time_2: float,
+        tx_bits: int,
+        tx_frame: bytes
+        ) -> Dict[str, Union[int, bytes]]:
     # TEST_RF_RESET_CMD
     ...
 
 
 @overload
-def MPC_Test(test_type: TestType, ask: int, time_1: float,
-             time_2: float, timeout: float,
-             tx_bits: int, tx_frame: bytes) -> Dict[str, Union[int, bytes]]:
+def MPC_Test(
+        test_type: TestType,
+        ask: int,
+        time_1: float,
+        time_2: float,
+        timeout: float,
+        tx_bits: int,
+        tx_frame: bytes
+        ) -> Dict[str, Union[int, bytes]]:
     # TEST_RF_RESET_CMD_WITH_TRIGGER_IN
     ...
 
 
 @overload
-def MPC_Test(test_type: TestType, reset_time: float, first_frame_delay: float,
-             next_frames_delay: float, type_odd: TechnologyType,
-             tx_bits_odd: int, tx_frame_odd: bytes, type_even: TechnologyType,
-             tx_bits_even: int, tx_frame_even: bytes, timeout: float) -> None:
+def MPC_Test(
+        test_type: TestType,
+        reset_time: float,
+        first_frame_delay: float,
+        next_frames_delay: float,
+        type_odd: TechnologyType,
+        tx_bits_odd: int,
+        tx_frame_odd: bytes,
+        type_even: TechnologyType,
+        tx_bits_even: int,
+        tx_frame_even: bytes,
+        timeout: float
+        ) -> None:
     # TEST_EMV_POLLING
     ...
 
 
-def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
+def MPC_Test(  # type: ignore[no-untyped-def]
+        test_type,
+        *args):
     """Performs specific test
 
     Parameters
@@ -3378,10 +3633,10 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
         func_pointer = _MPuLib.MPC_Test
     else:
         func_pointer = _MPuLib_variadic.MPC_Test
-    if test_type == TestType.TEST_REQA_REQB or \
-            test_type == TestType.TEST_WUPA_WUPB or \
-            test_type == TestType.TEST_REQB_REQB or \
-            test_type == TestType.TEST_POWERON_REQB:
+    if (test_type == TestType.TEST_REQA_REQB or
+            test_type == TestType.TEST_WUPA_WUPB or
+            test_type == TestType.TEST_REQB_REQB or
+            test_type == TestType.TEST_POWERON_REQB):
         if len(args) != 1:
             raise TypeError(f'MPC_Test({test_type.name}) takes exactly two '
                             f'arguments ({len(args) + 1} given)')
@@ -3399,10 +3654,10 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             byref(length16)))  # pRxBits
         return data[:length16.value]
 
-    elif test_type == TestType.TEST_REQB_REQA or \
-            test_type == TestType.TEST_WUPB_WUPA or \
-            test_type == TestType.TEST_REQA_REQA or \
-            test_type == TestType.TEST_POWERON_REQA:
+    elif (test_type == TestType.TEST_REQB_REQA or
+            test_type == TestType.TEST_WUPB_WUPA or
+            test_type == TestType.TEST_REQA_REQA or
+            test_type == TestType.TEST_POWERON_REQA):
         if len(args) != 1:
             raise TypeError(f'MPC_Test({test_type.name}) takes exactly two '
                             f'arguments ({len(args) + 1} given)')
@@ -3418,9 +3673,9 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             byref(atqa)))  # pAtqa
         return bytes([atqa.value & 0xFF, atqa.value >> 8])
 
-    elif test_type == TestType.TEST_FDT_PICCPCD_A or \
-            test_type == TestType.TEST_FDT_PICCPCD_B or \
-            test_type == TestType.TEST_FDT_PICCPCD_FELICA:
+    elif (test_type == TestType.TEST_FDT_PICCPCD_A or
+            test_type == TestType.TEST_FDT_PICCPCD_B or
+            test_type == TestType.TEST_FDT_PICCPCD_FELICA):
         if len(args) != 5:
             raise TypeError(f'MPC_Test({test_type.name}) takes exactly six '
                             f'arguments ({len(args) + 1} given)')
@@ -3702,8 +3957,10 @@ class ResponseTimeAction(IntEnum):
     PRT_GET_FDT = 7
 
 
-def MPC_PiccResponseTime2(param: ResponseTimeAction, unit: NfcUnit) \
-        -> List[int]:
+def MPC_PiccResponseTime2(
+        param: ResponseTimeAction,
+        unit: NfcUnit
+        ) -> List[int]:
     """Performs PICC timings measurement
 
     Parameters
@@ -3749,7 +4006,9 @@ class InputTriggerNum(IntEnum):
     TRIGGER_IN4 = 4
 
 
-def MPC_GetTrigger(trigger: InputTriggerNum) -> bool:
+def MPC_GetTrigger(
+        trigger: InputTriggerNum
+        ) -> bool:
     """Gets input trigger voltage level
 
     Parameters
@@ -3840,11 +4099,16 @@ class NfcTrigger(IntEnum):
     TRIG_PICC_CHAR_TYPE_V = 65
 
 
-def MPC_TriggerConfig(trigger_id: NfcTriggerId, config: NfcTrigger,
-                      value: Union[float, TechnologyType, CTS3ErrorCode,
-                                   bool] = 0,
-                      frame: Optional[bytes] = None,
-                      mask: Optional[bytes] = None) -> None:
+def MPC_TriggerConfig(
+        trigger_id: NfcTriggerId,
+        config: NfcTrigger,
+        value: Union[float,
+                     TechnologyType,
+                     CTS3ErrorCode,
+                     bool] = 0,
+        frame: Optional[bytes] = None,
+        mask: Optional[bytes] = None
+        ) -> None:
     """Configures trigger
 
     Parameters
@@ -3892,8 +4156,8 @@ def MPC_TriggerConfig(trigger_id: NfcTriggerId, config: NfcTrigger,
             raise TypeError('value must be an instance of '
                             'CTS3ErrorCode IntEnum')
         val = value.value
-    elif config == NfcTrigger.TRIG_RX_FRAME or \
-            config == NfcTrigger.TRIG_TX_FRAME:
+    elif (config == NfcTrigger.TRIG_RX_FRAME or
+            config == NfcTrigger.TRIG_TX_FRAME):
         if not isinstance(value, TechnologyType):
             raise TypeError('value must be an instance of '
                             'TechnologyType IntEnum')
@@ -3933,10 +4197,16 @@ class DisturbanceType(IntEnum):
     DISTURBANCE_SINE2 = 4
 
 
-def MPC_GenerateDisturbance(operation: DisturbanceOperation,
-                            disturbance_type: DisturbanceType,
-                            amplitude: float, offset: float, duration: float,
-                            param: Union[None, bool, int] = None) -> None:
+def MPC_GenerateDisturbance(
+        operation: DisturbanceOperation,
+        disturbance_type: DisturbanceType,
+        amplitude: float,
+        offset: float,
+        duration: float,
+        param: Union[None,
+                     bool,
+                     int] = None
+        ) -> None:
     """Programs an RF disturbance
 
     Parameters
@@ -3982,9 +4252,9 @@ def MPC_GenerateDisturbance(operation: DisturbanceOperation,
             c_uint32(0),
             c_uint32(0),
             c_uint32(0)))
-    elif disturbance_type == DisturbanceType.DISTURBANCE_SQUARE or \
-            disturbance_type == DisturbanceType.DISTURBANCE_SINE or \
-            disturbance_type == DisturbanceType.DISTURBANCE_SINE2:
+    elif (disturbance_type == DisturbanceType.DISTURBANCE_SQUARE or
+            disturbance_type == DisturbanceType.DISTURBANCE_SINE or
+            disturbance_type == DisturbanceType.DISTURBANCE_SINE2):
         periods_number = c_uint32(1)
         if param is not None:
             if not isinstance(param, int):
@@ -4016,8 +4286,11 @@ def MPC_GenerateDisturbance(operation: DisturbanceOperation,
             c_uint32(0)))
 
 
-def MPC_LoadDisturbanceWaveshape(operation: DisturbanceOperation,
-                                 timebase: int, data: List[float]) -> None:
+def MPC_LoadDisturbanceWaveshape(
+        operation: DisturbanceOperation,
+        timebase: int,
+        data: List[float]
+        ) -> None:
     """Loads a disturbance signal
 
     Parameters
@@ -4049,9 +4322,12 @@ def MPC_LoadDisturbanceWaveshape(operation: DisturbanceOperation,
         data_array))
 
 
-def MPC_SetDisturbanceTrigger(operation: DisturbanceOperation,
-                              trigger: NfcTrigger, delay: float = 0,
-                              count: int = 1) -> None:
+def MPC_SetDisturbanceTrigger(
+        operation: DisturbanceOperation,
+        trigger: NfcTrigger,
+        delay: float = 0,
+        count: int = 1
+        ) -> None:
     """Selects the trigger condition starting the disturbance
 
     Parameters
@@ -4103,8 +4379,9 @@ class CplAutotestId(IntEnum):
     TEST_RFOUT_CHANNEL = 105
 
 
-def MPS_CPLAutoTest(test_id: CplAutotestId = CplAutotestId.TEST_CPL_ALL) \
-        -> List[List[str]]:
+def MPS_CPLAutoTest(
+        test_id: CplAutotestId = CplAutotestId.TEST_CPL_ALL
+        ) -> List[List[str]]:
     """Performs NFC self-test
 
     Parameters
@@ -4127,8 +4404,8 @@ def MPS_CPLAutoTest(test_id: CplAutotestId = CplAutotestId.TEST_CPL_ALL) \
         c_uint32(0),
         c_uint32(0),
         byref(result)))
-    if (ret >= CTS3ErrorCode.RET_FAIL and ret <= CTS3ErrorCode.RET_WARNING) \
-            or ret == CTS3ErrorCode.RET_OK:
+    if ((ret >= CTS3ErrorCode.RET_FAIL and ret <= CTS3ErrorCode.RET_WARNING)
+            or ret == CTS3ErrorCode.RET_OK):
         if result.value is None:
             return [['']]
         else:
@@ -4142,7 +4419,10 @@ def MPS_CPLAutoTest(test_id: CplAutotestId = CplAutotestId.TEST_CPL_ALL) \
 # region Miscellaneous
 
 
-def MPC_ComputeCrc(card_type: TechnologyType, frame: bytes) -> bytes:
+def MPC_ComputeCrc(
+        card_type: TechnologyType,
+        frame: bytes
+        ) -> bytes:
     """Computes frame CRC
 
     Parameters
@@ -4175,7 +4455,10 @@ def MPC_ComputeCrc(card_type: TechnologyType, frame: bytes) -> bytes:
     return bytes([crc1.value, crc2.value])
 
 
-def MPC_CheckCRCFrame(card_type: TechnologyType, frame: bytes) -> bool:
+def MPC_CheckCRCFrame(
+        card_type: TechnologyType,
+        frame: bytes
+        ) -> bool:
     """Checks frame CRC
 
     Parameters
@@ -4201,9 +4484,9 @@ def MPC_CheckCRCFrame(card_type: TechnologyType, frame: bytes) -> bool:
         c_int32(card_type),
         frame,
         c_uint32(len(frame))))
-    if ret == CTS3ErrorCode.ERR_RX_FRAME_CRCA or \
-            ret == CTS3ErrorCode.ERR_RX_FRAME_CRCB or \
-            ret == CTS3ErrorCode.ERR_RX_FRAME_CRCF:
+    if (ret == CTS3ErrorCode.ERR_RX_FRAME_CRCA or
+            ret == CTS3ErrorCode.ERR_RX_FRAME_CRCB or
+            ret == CTS3ErrorCode.ERR_RX_FRAME_CRCF):
         return False
     elif ret == CTS3ErrorCode.RET_OK:
         return True
@@ -4217,7 +4500,9 @@ class InputImpedance(IntEnum):
     INPUT_IMPEDANCE_1M = 1000000
 
 
-def MPC_SelectInputImpedanceAnalogIn(impedance: InputImpedance) -> None:
+def MPC_SelectInputImpedanceAnalogIn(
+        impedance: InputImpedance
+        ) -> None:
     """Selects ANALOG IN input impedance
 
     Parameters
@@ -4239,7 +4524,9 @@ class CounterCommand(IntEnum):
     COUNTER_READ = 2
 
 
-def MPS_Counter(command: CounterCommand) -> int:
+def MPS_Counter(
+        command: CounterCommand
+        ) -> int:
     """Counts protocol errors
 
     Parameters
@@ -4283,8 +4570,11 @@ class NfcDataRate(IntEnum):
     NFC_424 = 424
 
 
-def MPC_NfcConfiguration(mode: NfcMode, initiator: bool,
-                         data_rate: NfcDataRate) -> None:
+def MPC_NfcConfiguration(
+        mode: NfcMode,
+        initiator: bool,
+        data_rate: NfcDataRate
+        ) -> None:
     """Configures the NFC mode
 
     Parameters
@@ -4357,7 +4647,9 @@ def MPC_Sdd() -> Dict[str, bytes]:
     return {'sel_res': bytes([sel_res.value]), 'nfc_id1': data[:length.value]}
 
 
-def MPC_SelReq(nfc_id1: bytes) -> bytes:
+def MPC_SelReq(
+        nfc_id1: bytes
+        ) -> bytes:
     """Selects a target by its NFCID1
 
     Parameters
@@ -4388,8 +4680,14 @@ def MPC_SlpReq() -> None:
         c_uint8(0)))
 
 
-def MPC_PollReq(system_code: Union[bytes, int], rc: Union[bytes, int],
-                tsn: Union[bytes, int]) -> Dict[str, bytes]:
+def MPC_PollReq(
+        system_code: Union[bytes,
+                           int],
+        rc: Union[bytes,
+                  int],
+        tsn: Union[bytes,
+                   int]
+        ) -> Dict[str, bytes]:
     """Sends a polling request
 
     Parameters
@@ -4451,7 +4749,9 @@ def MPC_PollReq(system_code: Union[bytes, int], rc: Union[bytes, int],
                                                          rd.value & 0xFF])}
 
 
-def MPC_AtrReq(atr_req: bytes) -> bytes:
+def MPC_AtrReq(
+        atr_req: bytes
+        ) -> bytes:
     """Sends an ATR_REQ command
 
     Parameters
@@ -4478,7 +4778,12 @@ def MPC_AtrReq(atr_req: bytes) -> bytes:
     return data[:length.value]
 
 
-def MPC_PslReq(brs: Union[bytes, int], fsl: Union[bytes, int]) -> None:
+def MPC_PslReq(
+        brs: Union[bytes,
+                   int],
+        fsl: Union[bytes,
+                   int]
+        ) -> None:
     """Sends a PSL_REQ command
 
     Parameters
@@ -4512,7 +4817,9 @@ def MPC_PslReq(brs: Union[bytes, int], fsl: Union[bytes, int]) -> None:
         c_uint8(fsl_value)))
 
 
-def MPC_WakeUpReq(nfc_id3: bytes) -> None:
+def MPC_WakeUpReq(
+        nfc_id3: bytes
+        ) -> None:
     """Wakes a target up
 
     Parameters
@@ -4539,7 +4846,9 @@ def MPC_ReleaseReq() -> None:
         c_uint8(0)))
 
 
-def MPC_ExchangeNFCData(command: bytes) -> bytes:
+def MPC_ExchangeNFCData(
+        command: bytes
+        ) -> bytes:
     """Exchanges data based on ISO 18092 frame format
 
     Parameters
@@ -4574,7 +4883,9 @@ def MPC_ExchangeNFCData(command: bytes) -> bytes:
     return data[:length.value]
 
 
-def MPC_DepReq(command: bytes) -> bytes:
+def MPC_DepReq(
+        command: bytes
+        ) -> bytes:
     """Exchanges data with a DEP_REQ command
 
     Parameters
@@ -4601,7 +4912,9 @@ def MPC_DepReq(command: bytes) -> bytes:
     return data[:length.value]
 
 
-def MPC_NfcWaitAndGetFrameAsTarget(timeout: float) -> bytes:
+def MPC_NfcWaitAndGetFrameAsTarget(
+        timeout: float
+        ) -> bytes:
     """Receives a frame from an NFC active initiator
 
     Parameters
@@ -4627,7 +4940,10 @@ def MPC_NfcWaitAndGetFrameAsTarget(timeout: float) -> bytes:
     return data[:length.value]
 
 
-def MPC_NfcRFCollisionAvoidance(unit: FieldUnit, value: float) -> None:
+def MPC_NfcRFCollisionAvoidance(
+        unit: FieldUnit,
+        value: float
+        ) -> None:
     """Selects field value to be used during NFC active exchanges
 
     Parameters
@@ -4652,11 +4968,11 @@ def MPC_NfcRFCollisionAvoidance(unit: FieldUnit, value: float) -> None:
             c_uint8(0),
             c_uint8(FieldUnit.UNIT_PER_MILLE),
             c_int16(value_pm)))
-    elif unit == FieldUnit.UNIT_PER_MILLE or \
-            unit == FieldUnit.UNIT_DBM_RANGE_11DBM or \
-            unit == FieldUnit.UNIT_DBM_RANGE_29DBM or \
-            unit == FieldUnit.UNIT_DBM_RANGE_31DBM or \
-            unit == FieldUnit.UNIT_DBM_RANGE_33DBM:
+    elif (unit == FieldUnit.UNIT_PER_MILLE or
+            unit == FieldUnit.UNIT_DBM_RANGE_11DBM or
+            unit == FieldUnit.UNIT_DBM_RANGE_29DBM or
+            unit == FieldUnit.UNIT_DBM_RANGE_31DBM or
+            unit == FieldUnit.UNIT_DBM_RANGE_33DBM):
         value_pm = round(value)
         _check_limits(c_int16, value_pm, 'value')
         CTS3Exception._check_error(_MPuLib.MPC_NfcRFCollisionAvoidance(
@@ -4672,7 +4988,10 @@ def MPC_NfcRFCollisionAvoidance(unit: FieldUnit, value: float) -> None:
             c_int16(value_mV)))
 
 
-def MPC_NfcSendFrameAsTarget(tx_frame: bytes, timeout: float = 0) -> None:
+def MPC_NfcSendFrameAsTarget(
+        tx_frame: bytes,
+        timeout: float = 0
+        ) -> None:
     """Sends a frame to an NFC active initiator
 
     Parameters
@@ -4701,9 +5020,15 @@ def MPC_NfcSendFrameAsTarget(tx_frame: bytes, timeout: float = 0) -> None:
             c_uint32(0)))
 
 
-def MPC_SetActiveTimings(unit: NfcUnit, t_idt: float = 0, t_irfg: float = 0,
-                         t_adt: float = 0, t_arfg: float = 0, t_off: float = 0,
-                         t_mute: float = 0) -> None:
+def MPC_SetActiveTimings(
+        unit: NfcUnit,
+        t_idt: float = 0,
+        t_irfg: float = 0,
+        t_adt: float = 0,
+        t_arfg: float = 0,
+        t_off: float = 0,
+        t_mute: float = 0
+        ) -> None:
     """Sets timings for NFC active mode
 
     Parameters
@@ -4753,7 +5078,9 @@ def MPC_SetActiveTimings(unit: NfcUnit, t_idt: float = 0, t_irfg: float = 0,
         c_uint32(computed_tmute)))
 
 
-def MPC_GetActiveTimings(unit: NfcUnit) -> Dict[str, int]:
+def MPC_GetActiveTimings(
+        unit: NfcUnit
+        ) -> Dict[str, int]:
     """Gets timings for NFC active mode
 
     Parameters
@@ -4839,7 +5166,10 @@ class SpyParameter(IntEnum):
     CP_SPY_DOWNLOAD_BLOCK_SIZE = 11
 
 
-def MPS_SpyChangeParameters(param: SpyParameter, value: int) -> None:
+def MPS_SpyChangeParameters(
+        param: SpyParameter,
+        value: int
+        ) -> None:
     """Changes protocol analyzer parameter
 
     Parameters
@@ -4858,7 +5188,9 @@ def MPS_SpyChangeParameters(param: SpyParameter, value: int) -> None:
         c_uint32(value)))
 
 
-def MPS_SpyGetParameters(param: SpyParameter) -> int:
+def MPS_SpyGetParameters(
+        param: SpyParameter
+        ) -> int:
     """Gets protocol analyzer parameter
 
     Parameters
@@ -4881,7 +5213,9 @@ def MPS_SpyGetParameters(param: SpyParameter) -> int:
     return value.value
 
 
-def MPS_SetUserEvent(user_event_number: int) -> None:
+def MPS_SetUserEvent(
+        user_event_number: int
+        ) -> None:
     """Adds a user defined event in the acquisition buffer
 
     Parameters
@@ -4895,10 +5229,13 @@ def MPS_SetUserEvent(user_event_number: int) -> None:
         c_uint8(user_event_number)))
 
 
-def BeginDownload(call_back: Callable[[int,
-                                       int,
-                                       POINTER(c_uint8),  # type: ignore[misc]
-                                       int], int]) -> None:
+def BeginDownload(
+        call_back: Callable[[int,
+                             int,
+                             POINTER(c_uint8),  # type: ignore[misc]
+                             int],
+                            int]
+        ) -> None:
     """Starts protocol analyzer events download
 
     Parameters
@@ -4928,7 +5265,10 @@ def BeginDownload(call_back: Callable[[int,
         raise CTS3Exception(CTS3ErrorCode.DLLCOMERROR)
 
 
-def BeginDownloadTo(path: Union[str, Path]) -> None:
+def BeginDownloadTo(
+        path: Union[str,
+                    Path]
+        ) -> None:
     """Starts protocol analyzer events download
 
     Parameters
@@ -5056,9 +5396,11 @@ class DefaultParameterType(IntEnum):
     DP_MODULATION_RISE_TIME_ALL_TYPES = 80
 
 
-def MPC_SetDefaultParameters(card_type: TechnologyType,
-                             param_id: DefaultParameterType,
-                             param_value: int) -> None:
+def MPC_SetDefaultParameters(
+        card_type: TechnologyType,
+        param_id: DefaultParameterType,
+        param_value: int
+        ) -> None:
     """Sets a default parameter value
 
     Parameters
@@ -5085,8 +5427,10 @@ def MPC_SetDefaultParameters(card_type: TechnologyType,
         c_uint32(4)))
 
 
-def MPC_GetDefaultParameters(card_type: TechnologyType,
-                             param_id: DefaultParameterType) -> int:
+def MPC_GetDefaultParameters(
+        card_type: TechnologyType,
+        param_id: DefaultParameterType
+        ) -> int:
     """Gets a default parameter value
 
     Parameters
@@ -5141,7 +5485,9 @@ class InternalParameterType(IntEnum):
     CONFIG_MODULATION_ASK_TYPE_VICINITY_PM = 212
 
 
-def MPS_GetInternalParameter(param_type: InternalParameterType) -> int:
+def MPS_GetInternalParameter(
+        param_type: InternalParameterType
+        ) -> int:
     """Gets current internal parameter value
 
     Parameters
@@ -5170,9 +5516,11 @@ def MPS_GetInternalParameter(param_type: InternalParameterType) -> int:
 # region Phase drift monitoring
 
 
-def MPC_SelectPhaseDriftLimits(intra_modulation: float = float('inf'),
-                               inter_modulations: float = float('inf'),
-                               frame: float = float('inf')) -> None:
+def MPC_SelectPhaseDriftLimits(
+        intra_modulation: float = float('inf'),
+        inter_modulations: float = float('inf'),
+        frame: float = float('inf')
+        ) -> None:
     """Selects phase drift monitoring limits
 
     Parameters

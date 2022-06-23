@@ -72,7 +72,10 @@ class DaqPoint():
         Value (in V, ° or dimensionless)
     """
 
-    def __init__(self, x: float, y: float):
+    def __init__(
+            self,
+            x: float,
+            y: float):
         """Inits DaqPoint
 
         Parameters
@@ -86,7 +89,10 @@ class DaqPoint():
         self.y = y
 
 
-def load_signals(file_path: Union[str, Path]) -> List[List[DaqPoint]]:
+def load_signals(
+        file_path: Union[str,
+                         Path]
+        ) -> List[List[DaqPoint]]:
     """Loads DAQ signals from an acquisition file (single mode)
 
     Parameters
@@ -125,8 +131,8 @@ def load_signals(file_path: Union[str, Path]) -> List[List[DaqPoint]]:
             if header.source == SOURCE_PHASE:
                 # Phase
                 for y in iter_unpack('<h', file_content):
-                    value = float('nan') if y[0] > 8192 else \
-                            180.0 * cast(int, y[0]) / 8192.0
+                    value = (float('nan') if y[0] > 8192
+                             else 180.0 * cast(int, y[0]) / 8192.0)
                     signal.append(DaqPoint(date, value))
                     date += 1.0 / sampling
             elif header.source == SOURCE_VDC:
@@ -197,7 +203,10 @@ def load_signals(file_path: Union[str, Path]) -> List[List[DaqPoint]]:
     return []
 
 
-def load_signal(file_path: Union[str, Path]) -> List[List[float]]:
+def load_signal(
+        file_path: Union[str,
+                         Path]
+        ) -> List[List[float]]:
     """Loads DAQ signals from an acquisition file (single mode)
 
     Parameters
@@ -243,9 +252,12 @@ class DaqNCTerm(IntEnum):
     NCT_OPEN = 1000000
 
 
-def Daq_SetChannel(channel: DaqChannel, enabled: bool,
-                   voltage_range: DaqRange,
-                   nc_term: DaqNCTerm = DaqNCTerm.NCT_50O) -> None:
+def Daq_SetChannel(
+        channel: DaqChannel,
+        enabled: bool,
+        voltage_range: DaqRange,
+        nc_term: DaqNCTerm = DaqNCTerm.NCT_50O
+        ) -> None:
     """Selects and configures a channel
 
     Parameters
@@ -275,8 +287,9 @@ def Daq_SetChannel(channel: DaqChannel, enabled: bool,
         c_uint8(0)))
 
 
-def Daq_GetChannel(channel: DaqChannel) \
-        -> Dict[str, Union[bool, DaqRange, DaqNCTerm, None]]:
+def Daq_GetChannel(
+        channel: DaqChannel
+        ) -> Dict[str, Union[bool, DaqRange, DaqNCTerm, None]]:
     """Gets channel configuration
 
     Parameters
@@ -322,8 +335,10 @@ class DaqSamplingClk(IntEnum):
     SCLK_EXT = 1
 
 
-def Daq_SetTimeBase(sampling_rate: DaqSamplingClk = DaqSamplingClk.SCLK_150MHZ,
-                    points_number: int = 0x10000000) -> None:
+def Daq_SetTimeBase(
+        sampling_rate: DaqSamplingClk = DaqSamplingClk.SCLK_150MHZ,
+        points_number: int = 0x10000000
+        ) -> None:
     """Configures the sampling rates and the number of points to acquire
     on the enabled channels
 
@@ -361,9 +376,12 @@ class DaqTrigDir(IntEnum):
     DIR_BOTH_EDGES = 2
 
 
-def Daq_SetTrigger(trigger_source: DaqTrigSource, level: float = 0,
-                   direction: DaqTrigDir = DaqTrigDir.DIR_BOTH_EDGES,
-                   delay: int = 0) -> None:
+def Daq_SetTrigger(
+        trigger_source: DaqTrigSource,
+        level: float = 0,
+        direction: DaqTrigDir = DaqTrigDir.DIR_BOTH_EDGES,
+        delay: int = 0
+        ) -> None:
     """Configures the trigger on enabled channels
 
     Parameters
@@ -414,11 +432,13 @@ class DaqDataFormat(IntEnum):
     FORMAT_RAW_16BITS = 0
 
 
-def Daq_StartStopAcq(acq_mode: DaqAcqMode,
-                     download_mode: DaqDownloadMode =
-                     DaqDownloadMode.MODE_DOWNLOAD,
-                     data_format: Optional[DaqDataFormat] = None,
-                     file_name: Union[str, Path] = '') -> None:
+def Daq_StartStopAcq(
+        acq_mode: DaqAcqMode,
+        download_mode: DaqDownloadMode = DaqDownloadMode.MODE_DOWNLOAD,
+        data_format: Optional[DaqDataFormat] = None,
+        file_name: Union[str,
+                         Path] = ''
+        ) -> None:
     """Starts/Stops the acquisition
 
     Parameters
@@ -502,8 +522,7 @@ def Daq_GetInfo() -> str:
         byref(version),
         byref(revision),
         byref(rfu)))
-    return str(year.value) + '.' + str(version.value) + '.' + \
-        str(revision.value)
+    return f'{year.value}.{version.value}.{revision.value}'
 
 
 @unique
@@ -513,7 +532,10 @@ class DaqFilter(IntEnum):
     VDC_FILTER = 3
 
 
-def Daq_SetFilter(filter: DaqFilter, enabled: bool) -> None:
+def Daq_SetFilter(
+        filter: DaqFilter,
+        enabled: bool
+        ) -> None:
     """Enables DAQ filter
 
     Parameters
@@ -533,7 +555,10 @@ def Daq_SetFilter(filter: DaqFilter, enabled: bool) -> None:
 # region Probe Management
 
 
-def Daq_ProbeCompensation(channel: int, label: Optional[str]) -> None:
+def Daq_ProbeCompensation(
+        channel: int,
+        label: Optional[str]
+        ) -> None:
     """Performs active probe compensation
 
     Parameters
@@ -556,7 +581,10 @@ def Daq_ProbeCompensation(channel: int, label: Optional[str]) -> None:
             label.encode('ascii')))
 
 
-def Daq_LoadProbe(label: Optional[str], channel: int) -> None:
+def Daq_LoadProbe(
+        label: Optional[str],
+        channel: int
+        ) -> None:
     """Loads probe compensation information
 
     Parameters
@@ -592,7 +620,9 @@ def Daq_ListProbes() -> List[str]:
     return list_string.split(';') if len(list_string) else []
 
 
-def Daq_DeleteProbe(label: str) -> None:
+def Daq_DeleteProbe(
+        label: str
+        ) -> None:
     """Removes probe compensation information from database
 
     Parameters
@@ -615,8 +645,9 @@ class DaqAutotestId(IntEnum):
     TEST_DAQ_REF = 300
 
 
-def MPS_DaqAutoTest(test_id: DaqAutotestId = DaqAutotestId.TEST_DAQ_ALL) \
-        -> List[List[str]]:
+def MPS_DaqAutoTest(
+        test_id: DaqAutotestId = DaqAutotestId.TEST_DAQ_ALL
+        ) -> List[List[str]]:
     """Performs DAQ self-test
 
     Parameters
@@ -637,8 +668,8 @@ def MPS_DaqAutoTest(test_id: DaqAutotestId = DaqAutotestId.TEST_DAQ_ALL) \
         c_bool(True),
         c_uint32(0),
         byref(result)))
-    if (ret >= CTS3ErrorCode.RET_FAIL and ret <= CTS3ErrorCode.RET_WARNING) \
-            or ret == CTS3ErrorCode.RET_OK:
+    if ((ret >= CTS3ErrorCode.RET_FAIL and ret <= CTS3ErrorCode.RET_WARNING)
+            or ret == CTS3ErrorCode.RET_OK):
         if result.value is None:
             return [['']]
         else:
@@ -652,9 +683,10 @@ def MPS_DaqAutoTest(test_id: DaqAutotestId = DaqAutotestId.TEST_DAQ_ALL) \
 # region Firmware management
 
 
-def Daq_FlashFirmware(partIndex: int,
-                      call_back: Optional[Callable[[int], int]] =
-                      None) -> None:
+def Daq_FlashFirmware(
+        partIndex: int,
+        call_back: Optional[Callable[[int], int]] = None
+        ) -> None:
     """Flashes DAQ with a specific firmware
 
     Parameters

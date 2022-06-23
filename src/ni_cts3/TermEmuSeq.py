@@ -104,10 +104,17 @@ class SequencerDataFlag(IntEnum):
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          param: Union[int, TechnologyType, VoltmeterRange,
-                                       AutoSwtxMgt, float, bool,
-                                       SequencerDataFlag]) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        param: Union[int,
+                     TechnologyType,
+                     VoltmeterRange,
+                     AutoSwtxMgt,
+                     float,
+                     bool,
+                     SequencerDataFlag]
+        ) -> None:
     # TSCN_PARAM_SOF_LOW, TSCN_PARAM_SOF_HIGH, TSCN_PARAM_EGT, TSCN_PARAM_EOF,
     # TSCN_PARAM_START_BIT, TSCN_PARAM_B1, TSCN_PARAM_B2, TSCN_PARAM_B3,
     # TSCN_PARAM_B4, TSCN_PARAM_B5, TSCN_PARAM_B6, TSCN_PARAM_B7,
@@ -127,182 +134,290 @@ def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          trigger: NfcTrigger, delay: float) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        trigger: NfcTrigger,
+        delay: float
+        ) -> None:
     # TSCN_DO_START_RF_MEASURE
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          pcd_datarate: DataRate,
-                          picc_datarate: DataRate) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        pcd_datarate: DataRate,
+        picc_datarate: DataRate
+        ) -> None:
     # TSCN_DO_CHANGE_DATA_RATE
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          trigger: int, state: bool) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        trigger: int,
+        state: bool
+        ) -> None:
     # TSCN_DO_TRIGGER_OUT
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          coding_mode: VicinityCodingMode,
-                          data_rate: VicinityDataRate,
-                          sub_carrier: VicinitySubCarrier) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        coding_mode: VicinityCodingMode,
+        data_rate: VicinityDataRate,
+        sub_carrier: VicinitySubCarrier
+        ) -> None:
     # TSCN_DO_CHANGE_VC_COMMUNICATION
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          trigger: NfcTriggerId, config: NfcTrigger,
-                          value: Union[bool, float]) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        trigger: NfcTriggerId,
+        config: NfcTrigger,
+        value: Union[bool,
+                     float]
+        ) -> None:
     # TSCN_DO_TRIGGER
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          tadt: int, tarfg: int, toff: int) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        tadt: int,
+        tarfg: int,
+        toff: int
+        ) -> None:
     # TSCN_PARAM_NFC_ACTIVE_TIMINGS
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          tadt: int, tarfg: int,
-                          toff: int, tmute: int) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        tadt: int,
+        tarfg: int,
+        toff: int,
+        tmute: int
+        ) -> None:
     # TSCN_PARAM_ACTIVE_TIMINGS
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          pcd_crc: bool, tx_bits: Optional[int],
-                          tx_frame: bytes, wait: SequencerDataFlag) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        pcd_crc: bool,
+        tx_bits: Optional[int],
+        tx_frame: bytes,
+        wait: SequencerDataFlag
+        ) -> None:
     # TSCN_DO_EXCHANGE, TSCN_DO_EXCHANGE_ACTIVE_INITIATOR
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          pcd_crc: bool, tx_bits: Optional[int],
-                          tx_frame: bytes, rx_pattern: bytes,
-                          rx_mask: Optional[bytes] = None) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        pcd_crc: bool,
+        tx_bits: Optional[int],
+        tx_frame: bytes,
+        rx_pattern: bytes,
+        rx_mask: Optional[bytes] = None
+        ) -> None:
     # TSCN_DO_EXCHANGE_PATTERN
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          pcd_crc: bool, tx_bits: Optional[int],
-                          tx_frame: bytes, wait: SequencerDataFlag,
-                          timeout: float) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        pcd_crc: bool,
+        tx_bits: Optional[int],
+        tx_frame: bytes,
+        wait: SequencerDataFlag,
+        timeout: float
+        ) -> None:
     # TSCN_DO_EXCHANGE, TSCN_DO_EXCHANGE_ACTIVE_INITIATOR
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          ask: int, time_1: float, time_2: float,
-                          tx_bits: Optional[int], tx_frame: bytes) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        ask: int,
+        time_1: float,
+        time_2: float,
+        tx_bits: Optional[int],
+        tx_frame: bytes
+        ) -> None:
     # TSCN_DO_RF_RESET_CMD
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          trigger: int, delay: float, pcd_crc: bool,
-                          tx_bits: Optional[int], tx_frame: bytes,
-                          wait: SequencerDataFlag) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        trigger: int,
+        delay: float,
+        pcd_crc: bool,
+        tx_bits: Optional[int],
+        tx_frame: bytes,
+        wait: SequencerDataFlag
+        ) -> None:
     # TSCN_DO_TON_EXCHANGE_AFTER_DELAY_TOFF
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          trigger: int, delay: float, pcd_crc: bool,
-                          tx_bits: Optional[int], tx_frame: bytes,
-                          wait: SequencerDataFlag, timeout: float) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        trigger: int,
+        delay: float,
+        pcd_crc: bool,
+        tx_bits: Optional[int],
+        tx_frame: bytes,
+        wait: SequencerDataFlag,
+        timeout: float
+        ) -> None:
     # TSCN_DO_TON_EXCHANGE_AFTER_DELAY_TOFF
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          param: SequencerDataFlag, timeout: float) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        param: SequencerDataFlag,
+        timeout: float
+        ) -> None:
     # TSCN_DO_EOF_VICINITY
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          request: bytes, attrib: bytes, fdt: float) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        request: bytes,
+        attrib: bytes,
+        fdt: float
+        ) -> None:
     # TSCN_DO_REQUESTB_ATTRIB_FDT
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          request: bytes, command: bytes) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        request: bytes,
+        command: bytes
+        ) -> None:
     # TSCN_DO_REQUESTB_ATTRIB, TSCN_DO_REQUESTB_HALTB
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          pcd_crc_1: bool, tx_bits_1: Optional[int],
-                          tx_frame_1: bytes, pcd_crc_2: bool,
-                          tx_bits_2: Optional[int], tx_frame_2: bytes,
-                          delay: int, wait: SequencerDataFlag) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        pcd_crc_1: bool,
+        tx_bits_1: Optional[int],
+        tx_frame_1: bytes,
+        pcd_crc_2: bool,
+        tx_bits_2: Optional[int],
+        tx_frame_2: bytes,
+        delay: int,
+        wait: SequencerDataFlag
+        ) -> None:
     # TSCN_DO_SEND_TWO_FRAMES
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          pcd_crc_1: bool, tx_bits_1: Optional[int],
-                          tx_frame_1: bytes, pcd_crc_2: bool,
-                          tx_bits_2: Optional[int], tx_frame_2: bytes,
-                          delay: int, wait: SequencerDataFlag,
-                          timeout: float) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        pcd_crc_1: bool,
+        tx_bits_1: Optional[int],
+        tx_frame_1: bytes,
+        pcd_crc_2: bool,
+        tx_bits_2: Optional[int],
+        tx_frame_2: bytes,
+        delay: int,
+        wait: SequencerDataFlag,
+        timeout: float
+        ) -> None:
     # TSCN_DO_SEND_TWO_FRAMES
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          first_frame_delay: float, next_frames_delay: float,
-                          type_odd: TechnologyType, tx_bits_odd: Optional[int],
-                          tx_frame_odd: bytes, type_even: TechnologyType,
-                          tx_bits_even: Optional[int], tx_frame_even: bytes,
-                          timeout: float) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        first_frame_delay: float,
+        next_frames_delay: float,
+        type_odd: TechnologyType,
+        tx_bits_odd: Optional[int],
+        tx_frame_odd: bytes,
+        type_even: TechnologyType,
+        tx_bits_even: Optional[int],
+        tx_frame_even: bytes,
+        timeout: float
+        ) -> None:
     # TSCN_DO_EMV_POLLING
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          tx_bits: int, tx_frame: bytes,
-                          wait: SequencerDataFlag) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        tx_bits: int,
+        tx_frame: bytes,
+        wait: SequencerDataFlag
+        ) -> None:
     # TSCN_DO_SEND_RAW_A106_FRAME
     ...
 
 
 @overload
-def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
-                          tx_bits: int, tx_frame: bytes,
-                          wait: SequencerDataFlag, timeout: float) -> None:
+def MPC_AddToScenarioPicc(
+        scenario_id: int,
+        action: TermEmuSeqAction,
+        tx_bits: int,
+        tx_frame: bytes,
+        wait: SequencerDataFlag,
+        timeout: float
+        ) -> None:
     # TSCN_DO_SEND_RAW_A106_FRAME
     ...
 
 
-def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
-                          action, *args):
+def MPC_AddToScenarioPicc(  # type: ignore[no-untyped-def]
+        scenario_id,
+        action,
+        *args):
     """Adds an action to a scenario
 
     Parameters
@@ -324,27 +439,27 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         func_pointer = _MPuLib_variadic.MPC_AddToScenarioPicc
 
     # One parameter
-    if action == TermEmuSeqAction.TSCN_PARAM_SOF_LOW or \
-            action == TermEmuSeqAction.TSCN_PARAM_SOF_HIGH or \
-            action == TermEmuSeqAction.TSCN_PARAM_EGT or \
-            action == TermEmuSeqAction.TSCN_PARAM_EOF or \
-            action == TermEmuSeqAction.TSCN_PARAM_START_BIT or \
-            action == TermEmuSeqAction.TSCN_PARAM_B1 or \
-            action == TermEmuSeqAction.TSCN_PARAM_B2 or \
-            action == TermEmuSeqAction.TSCN_PARAM_B3 or \
-            action == TermEmuSeqAction.TSCN_PARAM_B4 or \
-            action == TermEmuSeqAction.TSCN_PARAM_B5 or \
-            action == TermEmuSeqAction.TSCN_PARAM_B6 or \
-            action == TermEmuSeqAction.TSCN_PARAM_B7 or \
-            action == TermEmuSeqAction.TSCN_PARAM_B8 or \
-            action == TermEmuSeqAction.TSCN_PARAM_STOP_BIT or \
-            action == TermEmuSeqAction.TSCN_DO_RF_FIELD_STRENGTH or \
-            action == TermEmuSeqAction.TSCN_DO_RF_FIELD_STRENGTH_PER_MILLE or \
-            action == TermEmuSeqAction.TSCN_DO_PARITY_ERROR or \
-            action == TermEmuSeqAction.TSCN_PARAM_MODULATION_ASK_PT or \
-            action == TermEmuSeqAction.TSCN_DO_ANTICOLL_CLN or \
-            action == TermEmuSeqAction.TSCN_DO_SEND_SELECT_CLN or \
-            action == TermEmuSeqAction.TSCN_DO_USER_EVENT:
+    if (action == TermEmuSeqAction.TSCN_PARAM_SOF_LOW or
+            action == TermEmuSeqAction.TSCN_PARAM_SOF_HIGH or
+            action == TermEmuSeqAction.TSCN_PARAM_EGT or
+            action == TermEmuSeqAction.TSCN_PARAM_EOF or
+            action == TermEmuSeqAction.TSCN_PARAM_START_BIT or
+            action == TermEmuSeqAction.TSCN_PARAM_B1 or
+            action == TermEmuSeqAction.TSCN_PARAM_B2 or
+            action == TermEmuSeqAction.TSCN_PARAM_B3 or
+            action == TermEmuSeqAction.TSCN_PARAM_B4 or
+            action == TermEmuSeqAction.TSCN_PARAM_B5 or
+            action == TermEmuSeqAction.TSCN_PARAM_B6 or
+            action == TermEmuSeqAction.TSCN_PARAM_B7 or
+            action == TermEmuSeqAction.TSCN_PARAM_B8 or
+            action == TermEmuSeqAction.TSCN_PARAM_STOP_BIT or
+            action == TermEmuSeqAction.TSCN_DO_RF_FIELD_STRENGTH or
+            action == TermEmuSeqAction.TSCN_DO_RF_FIELD_STRENGTH_PER_MILLE or
+            action == TermEmuSeqAction.TSCN_DO_PARITY_ERROR or
+            action == TermEmuSeqAction.TSCN_PARAM_MODULATION_ASK_PT or
+            action == TermEmuSeqAction.TSCN_DO_ANTICOLL_CLN or
+            action == TermEmuSeqAction.TSCN_DO_SEND_SELECT_CLN or
+            action == TermEmuSeqAction.TSCN_DO_USER_EVENT):
         if len(args) != 1:
             raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                             f'exactly three arguments ({len(args) + 2} given)')
@@ -406,9 +521,9 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             c_uint32(args[0]),  # Trigger
             c_uint32(0)))  # Rfu
     # µs
-    elif action == TermEmuSeqAction.TSCN_PARAM_FWT or \
-            action == TermEmuSeqAction.TSCN_DO_RF_RESET or \
-            action == TermEmuSeqAction.TSCN_DO_TEMPO:
+    elif (action == TermEmuSeqAction.TSCN_PARAM_FWT or
+            action == TermEmuSeqAction.TSCN_DO_RF_RESET or
+            action == TermEmuSeqAction.TSCN_DO_TEMPO):
         if len(args) != 1:
             raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                             f'exactly three arguments ({len(args) + 2} given)')
@@ -422,9 +537,9 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             c_uint32(action),
             c_uint32(delay_us)))
     # ns
-    elif action == TermEmuSeqAction.TSCN_PARAM_PAUSE_WIDTH or \
-            action == TermEmuSeqAction.TSCN_PARAM_PAUSE_WIDTH_VICINITY or \
-            action == TermEmuSeqAction.TSCN_PARAM_FDT_PCD:
+    elif (action == TermEmuSeqAction.TSCN_PARAM_PAUSE_WIDTH or
+            action == TermEmuSeqAction.TSCN_PARAM_PAUSE_WIDTH_VICINITY or
+            action == TermEmuSeqAction.TSCN_PARAM_FDT_PCD):
         if len(args) != 1:
             raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                             f'exactly three arguments ({len(args) + 2} given)')
@@ -438,10 +553,10 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             c_uint32(action),
             c_uint32(delay_ns)))
     # boolean
-    elif action == TermEmuSeqAction.TSCN_DO_TX_PARITY or \
-            action == TermEmuSeqAction.TSCN_DO_MODE_NO_EOF or \
-            action == TermEmuSeqAction.TSCN_PARAM_AUTOMATIC_RTOX_RESPONSE or \
-            action == TermEmuSeqAction.TSCN_PARAM_ACTIVE_FDT_MODE:
+    elif (action == TermEmuSeqAction.TSCN_DO_TX_PARITY or
+            action == TermEmuSeqAction.TSCN_DO_MODE_NO_EOF or
+            action == TermEmuSeqAction.TSCN_PARAM_AUTOMATIC_RTOX_RESPONSE or
+            action == TermEmuSeqAction.TSCN_PARAM_ACTIVE_FDT_MODE):
         if len(args) != 1:
             raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                             f'exactly three arguments ({len(args) + 2} given)')
@@ -498,8 +613,8 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             c_uint32(action),
             c_uint32(args[0]),  # Trigger
             c_uint32(1) if args[1] else c_uint32(1)))  # State
-    elif action == TermEmuSeqAction.TSCN_DO_REQUESTB_ATTRIB or \
-            action == TermEmuSeqAction.TSCN_DO_REQUESTB_HALTB:
+    elif (action == TermEmuSeqAction.TSCN_DO_REQUESTB_ATTRIB or
+            action == TermEmuSeqAction.TSCN_DO_REQUESTB_HALTB):
         if len(args) != 2:
             raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                             f'exactly four arguments ({len(args) + 2} given)')
@@ -642,8 +757,8 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
             args[1],  # pATTRIB
             c_uint32(fdt_ns)))  # Fdt_ns
 
-    elif action == TermEmuSeqAction.TSCN_DO_EXCHANGE or \
-            action == TermEmuSeqAction.TSCN_DO_EXCHANGE_ACTIVE_INITIATOR:
+    elif (action == TermEmuSeqAction.TSCN_DO_EXCHANGE or
+            action == TermEmuSeqAction.TSCN_DO_EXCHANGE_ACTIVE_INITIATOR):
         if len(args) < 4:
             raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                             f'six or seven arguments ({len(args) + 2} given)')
@@ -659,8 +774,8 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
         if not isinstance(args[3], SequencerDataFlag):
             raise TypeError('wait must be an instance of '
                             'SequencerDataFlag IntEnum')
-        if args[3] == SequencerDataFlag.EXCHANGE_WAIT_RX or \
-                args[3] == SequencerDataFlag.EXCHANGE_ACTIVE_NO_FIELD:
+        if (args[3] == SequencerDataFlag.EXCHANGE_WAIT_RX or
+                args[3] == SequencerDataFlag.EXCHANGE_ACTIVE_NO_FIELD):
             if len(args) != 4:
                 raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                                 'exactly six arguments '
@@ -1021,8 +1136,10 @@ def MPC_AddToScenarioPicc(scenario_id,  # type: ignore[no-untyped-def]
                 c_uint32(timeout_us)))  # RxTimeout_us
 
 
-def MPC_ExecuteScenarioPicc(scenario_id: int,
-                            timeout: Optional[float]) -> None:
+def MPC_ExecuteScenarioPicc(
+        scenario_id: int,
+        timeout: Optional[float]
+        ) -> None:
     """Runs a scenario instance
 
     Parameters
@@ -1048,7 +1165,9 @@ def MPC_ExecuteScenarioPicc(scenario_id: int,
             c_uint32(0)))
 
 
-def MPC_CloseScenarioPicc(scenario_id: int) -> None:
+def MPC_CloseScenarioPicc(
+        scenario_id: int
+        ) -> None:
     """Closes a scenario instance
 
     Parameters

@@ -13,7 +13,9 @@ class CTS3Exception(Exception):
         Error code
     """
 
-    def __init__(self, err_code: CTS3ErrorCode):
+    def __init__(
+            self,
+            err_code: CTS3ErrorCode):
         """Inits CTS3Exception
 
         Parameters
@@ -25,7 +27,9 @@ class CTS3Exception(Exception):
         self.ErrorCode = err_code
 
     @staticmethod
-    def _check_error(status: int) -> None:
+    def _check_error(
+            status: int
+            ) -> None:
         """Checks CTS3 status
 
         Parameters
@@ -34,12 +38,12 @@ class CTS3Exception(Exception):
             CTS3 status
         """
         ret = CTS3ErrorCode(status)
-        if ret == CTS3ErrorCode.ERR_TIME_FDT_MAX or \
-                ret == CTS3ErrorCode.ERR_TIME_FDT_MIN or \
-                ret == CTS3ErrorCode.ERR_TIME_TR1_MAX or \
-                ret == CTS3ErrorCode.ERR_TIME_TR1_MIN or\
-                ret == CTS3ErrorCode.ERR_PHASE_DRIFT or \
-                ret == CTS3ErrorCode.ERR_ADJUST_THRESHOLD_RF_FIELD:
+        if (ret == CTS3ErrorCode.ERR_TIME_FDT_MAX or
+                ret == CTS3ErrorCode.ERR_TIME_FDT_MIN or
+                ret == CTS3ErrorCode.ERR_TIME_TR1_MAX or
+                ret == CTS3ErrorCode.ERR_TIME_TR1_MIN or
+                ret == CTS3ErrorCode.ERR_PHASE_DRIFT or
+                ret == CTS3ErrorCode.ERR_ADJUST_THRESHOLD_RF_FIELD):
             warn(GetErrorMessageFromCode(status), UserWarning, 3)
         elif ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
@@ -54,7 +58,9 @@ class CTS3MifareException(Exception):
         Error code
     """
 
-    def __init__(self, err_code: MifareErrorCode):
+    def __init__(
+            self,
+            err_code: MifareErrorCode):
         """Inits CTS3MifareException
 
         Parameters
@@ -66,7 +72,9 @@ class CTS3MifareException(Exception):
         self.ErrorCode = err_code
 
     @staticmethod
-    def _check_error(status: int) -> None:
+    def _check_error(
+            status: int
+            ) -> None:
         """Checks MIFARE status
 
         Parameters

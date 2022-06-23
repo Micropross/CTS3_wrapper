@@ -6,7 +6,10 @@ from .MPException import CTS3Exception
 # region Poller
 
 
-def WLC_P_PowerTransfer(duration: float, field: float) -> None:
+def WLC_P_PowerTransfer(
+        duration: float,
+        field: float
+        ) -> None:
     """Performs a Wireless Power Transfer phase
 
     Parameters
@@ -29,7 +32,10 @@ class WlcPTiming(IntEnum):
     WLC_P_TIMING_SETTLE = 1
 
 
-def WLC_P_SetTiming(type: WlcPTiming, value: float) -> None:
+def WLC_P_SetTiming(
+        type: WlcPTiming,
+        value: float
+        ) -> None:
     """Sets a WLC Poller timing
 
     Parameters
@@ -46,7 +52,9 @@ def WLC_P_SetTiming(type: WlcPTiming, value: float) -> None:
         c_double(value)))
 
 
-def WLC_P_GetTiming(type: WlcPTiming) -> float:
+def WLC_P_GetTiming(
+        type: WlcPTiming
+        ) -> float:
     """Gets a WLC Poller timing
 
     Parameters
@@ -72,7 +80,9 @@ def WLC_P_GetTiming(type: WlcPTiming) -> float:
 # region Listener
 
 
-def WLC_L_AntDisconnect(disconnect: bool) -> None:
+def WLC_L_AntDisconnect(
+        disconnect: bool
+        ) -> None:
     """Selects K1 & K2 relays status
 
     Parameters
@@ -91,7 +101,9 @@ def WLC_L_StopRequest() -> None:
     CTS3Exception._check_error(_MPuLib.WLC_L_StopRequest())
 
 
-def WLC_L_ImpPulse(duration: float) -> None:
+def WLC_L_ImpPulse(
+        duration: float
+        ) -> None:
     """Generates an Impedance Pulse
 
     Parameters
@@ -103,7 +115,9 @@ def WLC_L_ImpPulse(duration: float) -> None:
         c_double(duration)))
 
 
-def WLC_L_ImpChange(duration: float) -> None:
+def WLC_L_ImpChange(
+        duration: float
+        ) -> None:
     """Generates an Impedance Change
 
     Parameters
@@ -115,7 +129,10 @@ def WLC_L_ImpChange(duration: float) -> None:
         c_double(duration)))
 
 
-def WLC_L_SetVic(v_nic: float, v_ic: float) -> None:
+def WLC_L_SetVic(
+        v_nic: float,
+        v_ic: float
+        ) -> None:
     """Selects Voltage Impedance Change
 
     Parameters
@@ -137,7 +154,10 @@ class WlcLTiming(IntEnum):
     WLC_L_TIMING_STOP_IMP_CHANGE = 1
 
 
-def WLC_L_SetTiming(type: WlcLTiming, value: float) -> None:
+def WLC_L_SetTiming(
+        type: WlcLTiming,
+        value: float
+        ) -> None:
     """Sets a WLC Listener timing
 
     Parameters
@@ -154,7 +174,9 @@ def WLC_L_SetTiming(type: WlcLTiming, value: float) -> None:
         c_double(value)))
 
 
-def WLC_L_GetTiming(type: WlcLTiming) -> float:
+def WLC_L_GetTiming(
+        type: WlcLTiming
+        ) -> float:
     """Gets a WLC Listener timing
 
     Parameters

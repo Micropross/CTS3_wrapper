@@ -122,7 +122,10 @@ class S_emd():
         EMD waveform pattern
     """
 
-    def __init__(self, patterns_number: int, pattern_type: S_emd_pattern):
+    def __init__(
+            self,
+            patterns_number: int,
+            pattern_type: S_emd_pattern):
         """Inits S_emd
 
         Parameters
@@ -141,9 +144,15 @@ class S_emd():
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         param1: Union[int, bool, float, EmdSubCarrier,
-                                       VoltmeterRange]) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        param1: Union[int,
+                      bool,
+                      float,
+                      EmdSubCarrier,
+                      VoltmeterRange]
+        ) -> None:
     # TSCN_PARAM_SOF_LOW, TSCN_PARAM_SOF_HIGH, TSCN_PARAM_EGT, TSCN_PARAM_EOF,
     # TSCN_DO_PARITY_ERROR, TSCN_DO_USER_EVENT, TSCN_PARAM_TR0, TSCN_PARAM_TR1,
     # TSCN_PARAM_TRF, TSCN_PARAM_FDT1_PICC, TSCN_PARAM_FDT2_PICC,
@@ -160,10 +169,18 @@ def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         param1: Union[int, bool, VicinityDataRate, DataRate],
-                         param2: Union[int, bool, VicinitySubCarrier,
-                                       DataRate]) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        param1: Union[int,
+                      bool,
+                      VicinityDataRate,
+                      DataRate],
+        param2: Union[int,
+                      bool,
+                      VicinitySubCarrier,
+                      DataRate]
+        ) -> None:
     # TSCN_DO_CHANGE_FELICA_DUTY_CYCLE, TSCN_DO_VICINITY_COLLISION,
     # TSCN_DO_TRIGGER_OUT, TSCN_DO_COMPLETE_ANTICOLLISION,
     # TSCN_DO_CHANGE_VC_DATA_RATE,
@@ -173,17 +190,28 @@ def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         param1: bool, param2: int,
-                         param3: int) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        param1: bool,
+        param2: int,
+        param3: int
+        ) -> None:
     # TSCN_DO_NEGATIVE_MODULATION
     ...
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         param1: int, param2: Union[int, NfcTrigger],
-                         param3: Union[int, bool, SequenceError]) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        param1: int,
+        param2: Union[int,
+                      NfcTrigger],
+        param3: Union[int,
+                      bool,
+                      SequenceError]
+        ) -> None:
     # TSCN_PARAM_NFC_ACTIVE_TIMINGS,
     # TSCN_DO_CE_TRIGGER,
     # TSCN_DO_SEQUENCE_ERROR
@@ -191,125 +219,192 @@ def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         tadt: int, tarfg: int,
-                         toff: int, tmute: int) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        tadt: int,
+        tarfg: int,
+        toff: int,
+        tmute: int
+        ) -> None:
     # TSCN_PARAM_ACTIVE_TIMINGS
     ...
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         param1: Union[float, NfcTrigger],
-                         param2: float) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        param1: Union[float,
+                      NfcTrigger],
+        param2: float
+        ) -> None:
     # TSCN_SET_LMA_CARD_EMULATION,
     # TSCN_DO_START_RF_MEASURE
     ...
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         fdt: int, emd: List[S_emd]) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        fdt: int,
+        emd: List[S_emd]
+        ) -> None:
     # TSCN_DO_EMD
     ...
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         picc_crc: bool, pcd_type: TechnologyType,
-                         synchro: bool, picc_frame: bytes) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        picc_crc: bool,
+        pcd_type: TechnologyType,
+        synchro: bool,
+        picc_frame: bytes
+        ) -> None:
     # TSCN_DO_EXCHANGE
     ...
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         pcd_crc: bool, picc_crc: bool,
-                         pcd_type: TechnologyType, synchro: bool,
-                         pcd_frame: Optional[bytes],
-                         picc_frame: Optional[bytes]) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        pcd_crc: bool,
+        picc_crc: bool,
+        pcd_type: TechnologyType,
+        synchro: bool,
+        pcd_frame: Optional[bytes],
+        picc_frame: Optional[bytes]
+        ) -> None:
     # TSCN_DO_EXCHANGE, TSCN_DO_EXCHANGE_ACTIVE_TARGET
     ...
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         param1: bool, picc_frame: bytes) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        param1: bool,
+        picc_frame: bytes
+        ) -> None:
     # TSCN_DO_WAIT_VC_EOF_ONLY
     ...
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         pcd_type: TechnologyType, mask: bytes) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        pcd_type: TechnologyType,
+        mask: bytes
+        ) -> None:
     # TSCN_SET_PCD_MASK
     ...
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         synchro: bool, pcd_frame: str,
-                         picc_frame: str) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        synchro: bool,
+        pcd_frame: str,
+        picc_frame: str
+        ) -> None:
     # TSCN_DO_EXCHANGE_RAW_TYPEA
     ...
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         vcd_crc: bool, synchro: bool,
-                         vcd_frame: bytes) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        vcd_crc: bool,
+        synchro: bool,
+        vcd_frame: bytes
+        ) -> None:
     # TSCN_DO_WAIT_VC_SEND_SOF_ONLY
     ...
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         synchro: bool, picc_bits_number: int,
-                         picc_frame: bytes) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        synchro: bool,
+        picc_bits_number: int,
+        picc_frame: bytes
+        ) -> None:
     # TSCN_DO_WAIT_TYPEA106_SEND_BITS
     ...
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         pcd_crc: bool, synchro: bool,
-                         pcd_frame: Optional[bytes]) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        pcd_crc: bool,
+        synchro: bool,
+        pcd_frame: Optional[bytes]
+        ) -> None:
     # TSCN_DO_WAIT_TYPEA106_SEND_BITS
     ...
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         pcd_crc: bool, synchro: bool,
-                         pcd_frame: Optional[bytes], picc_bits_number: int,
-                         picc_frame: bytes) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        pcd_crc: bool,
+        synchro: bool,
+        pcd_frame: Optional[bytes],
+        picc_bits_number: int,
+        picc_frame: bytes
+        ) -> None:
     # TSCN_DO_WAIT_TYPEA106_SEND_BITS
     ...
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         picc_ebf: bool, picc_pcd_option: int,
-                         picc_crc: bool, pcd_type: TechnologyType,
-                         synchro: bool, picc_frame: bytes) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        picc_ebf: bool,
+        picc_pcd_option: int,
+        picc_crc: bool,
+        pcd_type: TechnologyType,
+        synchro: bool,
+        picc_frame: bytes
+        ) -> None:
     # TSCN_DO_EXCHANGE_EBF
     ...
 
 
 @overload
-def MPC_AddToScenarioPcd(scenario_id: int, action: CardEmuSeqAction,
-                         pcd_ebf: bool, picc_ebf: bool,
-                         pcd_picc_option: int, picc_pcd_option: int,
-                         pcd_crc: bool, picc_crc: bool,
-                         pcd_type: TechnologyType, synchro: bool,
-                         pcd_frame: Optional[bytes],
-                         picc_frame: Optional[bytes]) -> None:
+def MPC_AddToScenarioPcd(
+        scenario_id: int,
+        action: CardEmuSeqAction,
+        pcd_ebf: bool,
+        picc_ebf: bool,
+        pcd_picc_option: int,
+        picc_pcd_option: int,
+        pcd_crc: bool,
+        picc_crc: bool,
+        pcd_type: TechnologyType,
+        synchro: bool,
+        pcd_frame: Optional[bytes],
+        picc_frame: Optional[bytes]
+        ) -> None:
     # TSCN_DO_EXCHANGE_EBF
     ...
 
 
-def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
-                         action, *args):
+def MPC_AddToScenarioPcd(  # type: ignore[no-untyped-def]
+        scenario_id,
+        action,
+        *args):
     """Adds an action to a scenario
 
     Parameters
@@ -331,19 +426,19 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
         func_pointer = _MPuLib_variadic.MPC_AddToScenarioPcd
 
     # One parameter
-    if action == CardEmuSeqAction.TSCN_PARAM_SOF_LOW or \
-            action == CardEmuSeqAction.TSCN_PARAM_SOF_HIGH or \
-            action == CardEmuSeqAction.TSCN_PARAM_EGT or \
-            action == CardEmuSeqAction.TSCN_PARAM_EOF or \
-            action == CardEmuSeqAction.TSCN_DO_PARITY_ERROR or \
-            action == CardEmuSeqAction.TSCN_PARAM_TR0 or \
-            action == CardEmuSeqAction.TSCN_PARAM_TR1 or \
-            action == CardEmuSeqAction.TSCN_PARAM_TRF or \
-            action == CardEmuSeqAction.TSCN_PARAM_FDT1_PICC or \
-            action == CardEmuSeqAction.TSCN_PARAM_FDT2_PICC or \
-            action == CardEmuSeqAction.TSCN_PARAM_EGT_BEFORE_EOF or \
-            action == CardEmuSeqAction.TSCN_PARAM_AUTOMATIC_ATN_RESPONSE or \
-            action == CardEmuSeqAction.TSCN_DO_USER_EVENT:
+    if (action == CardEmuSeqAction.TSCN_PARAM_SOF_LOW or
+            action == CardEmuSeqAction.TSCN_PARAM_SOF_HIGH or
+            action == CardEmuSeqAction.TSCN_PARAM_EGT or
+            action == CardEmuSeqAction.TSCN_PARAM_EOF or
+            action == CardEmuSeqAction.TSCN_DO_PARITY_ERROR or
+            action == CardEmuSeqAction.TSCN_PARAM_TR0 or
+            action == CardEmuSeqAction.TSCN_PARAM_TR1 or
+            action == CardEmuSeqAction.TSCN_PARAM_TRF or
+            action == CardEmuSeqAction.TSCN_PARAM_FDT1_PICC or
+            action == CardEmuSeqAction.TSCN_PARAM_FDT2_PICC or
+            action == CardEmuSeqAction.TSCN_PARAM_EGT_BEFORE_EOF or
+            action == CardEmuSeqAction.TSCN_PARAM_AUTOMATIC_ATN_RESPONSE or
+            action == CardEmuSeqAction.TSCN_DO_USER_EVENT):
         if len(args) != 1:
             raise TypeError(f'MPC_AddToScenarioPcd({action.name}) takes '
                             f'exactly three arguments ({len(args) + 2} given)')
@@ -355,8 +450,8 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             c_uint32(scenario_id),
             c_uint32(action),
             c_uint32(args[0])))
-    elif action == CardEmuSeqAction.TSCN_PARAM_FELICA_BIT_CODING_REVERSE or \
-            action == CardEmuSeqAction.TSCN_PARAM_ACTIVE_FDT_MODE:
+    elif (action == CardEmuSeqAction.TSCN_PARAM_FELICA_BIT_CODING_REVERSE or
+            action == CardEmuSeqAction.TSCN_PARAM_ACTIVE_FDT_MODE):
         if len(args) != 1:
             raise TypeError(f'MPC_AddToScenarioPcd({action.name}) takes '
                             f'exactly three arguments ({len(args) + 2} given)')
@@ -380,9 +475,9 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             c_uint32(action),
             c_uint32(tempo_us)))
     # ns
-    elif action == CardEmuSeqAction.TSCN_PARAM_TR0_NS or \
-            action == CardEmuSeqAction.TSCN_PARAM_FDT1_PICC_NS or \
-            action == CardEmuSeqAction.TSCN_PARAM_FDT2_PICC_NS:
+    elif (action == CardEmuSeqAction.TSCN_PARAM_TR0_NS or
+            action == CardEmuSeqAction.TSCN_PARAM_FDT1_PICC_NS or
+            action == CardEmuSeqAction.TSCN_PARAM_FDT2_PICC_NS):
         if len(args) != 1:
             raise TypeError(f'MPC_AddToScenarioPcd({action.name}) takes '
                             f'exactly three arguments ({len(args) + 2} given)')
@@ -419,8 +514,8 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             c_uint32(scenario_id),
             c_uint32(action),
             c_uint32(args[0])))
-    elif action == CardEmuSeqAction.TSCN_DO_TRIGGER_OUT_RX_ON or \
-            action == CardEmuSeqAction.TSCN_DO_TRIGGER_OUT_EMD_GENERATION:
+    elif (action == CardEmuSeqAction.TSCN_DO_TRIGGER_OUT_RX_ON or
+            action == CardEmuSeqAction.TSCN_DO_TRIGGER_OUT_EMD_GENERATION):
         if len(args) != 1:
             raise TypeError(f'MPC_AddToScenarioPcd({action.name}) takes '
                             f'exactly three arguments ({len(args) + 2} given)')
@@ -435,8 +530,8 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
             c_uint32(0)))  # Rfu
 
     # Two parameters
-    elif action == CardEmuSeqAction.TSCN_DO_CHANGE_FELICA_DUTY_CYCLE or \
-            action == CardEmuSeqAction.TSCN_DO_VICINITY_COLLISION:
+    elif (action == CardEmuSeqAction.TSCN_DO_CHANGE_FELICA_DUTY_CYCLE or
+            action == CardEmuSeqAction.TSCN_DO_VICINITY_COLLISION):
         if len(args) != 2:
             raise TypeError(f'MPC_AddToScenarioPcd({action.name}) takes '
                             f'exactly four arguments ({len(args) + 2} given)')
@@ -1058,7 +1153,10 @@ def MPC_AddToScenarioPcd(scenario_id,  # type: ignore[no-untyped-def]
                 args[5]))  # pPiccResponse
 
 
-def MPC_ExecuteScenarioPcd(scenario_id: int, timeout: float) -> None:
+def MPC_ExecuteScenarioPcd(
+        scenario_id: int,
+        timeout: float
+        ) -> None:
     """Runs a scenario instance
 
     Parameters
@@ -1077,7 +1175,9 @@ def MPC_ExecuteScenarioPcd(scenario_id: int, timeout: float) -> None:
         c_uint32(timeout_ms)))
 
 
-def MPC_CloseScenarioPcd(scenario_id: int) -> None:
+def MPC_CloseScenarioPcd(
+        scenario_id: int
+        ) -> None:
     """Closes a scenario instance
 
     Parameters
