@@ -83,6 +83,7 @@ class TermEmuSeqAction(IntEnum):
     TSCN_PARAM_ACTIVE_FDT_MODE = 80
     TSCN_DO_EXCHANGE_PATTERN = 81
     TSCN_PARAM_ACTIVE_TIMINGS = 82
+    TSCN_PARAM_FELICA_FRAMING = 83
 
 
 @unique
@@ -159,10 +160,10 @@ def MPC_AddToScenarioPicc(
 def MPC_AddToScenarioPicc(
         scenario_id: int,
         action: TermEmuSeqAction,
-        trigger: int,
+        value: int,
         state: bool
         ) -> None:
-    # TSCN_DO_TRIGGER_OUT
+    # TSCN_DO_TRIGGER_OUT, TSCN_PARAM_FELICA_FRAMING
     ...
 
 
@@ -600,19 +601,20 @@ def MPC_AddToScenarioPicc(  # type: ignore[no-untyped-def]
             c_uint32(action),
             c_uint32(args[0]),  # PcdDataRate
             c_uint32(args[1])))  # PiccDataRate
-    elif action == TermEmuSeqAction.TSCN_DO_TRIGGER_OUT:
+    elif (action == TermEmuSeqAction.TSCN_DO_TRIGGER_OUT or
+            action == TermEmuSeqAction.TSCN_PARAM_FELICA_FRAMING):
         if len(args) != 2:
             raise TypeError(f'MPC_AddToScenarioPicc({action.name}) takes '
                             f'exactly four arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
-            raise TypeError('trigger must be an instance of int')
-        _check_limits(c_uint32, args[0], 'trigger')  # Trigger
+            raise TypeError('value must be an instance of int')
+        _check_limits(c_uint32, args[0], 'value')  # Trigger/preamble
         CTS3Exception._check_error(func_pointer(
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
-            c_uint32(args[0]),  # Trigger
-            c_uint32(1) if args[1] else c_uint32(1)))  # State
+            c_uint32(args[0]),  # Trigger/preamble
+            c_uint32(1) if args[1] else c_uint32(1)))  # State/sync
     elif (action == TermEmuSeqAction.TSCN_DO_REQUESTB_ATTRIB or
             action == TermEmuSeqAction.TSCN_DO_REQUESTB_HALTB):
         if len(args) != 2:
