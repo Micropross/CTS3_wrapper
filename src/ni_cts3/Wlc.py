@@ -1,6 +1,7 @@
 from enum import IntEnum, unique
 from ctypes import c_uint8, c_uint32, c_double, byref
-from . import _MPuLib
+from typing import Union
+from . import _MPuLib, _check_limits
 from .MPException import CTS3Exception
 
 # region Poller
@@ -128,17 +129,18 @@ class WlcLLoad(IntEnum):
 
 
 def WLC_L_AntLoad(
-        load: WlcLLoad
+        load: Union[WlcLLoad, int]
         ) -> None:
     """Selects antenna polarity
 
     Parameters
     ----------
-    load : WlcLLoad
+    load : WlcLLoad or int
         Antenna load in O
     """
-    if not isinstance(load, WlcLLoad):
-        raise TypeError('polarity must be an instance of WlcLLoad IntEnum')
+    if not isinstance(load, WlcLLoad) and not isinstance(load, int):
+        raise TypeError('load must be an instance of WlcLLoad IntEnum')
+    _check_limits(c_uint32, load, 'load')
     CTS3Exception._check_error(_MPuLib.WLC_L_AntLoad(
         c_uint32(load)))
 
