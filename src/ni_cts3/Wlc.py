@@ -90,10 +90,57 @@ def WLC_L_AntDisconnect(
     disconnect : bool
         true to disconnect K1 & K2 relays
     """
-    if not isinstance(disconnect, bool):
-        raise TypeError('disconnect must be an instance of bool')
     CTS3Exception._check_error(_MPuLib.WLC_L_AntDisconnect(
-        c_uint8(disconnect)))
+        c_uint8(1) if disconnect else c_uint8(0)))
+
+
+@unique
+class WlcLPolarity(IntEnum):
+    """Listener Polarity"""
+    WLC_L_MOD_M = 0
+    WLC_L_MOD_P = 1
+
+
+def WLC_L_AntPolarity(
+        polarity: WlcLPolarity
+        ) -> None:
+    """Selects antenna polarity
+
+    Parameters
+    ----------
+    polarity : WlcLPolarity
+        Antenna polarity
+    """
+    if not isinstance(polarity, WlcLPolarity):
+        raise TypeError('polarity must be an instance of WlcLPolarity IntEnum')
+    CTS3Exception._check_error(_MPuLib.WLC_L_AntPolarity(
+        c_uint8(polarity)))
+
+
+@unique
+class WlcLLoad(IntEnum):
+    """Listener Load"""
+    WLC_L_NO_LOAD = 0
+    WLC_L_PC0 = 100
+    WLC_L_PC1 = 50
+    WLC_L_PC2 = 33
+    WLC_L_PC3 = 25
+
+
+def WLC_L_AntLoad(
+        load: WlcLLoad
+        ) -> None:
+    """Selects antenna polarity
+
+    Parameters
+    ----------
+    load : WlcLLoad
+        Antenna load in O
+    """
+    if not isinstance(load, WlcLLoad):
+        raise TypeError('polarity must be an instance of WlcLLoad IntEnum')
+    CTS3Exception._check_error(_MPuLib.WLC_L_AntLoad(
+        c_uint32(load)))
 
 
 def WLC_L_StopRequest() -> None:
