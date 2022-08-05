@@ -85,6 +85,12 @@ class CTS3ErrorCode(IntEnum):
     RET_DAQ_OVERVOLTAGE = 0x0E14
 
     """
+    WLC error codes
+    """
+    RET_WLC_STOP_REQUEST = 0x0400
+    RET_WLC_IMPEDANCE_CHANGE = 0x0401
+
+    """
     Protocol Analyzer error codes
     """
     CRET_DOWNLOAD_RUNNING = 0x010E
