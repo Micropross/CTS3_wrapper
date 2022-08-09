@@ -616,7 +616,7 @@ def Daq_ListProbes() -> List[str]:
     cables_list = create_string_buffer(0xFFFF)
     CTS3Exception._check_error(_MPuLib.Daq_ListProbes(
         cables_list))
-    list_string = cables_list.value.decode('ascii')
+    list_string = cables_list.value.decode('ascii').strip()
     return list_string.split(';') if len(list_string) else []
 
 

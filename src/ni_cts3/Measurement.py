@@ -634,7 +634,7 @@ def MPC_ImpedanceListCables() -> List[str]:
     CTS3Exception._check_error(_MPuLib.MPC_ImpedanceListCables(
         c_uint8(0),
         cables_list))
-    list_string = cables_list.value.decode('ascii')
+    list_string = cables_list.value.decode('ascii').strip()
     return list_string.split(';') if len(list_string) else []
 
 
@@ -726,7 +726,7 @@ def MPC_ImpedanceListAdapters() -> List[str]:
     adapters_list = create_string_buffer(0xFFFF)
     CTS3Exception._check_error(_MPuLib.MPC_ImpedanceListAdapters(
         adapters_list))
-    list_string = adapters_list.value.decode('ascii')
+    list_string = adapters_list.value.decode('ascii').strip()
     return list_string.split(';') if len(list_string) else []
 
 
