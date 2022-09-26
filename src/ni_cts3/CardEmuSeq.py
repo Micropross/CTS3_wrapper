@@ -5,7 +5,7 @@ from typing import Union, List, Optional, overload
 from warnings import warn
 from . import _MPuLib, _MPuLib_variadic, _check_limits
 from .Measurement import VoltmeterRange
-from .Nfc import TechnologyType, NfcTrigger, DataRate
+from .Nfc import TechnologyType, NfcTrigger, NfcTriggerId, DataRate
 from .Nfc import VicinityDataRate, VicinitySubCarrier
 from .MPException import CTS3Exception
 
@@ -205,7 +205,8 @@ def MPC_AddToScenarioPcd(
 def MPC_AddToScenarioPcd(
         scenario_id: int,
         action: CardEmuSeqAction,
-        param1: int,
+        param1: Union[int,
+                      NfcTriggerId],
         param2: Union[int,
                       NfcTrigger],
         param3: Union[int,
@@ -661,9 +662,11 @@ def MPC_AddToScenarioPcd(  # type: ignore[no-untyped-def]
         if len(args) != 3:
             raise TypeError(f'MPC_AddToScenarioPcd({action.name}) takes '
                             f'exactly five arguments ({len(args) + 2} given)')
-        if not isinstance(args[0], int):
-            raise TypeError('param1 must be an instance of int')
-        _check_limits(c_uint32, args[0], 'param1')  # Trigger
+        if not isinstance(args[0], NfcTriggerId):
+            raise TypeError('param1 must be an instance of int or '
+                            'NfcTriggerId IntFlag')
+        trigger = args[0].value
+        _check_limits(c_uint32, trigger, 'param1')
         if not isinstance(args[1], NfcTrigger):
             raise TypeError('param2 must be an instance of '
                             'NfcTrigger IntEnum')
@@ -671,7 +674,7 @@ def MPC_AddToScenarioPcd(  # type: ignore[no-untyped-def]
             c_uint8(0),
             c_uint32(scenario_id),
             c_uint32(action),
-            c_uint32(args[0]),  # Trigger
+            c_uint32(trigger),
             c_uint32(args[1]),  # Config
             c_uint32(1) if args[2] else c_uint32(0)))  # Value
     elif action == CardEmuSeqAction.TSCN_DO_SEQUENCE_ERROR:
