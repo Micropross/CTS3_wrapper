@@ -7,6 +7,7 @@ from . import _MPuLib, _MPuLib_variadic, _check_limits
 from .Measurement import VoltmeterRange
 from .Nfc import TechnologyType, NfcTrigger, NfcTriggerId, DataRate
 from .Nfc import VicinityDataRate, VicinitySubCarrier
+from .MPStatus import CTS3ErrorCode
 from .MPException import CTS3Exception
 
 
@@ -665,8 +666,19 @@ def MPC_AddToScenarioPcd(  # type: ignore[no-untyped-def]
         if not isinstance(args[0], NfcTriggerId):
             raise TypeError('param1 must be an instance of int or '
                             'NfcTriggerId IntFlag')
-        trigger = args[0].value
-        _check_limits(c_uint32, trigger, 'param1')
+        if args[0] == NfcTriggerId.TRIGGER_1:
+            trigger = 1
+        elif args[0] == NfcTriggerId.TRIGGER_2:
+            trigger = 2
+        elif args[0] == NfcTriggerId.TRIGGER_3:
+            trigger = 3
+        elif (args[0] == NfcTriggerId.TRIGGER_ANALOG or
+              args[0] == NfcTriggerId.TRIGGER_DAQ or
+              args[0] == (NfcTriggerId.TRIGGER_ANALOG |
+                          NfcTriggerId.TRIGGER_DAQ)):
+            trigger = args[0].value
+        else:
+            raise CTS3Exception(CTS3ErrorCode.RET_INVALID_PARAMETER)
         if not isinstance(args[1], NfcTrigger):
             raise TypeError('param2 must be an instance of '
                             'NfcTrigger IntEnum')
