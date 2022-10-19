@@ -614,7 +614,7 @@ def MPC_AddToScenarioPicc(  # type: ignore[no-untyped-def]
             c_uint32(scenario_id),
             c_uint32(action),
             c_uint32(args[0]),  # Trigger/preamble
-            c_uint32(1) if args[1] else c_uint32(1)))  # State/sync
+            c_uint32(1) if args[1] else c_uint32(0)))  # State/sync
     elif (action == TermEmuSeqAction.TSCN_DO_REQUESTB_ATTRIB or
             action == TermEmuSeqAction.TSCN_DO_REQUESTB_HALTB):
         if len(args) != 2:
