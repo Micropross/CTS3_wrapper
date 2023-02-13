@@ -1247,9 +1247,11 @@ def MPS_SimWaitNStart(
 
 def MPS_SimStop() -> None:
     """Stops simulator"""
-    CTS3Exception._check_error(_MPuLib.MPS_SimStop(
+    ret = _MPuLib.MPS_SimStop(
         c_uint8(0),
-        c_uint32(0)))
+        c_uint32(0))
+    if ret != CTS3ErrorCode.CRET_SIMULATOR_NOT_RUNNING.value:
+        CTS3Exception._check_error(ret)
 
 
 def MPS_WaitSimEvent(
@@ -1952,10 +1954,10 @@ def MPS_SimAddRule(
         length = c_uint32(len(pattern_condition.pattern))
         temp = bytearray(pattern_condition.pattern +
                          b'\x00' * (256 - len(pattern_condition.mask)))
-        mask = (c_uint8 * 256).from_buffer(temp)
+        pattern = (c_uint8 * 256).from_buffer(temp)
         temp = bytearray(pattern_condition.mask +
                          b'\x00' * (256 - len(pattern_condition.pattern)))
-        pattern = (c_uint8 * 256).from_buffer(temp)
+        mask = (c_uint8 * 256).from_buffer(temp)
         condition_ctypes = _ActionConditionDataPattern(length, mask, pattern)
         CTS3Exception._check_error(_MPuLib.MPS_SimAddRule(
             c_uint8(0),
