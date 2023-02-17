@@ -25,7 +25,7 @@ if sys.platform == 'win32':
     from ctypes import WinDLL
 
 
-__version__ = '22.0.1'
+__version__ = '22.1.1'
 __author__ = 'NI'
 __copyright__ = f'Copyright 20{__version__[:2]}, NI'
 __license__ = 'MIT'
