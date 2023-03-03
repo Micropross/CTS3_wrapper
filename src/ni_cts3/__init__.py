@@ -31,7 +31,7 @@ __copyright__ = f'Copyright 20{__version__[:2]}, NI'
 __license__ = 'MIT'
 
 
-class MpDll(CDLL):
+class _MpDll(CDLL):
     _func_restype_ = c_int16  # type: ignore[assignment]
 
 
@@ -40,7 +40,7 @@ _lib_sys: Optional[Path] = None
 _lib_name: Optional[str] = None
 _lib_path = Path(__file__).resolve().parent.joinpath('.lib')
 if sys.platform == 'win32':
-    class MpWinDll(WinDLL):
+    class _MpWinDll(WinDLL):
         _func_restype_ = c_int16  # type: ignore[assignment]
 
     _lib_path = _lib_path.joinpath('Windows')
@@ -84,13 +84,13 @@ if not _lib_path.is_file():
 
 # Load library
 if sys.platform == 'win32':
-    _MPuLib: MpWinDll = MpWinDll(str(_lib_path))
+    _MPuLib: _MpWinDll = _MpWinDll(str(_lib_path))
 else:
-    _MPuLib: MpDll = MpDll(str(_lib_path))
-_MPuLib_variadic: Optional[MpDll] = None
+    _MPuLib: _MpDll = _MpDll(str(_lib_path))
+_MPuLib_variadic: Optional[_MpDll] = None
 if sys.platform == 'win32' and architecture()[0] == '32bit':
     # Load library for variadic functions
-    _MPuLib_variadic = MpDll(str(_lib_path))
+    _MPuLib_variadic = _MpDll(str(_lib_path))
 
 
 class _FirmwareLog(Thread):
