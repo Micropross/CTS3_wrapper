@@ -45,6 +45,8 @@ class CTS3Exception(Exception):
                 ret == CTS3ErrorCode.ERR_PHASE_DRIFT or
                 ret == CTS3ErrorCode.ERR_ADJUST_THRESHOLD_RF_FIELD):
             warn(GetErrorMessageFromCode(status), UserWarning, 3)
+        elif ret == CTS3ErrorCode.ERR_NO_VALID_ATR_REQ_RECEIVED:
+            warn(GetErrorMessageFromCode(status), Warning, 3)
         elif ret != CTS3ErrorCode.RET_OK:
             raise CTS3Exception(ret)
 

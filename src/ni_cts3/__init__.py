@@ -11,6 +11,7 @@ from typing import List, Dict, Type, Union, Optional, Callable, cast
 from enum import IntEnum, IntFlag, unique
 from xml.dom.minidom import parseString
 from datetime import datetime
+from warnings import simplefilter
 from ctypes import c_char, c_char_p, c_uint8, c_int16, c_uint16
 from ctypes import c_bool, c_int32, c_uint32, c_double
 from ctypes import sizeof, byref, create_string_buffer
@@ -33,6 +34,12 @@ __license__ = 'MIT'
 
 class _MpDll(CDLL):
     _func_restype_ = c_int16  # type: ignore[assignment]
+
+
+if not sys.warnoptions:
+    # Set warnings default behavior
+    simplefilter('error', Warning)  # convert Warnings to errors
+    simplefilter('always', UserWarning)  # print all UserWarnings
 
 
 # Load MPuLib from local path
