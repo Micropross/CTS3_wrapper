@@ -1,6 +1,7 @@
 from . import _MPuLib, GetErrorMessageFromCode, GetMifareErrorMessageFromCode
 from .MPStatus import CTS3ErrorCode, MifareErrorCode
 from ctypes import c_int32, c_uint8, byref
+from typing import Union
 from warnings import warn
 
 
@@ -15,16 +16,19 @@ class CTS3Exception(Exception):
 
     def __init__(
             self,
-            err_code: CTS3ErrorCode):
+            err: Union[str, CTS3ErrorCode]):
         """Inits CTS3Exception
 
         Parameters
         ----------
-        err_code : CTS3ErrorCode
-            Error code
+        err : CTS3ErrorCode or str
+            Error code or error message
         """
-        Exception.__init__(self, GetErrorMessageFromCode(err_code.value))
-        self.ErrorCode = err_code
+        if isinstance(err, CTS3ErrorCode):
+            Exception.__init__(self, GetErrorMessageFromCode(err.value))
+            self.ErrorCode = err
+        else:
+            Exception.__init__(self, err)
 
     @staticmethod
     def _check_error(
@@ -37,7 +41,10 @@ class CTS3Exception(Exception):
         status : int
             CTS3 status
         """
-        ret = CTS3ErrorCode(status)
+        try:
+            ret = CTS3ErrorCode(status)
+        except ValueError:
+            raise CTS3Exception(f'Unknown error code 0x{status:04x}')
         if (ret == CTS3ErrorCode.ERR_TIME_FDT_MAX or
                 ret == CTS3ErrorCode.ERR_TIME_FDT_MIN or
                 ret == CTS3ErrorCode.ERR_TIME_TR1_MAX or
