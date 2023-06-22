@@ -576,7 +576,7 @@ def MPS_GetActivePartition() -> int:
 
 def MPS_ListVersions(
         partition: int
-        ) -> Dict[str, Union[str, int]]:
+        ) -> Dict[str, Union[str, Union[int, bool]]]:
     """Reads the firmware version present on a partition
 
     Parameters
@@ -592,6 +592,7 @@ def MPS_ListVersions(
         'application_version' (str) : Application version
         'fpga_version' (str) : FPGA version
         'daq_version' (str) : DAQ version
+        'compatibility' (bool) : CTS3 revision compatibility
     """
     _check_limits(c_uint8, partition, 'partition')
     current_partition = c_uint8()
@@ -599,19 +600,21 @@ def MPS_ListVersions(
     app = create_string_buffer(64)
     fpga = create_string_buffer(64)
     daq = create_string_buffer(64)
-    CTS3Exception._check_error(_MPuLib.MPS_ListVersions(
+    ret = _MPuLib.MPS_ListVersions(
         c_uint8(partition),
         byref(current_partition),
         system,
         app,
         fpga,
-        daq))
+        daq)
+    CTS3Exception._check_error(ret)
     if partition > 0:
         return {'active_partition': current_partition.value,
                 'os_version': system.value.decode('ascii').strip(),
                 'application_version': app.value.decode('ascii').strip(),
                 'fpga_version': fpga.value.decode('ascii').strip(),
-                'daq_version': daq.value.decode('ascii').strip()}
+                'daq_version': daq.value.decode('ascii').strip(),
+                'compatibility': ret == CTS3ErrorCode.RET_OK.value}
     else:
         return {'active_partition': current_partition.value}
 
