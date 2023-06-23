@@ -672,13 +672,8 @@ def MPC_AddToScenarioPcd(  # type: ignore[no-untyped-def]
             trigger = 2
         elif args[0] == NfcTriggerId.TRIGGER_3:
             trigger = 3
-        elif (args[0] == NfcTriggerId.TRIGGER_ANALOG or
-              args[0] == NfcTriggerId.TRIGGER_DAQ or
-              args[0] == (NfcTriggerId.TRIGGER_ANALOG |
-                          NfcTriggerId.TRIGGER_DAQ)):
-            trigger = args[0].value
         else:
-            raise CTS3Exception(CTS3ErrorCode.RET_INVALID_PARAMETER)
+            trigger = args[0].value
         if not isinstance(args[1], NfcTrigger):
             raise TypeError('param2 must be an instance of '
                             'NfcTrigger IntEnum')

@@ -487,7 +487,7 @@ def MPS_GetVersion2() -> str:
     CTS3Exception._check_error(_MPuLib.MPS_GetVersion2(
         message))
     info = message.value.decode('ascii').strip()
-    return cast(str, parseString(info).toprettyxml())
+    return parseString(info).toprettyxml()
 
 
 @unique
@@ -1565,7 +1565,14 @@ def LaunchEmbeddedScript(
         c_uint32(option),
         c_uint32(timeout_ms),
         byref(retCode),
-        cmp_func(call_back) if call_back else None))
+            cmp_func(call_back)))
+    else:
+        CTS3Exception._check_error(_MPuLib.LaunchEmbeddedScript(
+            script_command.encode('ascii'),
+            c_uint32(option),
+            c_uint32(timeout_ms),
+            byref(retCode),
+            None))
     return retCode.value
 
 
@@ -1590,7 +1597,12 @@ def StartEmbeddedApplication(
     CTS3Exception._check_error(_MPuLib.StartEmbeddedApplication(
         application_path.encode('ascii'),
         args.encode('ascii') if args else None,
-        cmp_func(call_back) if call_back else None))
+            cmp_func(call_back)))
+    else:
+        CTS3Exception._check_error(_MPuLib.StartEmbeddedApplication(
+            application_path.encode('ascii'),
+            args.encode('ascii') if args else None,
+            None))
 
 # endregion
 

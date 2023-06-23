@@ -1768,7 +1768,12 @@ def MPS_AddFilter(
         pattern = (c_uint8 * 256).from_buffer(bytearray(256))
         crc = c_uint16(filter.crc)
         crc_filter = _IoClCrcFilter(index, length, mask, pattern, crc)
-        filter_type = _FilterType.FILTER_TYPE_CL_CRC_TX
+        CTS3Exception._check_error(_MPuLib.MPS_AddFilter(
+            c_uint8(0),
+            c_uint32(0),
+            c_uint32(_FilterType.FILTER_TYPE_CL_CRC_TX.value),
+            c_uint32(0),
+            byref(crc_filter)))
     elif isinstance(filter, IoClCrcFilter_pattern):
         index = c_uint32(filter.index)
         length = c_uint32(len(filter.pattern))
@@ -1780,14 +1785,24 @@ def MPS_AddFilter(
         pattern = (c_uint8 * 256).from_buffer(temp)
         crc = c_uint16(filter.crc)
         crc_filter = _IoClCrcFilter(index, length, mask, pattern, crc)
-        filter_type = _FilterType.FILTER_TYPE_CL_CRC_TX
+        CTS3Exception._check_error(_MPuLib.MPS_AddFilter(
+            c_uint8(0),
+            c_uint32(0),
+            c_uint32(_FilterType.FILTER_TYPE_CL_CRC_TX.value),
+            c_uint32(0),
+            byref(crc_filter)))
     elif isinstance(filter, IoClFrameSuppFilter_index):
         index = c_uint32(filter.index)
         length = c_uint32(0)
         mask = (c_uint8 * 256).from_buffer(bytearray(256))
         pattern = (c_uint8 * 256).from_buffer(bytearray(256))
         supp_filter = _IoClFrameSuppFilter(index, length, mask, pattern)
-        filter_type = _FilterType.FILTER_TYPE_CL_SUPP_TX
+        CTS3Exception._check_error(_MPuLib.MPS_AddFilter(
+            c_uint8(0),
+            c_uint32(0),
+            c_uint32(_FilterType.FILTER_TYPE_CL_SUPP_TX.value),
+            c_uint32(0),
+            byref(supp_filter)))
     elif isinstance(filter, IoClFrameSuppFilter_pattern):
         index = c_uint32(filter.index)
         length = c_uint32(len(filter.pattern))
@@ -1798,27 +1813,16 @@ def MPS_AddFilter(
                          b'\x00' * (256 - len(filter.pattern)))
         pattern = (c_uint8 * 256).from_buffer(temp)
         supp_filter = _IoClFrameSuppFilter(index, length, mask, pattern)
-        filter_type = _FilterType.FILTER_TYPE_CL_SUPP_TX
+        CTS3Exception._check_error(_MPuLib.MPS_AddFilter(
+            c_uint8(0),
+            c_uint32(0),
+            c_uint32(_FilterType.FILTER_TYPE_CL_SUPP_TX.value),
+            c_uint32(0),
+            byref(supp_filter)))
     else:
         raise TypeError('filter must be an instance of IoClCrcFilter_index, '
                         'IoClCrcFilter_pattern, IoClFrameSuppFilter_index '
                         'or IoClFrameSuppFilter_pattern')
-
-    if (isinstance(filter, IoClCrcFilter_index) or
-            isinstance(filter, IoClCrcFilter_pattern)):
-        CTS3Exception._check_error(_MPuLib.MPS_AddFilter(
-            c_uint8(0),
-            c_uint32(0),
-            c_uint32(filter_type.value),
-            c_uint32(0),
-            byref(crc_filter)))
-    else:
-        CTS3Exception._check_error(_MPuLib.MPS_AddFilter(
-            c_uint8(0),
-            c_uint32(0),
-            c_uint32(filter_type.value),
-            c_uint32(0),
-            byref(supp_filter)))
 
 
 def MPS_RemoveFilters() -> None:
