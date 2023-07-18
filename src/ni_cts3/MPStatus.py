@@ -5,9 +5,7 @@ from enum import IntEnum, unique
 class CTS3ErrorCode(IntEnum):
     """Error codes"""
 
-    """
-    Generic error codes
-    """
+    # Generic error codes
     RET_OK = 0x0000
     RET_UNKNOWN_COMMAND = 0x0001
     RET_INVALID_PARAMETER = 0x0003
@@ -30,44 +28,32 @@ class CTS3ErrorCode(IntEnum):
     RET_BUSY = 0x0039
     CRET_INVALID_LICENSE = 0x0187
 
-    """
-    Communication port error codes
-    """
+    # Communication port error codes
     RET_PORT_INVALID_NUMBER = 0x0C1C
     RET_PORT_NOT_OPEN = 0x0C1D
 
-    """
-    Firmware update error codes
-    """
+    # Firmware update error codes
     RET_FIRM_GPG_DECRYPT_FAIL = 0x0CEE
     RET_FIRM_GPG_NO_KEY = 0x0CEF
 
-    """
-    Embedded licenses error codes
-    """
+    # Embedded licenses error codes
     RET_WIBU_NOT_OPEN = 0x0CF8
     RET_WIBU_FAILED = 0x0CFA
     RET_WIBU_NOT_WRITTEN = 0x0CFB
     RET_WIBU_RX_ERROR = 0x0CFC
 
-    """
-    File management error codes
-    """
+    # File management error codes
     ERR_MODULE_NOT_FOUND = 0x0135
     ERR_OPEN_FILE_FAILED = 0x0280
     ERR_DOWNLOAD_FILE_FAILED = 0x0281
     ERR_UPLOAD_FILE_FAILED = 0x0282
 
-    """
-    Resource management error codes
-    """
+    # Resource management error codes
     RET_RESOURCE_NOT_OPEN = 0x0E74
     RET_RESOURCE_INVALID_ID = 0x0E75
     RET_RESOURCE_ALREADY_OPEN = 0x0F3E
 
-    """
-    Measurement error codes
-    """
+    # Measurement error codes
     CRET_MEASURE_RUNNING = 0x00E0
     CRET_NO_MEASURE_PENDING = 0x00E1
     ERR_INVALID_IMPEDANCE_CALIBRATION_TABLE = 0x01F8
@@ -78,35 +64,25 @@ class CTS3ErrorCode(IntEnum):
     ERR_TRANSMIT_MEASURE_TO_FILE_FAILED = 0x0213
     ERR_MEASUREMENT_OUT_OF_RANGE = 0x0216
 
-    """
-    DAQ error codes
-    """
+    # DAQ error codes
     RET_DAQ_BUSY = 0x0E12
     RET_DAQ_CHANNEL_NOT_SET = 0x0E13
     RET_DAQ_OVERVOLTAGE = 0x0E14
 
-    """
-    WLC error codes
-    """
+    # WLC error codes
     RET_WLC_STOP_REQUEST = 0x0400
     RET_WLC_IMPEDANCE_CHANGE = 0x0401
 
-    """
-    Protocol Analyzer error codes
-    """
+    # Protocol Analyzer error codes
     CRET_DOWNLOAD_RUNNING = 0x010E
     CRET_NO_DOWNLOAD_RUNNING = 0x010F
     CRET_SPY_FIFO_OVERRUN = 0x0110
 
-    """
-    Sequencer error codes
-    """
+    # Sequencer error codes
     CRET_SEQUENCER_NO_SUCH_SEQUENCEID = 0x011A
     CRET_SEQUENCER_ERROR = 0x0121
 
-    """
-    High-level simulator error codes
-    """
+    # High-level simulator error codes
     ERRSIM_NO_PPS_REQUEST_PENDING = 0x00C8
     CRET_SIM_NO_EVENT = 0x0186
     CRET_SIMULATOR_NOT_RUNNING = 0x0188
@@ -140,9 +116,7 @@ class CTS3ErrorCode(IntEnum):
     ERRSIM_NFC_UNEXPECTED_FRAME = 0x02F1
     ERRSIM_WRONG_NFC_FRAME_CRC = 0x02F2
 
-    """
-    Contactless error codes
-    """
+    # Contactless error codes
     CRET_ANTITEARING = 0x00F0
     ERR_TIMEOUTRX = 0x0190
     ERR_COLLISION = 0x0191
@@ -207,9 +181,7 @@ class CTS3ErrorCode(IntEnum):
     CRET_NO_PROBE = 0x0370
     CRET_WRONG_PROBE = 0x0371
 
-    """
-    Card emulation error codes
-    """
+    # Card emulation error codes
     ERR_RX_FRAME_TIMEOUT = 0x02BD
     ERR_WRONG_FRAME_A = 0x02BF
     ERR_RX_FRAME_CRCA = 0x02C0
@@ -221,32 +193,24 @@ class CTS3ErrorCode(IntEnum):
     ERR_SCENARIO_TIMEOUT = 0x02D0
     ERR_RECEIVED_FRAME_NOT_MATCH = 0x02D1
 
-    """
-    NFC analog measurement library error codes
-    """
+    # NFC analog measurement library error codes
     ERR_SCIENTIFIC_LIBRARY_GENERIC = 0x021C
     ERR_SCIENTIFIC_LIBRARY_WRONG_RANGE = 0x021D
     ERR_SCIENTIFIC_LIBRARY_UNSUPPORTED_MEAS = 0x021E
 
-    """
-    Auto-tests error codes
-    """
+    # Auto-tests error codes
     RET_FAIL = 0x1389
     RET_UNCONCLUSIVE = 0x138A
     RET_NOT_APPLICABLE = 0x138B
     RET_WARNING = 0x138D
 
-    """
-    System error codes
-    """
+    # System error codes
     ERR_SYSTEM = 0x1770
     ERR_SYSTEM_DISK_SPACE = 0x1771
     ERR_SYSTEM_STDLIB = 0x17D4
     ERR_SYSTEM_PTHREAD = 0x1838
 
-    """
-    Communication library error codes
-    """
+    # Communication library error codes
     DLLCOMERROR = -1
     DLLNOABORTCONNEXION = -2
     DLLNOANSWERTOABORT = -3
@@ -268,6 +232,7 @@ class CTS3ErrorCode(IntEnum):
 @unique
 class MifareErrorCode(IntEnum):
     """MIFARE error codes"""
+
     MI_OK = 0x00
     MI_NOTAGERR = 0x01
     MI_CRCERR = 0x02

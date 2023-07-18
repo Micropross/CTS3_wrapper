@@ -6,23 +6,19 @@ from warnings import warn
 
 
 class CTS3Exception(Exception):
-    """CTS3 exception
+    """
+    CTS3 exception
 
-    Attributes
-    ----------
-    ErrorCode : CTS3ErrorCode
-        Error code
+    Attributes:
+        ErrorCode: Error code
     """
 
-    def __init__(
-            self,
-            err: Union[str, CTS3ErrorCode]):
-        """Inits CTS3Exception
+    def __init__(self, err: Union[str, CTS3ErrorCode]):
+        """
+        Inits CTS3Exception
 
-        Parameters
-        ----------
-        err : CTS3ErrorCode or str
-            Error code or error message
+        Args:
+            err: Error code or error message
         """
         if isinstance(err, CTS3ErrorCode):
             Exception.__init__(self, GetErrorMessageFromCode(err.value))
@@ -31,27 +27,26 @@ class CTS3Exception(Exception):
             Exception.__init__(self, err)
 
     @staticmethod
-    def _check_error(
-            status: int
-            ) -> None:
-        """Checks CTS3 status
+    def _check_error(status: int) -> None:
+        """
+        Checks CTS3 status
 
-        Parameters
-        ----------
-        status : int
-            CTS3 status
+        Args:
+            status: CTS3 status
         """
         try:
             ret = CTS3ErrorCode(status)
         except ValueError:
-            raise CTS3Exception(f'Unknown error code 0x{status:04x}')
-        if (ret == CTS3ErrorCode.ERR_TIME_FDT_MAX or
-                ret == CTS3ErrorCode.ERR_TIME_FDT_MIN or
-                ret == CTS3ErrorCode.ERR_TIME_TR1_MAX or
-                ret == CTS3ErrorCode.ERR_TIME_TR1_MIN or
-                ret == CTS3ErrorCode.ERR_PHASE_DRIFT or
-                ret == CTS3ErrorCode.ERR_ADJUST_THRESHOLD_RF_FIELD or
-                ret == CTS3ErrorCode.RET_INCOMPATIBLE_BOOT_VERSION):
+            raise CTS3Exception(f"Unknown error code 0x{status:04x}")
+        if (
+            ret == CTS3ErrorCode.ERR_TIME_FDT_MAX
+            or ret == CTS3ErrorCode.ERR_TIME_FDT_MIN
+            or ret == CTS3ErrorCode.ERR_TIME_TR1_MAX
+            or ret == CTS3ErrorCode.ERR_TIME_TR1_MIN
+            or ret == CTS3ErrorCode.ERR_PHASE_DRIFT
+            or ret == CTS3ErrorCode.ERR_ADJUST_THRESHOLD_RF_FIELD
+            or ret == CTS3ErrorCode.RET_INCOMPATIBLE_BOOT_VERSION
+        ):
             warn(GetErrorMessageFromCode(status), UserWarning, 3)
         elif ret == CTS3ErrorCode.ERR_NO_VALID_ATR_REQ_RECEIVED:
             warn(GetErrorMessageFromCode(status), Warning, 3)
@@ -60,44 +55,35 @@ class CTS3Exception(Exception):
 
 
 class CTS3MifareException(Exception):
-    """CTS3 MIFARE exception
+    """
+    CTS3 MIFARE exception
 
-    Attributes
-    ----------
-    ErrorCode : MifareErrorCode
-        Error code
+    Attributes:
+        ErrorCode: Error code
     """
 
-    def __init__(
-            self,
-            err_code: MifareErrorCode):
-        """Inits CTS3MifareException
+    def __init__(self, err_code: MifareErrorCode):
+        """
+        Inits CTS3MifareException
 
-        Parameters
-        ----------
-        err_code : MifareErrorCode
-            Error code
+        Args:
+            err_code: Error code
         """
         Exception.__init__(self, GetMifareErrorMessageFromCode(err_code.value))
         self.ErrorCode = err_code
 
     @staticmethod
-    def _check_error(
-            status: int
-            ) -> None:
-        """Checks MIFARE status
+    def _check_error(status: int) -> None:
+        """
+        Checks MIFARE status
 
-        Parameters
-        ----------
-        status: int
-            MIFARE status
+        Args:
+            status: MIFARE status
         """
         if status == 0:
             error = c_int32()
             _MPuLib.CLP_GetLastErrorNumber.restype = c_int32
-            ret = _MPuLib.CLP_GetLastErrorNumber(
-                c_uint8(0),
-                byref(error))
+            ret = _MPuLib.CLP_GetLastErrorNumber(c_uint8(0), byref(error))
             if ret == 0:
                 if _MPuLib.GetLastComError() == 0:
                     raise CTS3Exception(CTS3ErrorCode.RET_RESOURCE_NOT_OPEN)
