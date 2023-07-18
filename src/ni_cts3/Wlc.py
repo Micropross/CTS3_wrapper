@@ -1,7 +1,6 @@
 from enum import IntEnum, unique
 from ctypes import c_uint8, c_uint32, c_double, byref
-from typing import Union
-from . import _MPuLib, _check_limits
+from . import _MPuLib
 from .MPException import CTS3Exception
 
 # region Poller

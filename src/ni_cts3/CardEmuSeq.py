@@ -7,7 +7,6 @@ from . import _MPuLib, _MPuLib_variadic, _check_limits
 from .Measurement import VoltmeterRange
 from .Nfc import TechnologyType, NfcTrigger, NfcTriggerId, DataRate
 from .Nfc import VicinityDataRate, VicinitySubCarrier
-from .MPStatus import CTS3ErrorCode
 from .MPException import CTS3Exception
 
 

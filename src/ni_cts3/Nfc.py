@@ -2032,9 +2032,9 @@ def CLP_LoadKey(
         raise TypeError('key_mode must be an instance of '
                         'MifareKey IntEnum')
     _check_limits(c_uint8, sector, 'sector')
-    if not isinstance(key, bytes):
+    if not isinstance(key, bytes) or len(key) != 6:
         raise TypeError('key must be an instance of 6 bytes')
-    str_key = ''.join(map('{:02X}'.format, key[:6]))
+    str_key = key.hex()
     _MPuLib.CLP_LoadKey.restype = c_int32
     CTS3MifareException._check_error(_MPuLib.CLP_LoadKey(
         c_uint8(0),
