@@ -1560,12 +1560,12 @@ def LaunchEmbeddedScript(
     retCode = c_uint8(0)
     if call_back:
         cmp_func = CFUNCTYPE(c_int32, c_char_p)
-    CTS3Exception._check_error(_MPuLib.LaunchEmbeddedScript(
-        script_command.encode('ascii'),
-        c_uint32(option),
-        c_uint32(timeout_ms),
-        byref(retCode),
-            cmp_func(call_back)))
+        CTS3Exception._check_error(_MPuLib.LaunchEmbeddedScript(
+            script_command.encode('ascii'),
+            c_uint32(option),
+            c_uint32(timeout_ms),
+            byref(retCode),
+                cmp_func(call_back)))
     else:
         CTS3Exception._check_error(_MPuLib.LaunchEmbeddedScript(
             script_command.encode('ascii'),
@@ -1594,10 +1594,10 @@ def StartEmbeddedApplication(
     """
     if call_back:
         cmp_func = CFUNCTYPE(c_int32, c_char_p)
-    CTS3Exception._check_error(_MPuLib.StartEmbeddedApplication(
-        application_path.encode('ascii'),
-        args.encode('ascii') if args else None,
-            cmp_func(call_back)))
+        CTS3Exception._check_error(_MPuLib.StartEmbeddedApplication(
+            application_path.encode('ascii'),
+            args.encode('ascii') if args else None,
+                cmp_func(call_back)))
     else:
         CTS3Exception._check_error(_MPuLib.StartEmbeddedApplication(
             application_path.encode('ascii'),
