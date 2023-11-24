@@ -2628,7 +2628,7 @@ def MPC_ChangeProtocolParameters(
         list_u32_val = (3 * c_uint32)()
         for i in range(3):
             item = param_value[i]
-            if not isinstance(item, float):
+            if not isinstance(item, float) and not isinstance(item, int):
                 raise TypeError("param_value must be an instance of 3-float list")
             if i == 2:
                 _check_limits(c_uint32, round(item * 1e3), "param_value")
@@ -2684,7 +2684,9 @@ def MPC_ChangeProtocolParameters(
         or param_type == ProtocolParameters.CPP_PLI_STEP
         or param_type == ProtocolParameters.CPP_AUTORANGE_MARGIN
     ):
-        if isinstance(param_value, list) or not isinstance(param_value, float):
+        if isinstance(param_value, list) or (
+            not isinstance(param_value, float) and not isinstance(param_value, int)
+        ):
             raise TypeError("param_value must be an instance of float")
         value_ms = round(param_value * 1e3)
         _check_limits(c_uint32, value_ms, "param_value")
@@ -2697,7 +2699,9 @@ def MPC_ChangeProtocolParameters(
 
     # µs parameter
     elif param_type == ProtocolParameters.CPP_FRAME_FDT:
-        if isinstance(param_value, list) or not isinstance(param_value, float):
+        if isinstance(param_value, list) or (
+            not isinstance(param_value, float) and not isinstance(param_value, int)
+        ):
             raise TypeError("param_value must be an instance of float")
         value_us = round(param_value * 1e6)
         _check_limits(c_uint32, value_us, "param_value")
