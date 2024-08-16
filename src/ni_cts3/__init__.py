@@ -76,10 +76,7 @@ elif sys.platform == "cygwin":
     else:
         raise NotImplementedError("Unsupported cygwin architecture")
 else:
-    if sys.platform == "darwin":
-        _lib_path = _lib_path.joinpath("macOS")
-        _lib_name = "libMPuLib.dylib"
-    elif sys.platform == "linux":
+    if sys.platform == "linux":
         if processor().startswith("armv7"):
             # CTS3 embedded library
             _lib_path = _lib_path.joinpath("Arm")
