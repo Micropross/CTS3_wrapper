@@ -3017,6 +3017,8 @@ class TestType(IntEnum):
     TEST_SPECIAL_GET_ATS = 21
     TEST_TON_EXCHANGE_AFTER_DELAY_TOFF = 22
     TEST_EMV_POLLING = 23
+    TEST_RF_RESET_CMD_HR = 24
+    TEST_RF_RESET_CMD_HR_TRIGGER_IN = 25
 
 
 @overload
@@ -3056,23 +3058,28 @@ def MPC_Test(
 
 @overload
 def MPC_Test(
-    test_type: TestType, ask: int, time_1: float, time_2: float, tx_bits: int, tx_frame: bytes
+    test_type: TestType,
+    ask: Union[int, float],
+    time_1: float,
+    time_2: float,
+    tx_bits: int,
+    tx_frame: bytes
 ) -> Dict[str, Union[int, bytes]]:
-    # TEST_RF_RESET_CMD
+    # TEST_RF_RESET_CMD, TEST_RF_RESET_CMD_HR
     ...
 
 
 @overload
 def MPC_Test(
     test_type: TestType,
-    ask: int,
+    ask: Union[int, float],
     time_1: float,
     time_2: float,
     timeout: float,
     tx_bits: int,
     tx_frame: bytes,
 ) -> Dict[str, Union[int, bytes]]:
-    # TEST_RF_RESET_CMD_WITH_TRIGGER_IN
+    # TEST_RF_RESET_CMD_WITH_TRIGGER_IN, TEST_RF_RESET_CMD_HR_TRIGGER_IN
     ...
 
 
@@ -3133,9 +3140,9 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
                 c_uint32(test_type),
                 c_uint32(delay_us),  # Delay_us
                 data,  # pRxFrame
-                byref(length16),
+                byref(length16),  # pRxBits
             )
-        )  # pRxBits
+        )
         return data[: length16.value]
 
     elif (
@@ -3155,9 +3162,12 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
         atqa = c_uint16()
         CTS3Exception._check_error(
             func_pointer(
-                c_uint8(0), c_uint32(test_type), c_uint32(delay_us), byref(atqa)  # Delay_us
+                c_uint8(0),
+                c_uint32(test_type),
+                c_uint32(delay_us),  # Delay_us
+                byref(atqa)  # pAtqa
             )
-        )  # pAtqa
+        )
         return bytes([atqa.value & 0xFF, atqa.value >> 8])
 
     elif (
@@ -3195,9 +3205,9 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
                 args[3],  # pTxFrame2
                 c_uint32(delay_ns),  # Delay_ns
                 data,  # pRxFrame
-                byref(rx_bits),
+                byref(rx_bits),  # pRxBits
             )
-        )  # pRxBits
+        )
         bytes_number = int(rx_bits.value / 8)
         if rx_bits.value % 8 > 0:
             bytes_number += 1
@@ -3230,9 +3240,9 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
                 c_uint32(time1_us),  # Time1_us
                 c_uint32(time2_us),  # Time2_us
                 data,  # pRxFrame
-                byref(length),
+                byref(length),  # pRxBytes
             )
-        )  # pRxBytes
+        )
         return data[: length.value]
 
     elif test_type == TestType.TEST_POWER_OFF_ON_CMD:
@@ -3264,9 +3274,9 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
                 c_uint32(args[2]),  # TxBits
                 args[3],  # pTxFrame
                 data,  # pRxFrame
-                byref(rx_bits),
+                byref(rx_bits),  # pRxBits
             )
-        )  # pRxBits
+        )
         bytes_number = int(rx_bits.value / 8)
         if rx_bits.value % 8 > 0:
             bytes_number += 1
@@ -3300,22 +3310,26 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
                 c_uint32(args[2]),  # TxBits
                 args[3],  # pTxFrame
                 data,  # pRxFrame
-                byref(rx_bits),
+                byref(rx_bits),  # pRxBits
             )
-        )  # pRxBits
+        )
         bytes_number = int(rx_bits.value / 8)
         if rx_bits.value % 8 > 0:
             bytes_number += 1
         return {"rx_frame": data[:bytes_number], "rx_bits_number": rx_bits.value}
 
-    elif test_type == TestType.TEST_RF_RESET_CMD:
+    elif test_type == TestType.TEST_RF_RESET_CMD or test_type == TestType.TEST_RF_RESET_CMD_HR:
         if len(args) != 5:
             raise TypeError(
                 f"MPC_Test({test_type.name}) takes exactly six arguments ({len(args) + 1} given)"
             )
-        if not isinstance(args[0], int):
-            raise TypeError("ask must be an instance of int")
-        _check_limits(c_uint32, args[0], "ask")  # Ask_pm
+        if test_type == TestType.TEST_RF_RESET_CMD:
+            if not isinstance(args[0], int):
+                raise TypeError("ask must be an instance of int")
+            _check_limits(c_uint32, args[0], "ask")  # Ask_pm
+        else:
+            if not isinstance(args[0], float) and not isinstance(args[0], int):
+                raise TypeError("ask must be an instance of float")
         if not isinstance(args[1], float) and not isinstance(args[1], int):
             raise TypeError("time_1 must be an instance of float")
         time1_us = round(args[1] * 1e6)
@@ -3335,28 +3349,32 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             func_pointer(
                 c_uint8(0),
                 c_uint32(test_type),
-                c_uint32(args[0]),  # Ask_pm
+                c_uint32(args[0]) if test_type == TestType.TEST_RF_RESET_CMD else c_double(args[0]),  # Ask
                 c_uint32(time1_us),  # Time1_us
                 c_uint32(time2_us),  # Time2_us
                 c_uint32(args[3]),  # TxBits
                 args[4],  # pTxFrame
                 data,  # pRxFrame
-                byref(rx_bits),
+                byref(rx_bits),  # pRxBits
             )
-        )  # pRxBits
+        )
         bytes_number = int(rx_bits.value / 8)
         if rx_bits.value % 8 > 0:
             bytes_number += 1
         return {"rx_frame": data[:bytes_number], "rx_bits_number": rx_bits.value}
 
-    elif test_type == TestType.TEST_RF_RESET_CMD_WITH_TRIGGER_IN:
+    elif test_type == TestType.TEST_RF_RESET_CMD_WITH_TRIGGER_IN or test_type == TestType.TEST_RF_RESET_CMD_HR_TRIGGER_IN:
         if len(args) != 6:
             raise TypeError(
                 f"MPC_Test({test_type.name}) takes exactly seven arguments ({len(args) + 1} given)"
             )
-        if not isinstance(args[0], int):
-            raise TypeError("ask must be an instance of int")
-        _check_limits(c_uint32, args[0], "ask")  # Ask_pm
+        if test_type == TestType.TEST_RF_RESET_CMD_WITH_TRIGGER_IN:
+            if not isinstance(args[0], int):
+                raise TypeError("ask must be an instance of int")
+            _check_limits(c_uint32, args[0], "ask")  # Ask_pm
+        else:
+            if not isinstance(args[0], float) and not isinstance(args[0], int):
+                raise TypeError("ask must be an instance of float")
         if not isinstance(args[1], float) and not isinstance(args[1], int):
             raise TypeError("time_1 must be an instance of float")
         time1_us = round(args[1] * 1e6)
@@ -3380,16 +3398,16 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             func_pointer(
                 c_uint8(0),
                 c_uint32(test_type),
-                c_uint32(args[0]),  # Ask_pm
+                c_uint32(args[0]) if test_type == TestType.TEST_RF_RESET_CMD_WITH_TRIGGER_IN else c_double(args[0]),  # Ask
                 c_uint32(time1_us),  # Time1_us
                 c_uint32(time2_us),  # Time2_us
                 c_uint32(timeout_triggerin_ms),  # TimeOutTriggerIn_ms
                 c_uint32(args[4]),  # TxBits
                 args[5],  # pTxFrame
                 data,  # pRxFrame
-                byref(rx_bits),
+                byref(rx_bits),  # pRxBits
             )
-        )  # pRxBits
+        )
         bytes_number = int(rx_bits.value / 8)
         if rx_bits.value % 8 > 0:
             bytes_number += 1
@@ -3443,10 +3461,11 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
                 c_uint32(args[6]),  # FrameType2
                 c_uint32(args[7]),  # TxBits2
                 args[8],  # pTxFrame2
-                c_uint32(timeout_ms),
+                c_uint32(timeout_ms),  # Timeout_ms
             )
-        )  # Timeout_ms
+        )
         return None
+
     else:
         raise TypeError("test_type must be an instance of TestType IntEnum")
 
