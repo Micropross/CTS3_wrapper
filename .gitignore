@@ -4,3 +4,4 @@
 /src/ni_cts3/__pycache__
 /src/ni_cts3/.lib/Windows/LabVIEW
 /.vscode
+/.mypy_cache

@@ -4,7 +4,6 @@ from enum import IntEnum, unique
 @unique
 class CTS3ErrorCode(IntEnum):
     """Error codes"""
-
     # Generic error codes
     RET_OK = 0x0000
     RET_UNKNOWN_COMMAND = 0x0001
@@ -232,7 +231,6 @@ class CTS3ErrorCode(IntEnum):
 @unique
 class MifareErrorCode(IntEnum):
     """MIFARE error codes"""
-
     MI_OK = 0x00
     MI_NOTAGERR = 0x01
     MI_CRCERR = 0x02

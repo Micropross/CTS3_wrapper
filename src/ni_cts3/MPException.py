@@ -37,16 +37,14 @@ class CTS3Exception(Exception):
         try:
             ret = CTS3ErrorCode(status)
         except ValueError:
-            raise CTS3Exception(f"Unknown error code 0x{status:04x}")
-        if (
-            ret == CTS3ErrorCode.ERR_TIME_FDT_MAX
-            or ret == CTS3ErrorCode.ERR_TIME_FDT_MIN
-            or ret == CTS3ErrorCode.ERR_TIME_TR1_MAX
-            or ret == CTS3ErrorCode.ERR_TIME_TR1_MIN
-            or ret == CTS3ErrorCode.ERR_PHASE_DRIFT
-            or ret == CTS3ErrorCode.ERR_ADJUST_THRESHOLD_RF_FIELD
-            or ret == CTS3ErrorCode.RET_INCOMPATIBLE_BOOT_VERSION
-        ):
+            raise CTS3Exception(f'Unknown error code 0x{status:04x}')
+        if (ret == CTS3ErrorCode.ERR_TIME_FDT_MAX
+                or ret == CTS3ErrorCode.ERR_TIME_FDT_MIN
+                or ret == CTS3ErrorCode.ERR_TIME_TR1_MAX
+                or ret == CTS3ErrorCode.ERR_TIME_TR1_MIN
+                or ret == CTS3ErrorCode.ERR_PHASE_DRIFT
+                or ret == CTS3ErrorCode.ERR_ADJUST_THRESHOLD_RF_FIELD
+                or ret == CTS3ErrorCode.RET_INCOMPATIBLE_BOOT_VERSION):
             warn(GetErrorMessageFromCode(status), UserWarning, 3)
         elif ret == CTS3ErrorCode.ERR_NO_VALID_ATR_REQ_RECEIVED:
             warn(GetErrorMessageFromCode(status), Warning, 3)

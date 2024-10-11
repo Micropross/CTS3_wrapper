@@ -15,14 +15,13 @@ def WLC_P_PowerTransfer(duration: float, field: float) -> None:
         field: Charging RF field strength in Vpp
     """
     CTS3Exception._check_error(
-        _MPuLib.WLC_P_PowerTransfer(c_double(duration), c_double(field), c_uint32(0))
-    )
+        _MPuLib.WLC_P_PowerTransfer(c_double(duration), c_double(field),
+                                    c_uint32(0)))
 
 
 @unique
 class WlcPTiming(IntEnum):
     """Poller Timings"""
-
     WLC_P_TIMING_HOLD_OFF = 0
     WLC_P_TIMING_SETTLE = 1
 
@@ -36,8 +35,9 @@ def WLC_P_SetTiming(type: WlcPTiming, value: float) -> None:
         value: Value of the timing to change in s
     """
     if not isinstance(type, WlcPTiming):
-        raise TypeError("type must be an instance of WlcPTiming IntEnum")
-    CTS3Exception._check_error(_MPuLib.WLC_P_SetTiming(c_uint8(type), c_double(value)))
+        raise TypeError('type must be an instance of WlcPTiming IntEnum')
+    CTS3Exception._check_error(
+        _MPuLib.WLC_P_SetTiming(c_uint8(type), c_double(value)))
 
 
 def WLC_P_GetTiming(type: WlcPTiming) -> float:
@@ -51,9 +51,10 @@ def WLC_P_GetTiming(type: WlcPTiming) -> float:
         Timing value in s
     """
     if not isinstance(type, WlcPTiming):
-        raise TypeError("type must be an instance of WlcPTiming IntEnum")
+        raise TypeError('type must be an instance of WlcPTiming IntEnum')
     value = c_double()
-    CTS3Exception._check_error(_MPuLib.WLC_P_GetTiming(c_uint8(type), byref(value)))
+    CTS3Exception._check_error(
+        _MPuLib.WLC_P_GetTiming(c_uint8(type), byref(value)))
     return value.value
 
 
@@ -95,13 +96,13 @@ def WLC_L_SetVic(v_nic: float, v_ic: float) -> None:
         v_nic: Voltage during No Impedance Change in V
         v_ic: Voltage during Impedance Change in V
     """
-    CTS3Exception._check_error(_MPuLib.WLC_L_SetVic(c_double(v_nic), c_double(v_ic)))
+    CTS3Exception._check_error(
+        _MPuLib.WLC_L_SetVic(c_double(v_nic), c_double(v_ic)))
 
 
 @unique
 class WlcLTiming(IntEnum):
     """Listener Timings"""
-
     WLC_L_TIMING_TRANSITION = 0
     WLC_L_TIMING_STOP_IMP_CHANGE = 1
 
@@ -115,8 +116,9 @@ def WLC_L_SetTiming(type: WlcLTiming, value: float) -> None:
         value: Value of the timing to change in s
     """
     if not isinstance(type, WlcLTiming):
-        raise TypeError("type must be an instance of WlcLTiming IntEnum")
-    CTS3Exception._check_error(_MPuLib.WLC_L_SetTiming(c_uint8(type), c_double(value)))
+        raise TypeError('type must be an instance of WlcLTiming IntEnum')
+    CTS3Exception._check_error(
+        _MPuLib.WLC_L_SetTiming(c_uint8(type), c_double(value)))
 
 
 def WLC_L_GetTiming(type: WlcLTiming) -> float:
@@ -130,9 +132,10 @@ def WLC_L_GetTiming(type: WlcLTiming) -> float:
         Timing value in s
     """
     if not isinstance(type, WlcLTiming):
-        raise TypeError("type must be an instance of WlcLTiming IntEnum")
+        raise TypeError('type must be an instance of WlcLTiming IntEnum')
     value = c_double()
-    CTS3Exception._check_error(_MPuLib.WLC_L_GetTiming(c_uint8(type), byref(value)))
+    CTS3Exception._check_error(
+        _MPuLib.WLC_L_GetTiming(c_uint8(type), byref(value)))
     return value.value
 
 
