@@ -195,8 +195,10 @@ def MPC_SelectFieldStrength(unit: FieldUnit,
 
     Args:
         unit: Field strength unit
-        value: Field strength in mVpp, dBm, % or ‰ (ignored if unit is APPLY_DEFAULT_VALUE)
-        max_duration: Maximum duration of the field in s, or None to let the field applied
+        value: Field strength in mVpp, dBm, % or ‰
+        (ignored if unit is APPLY_DEFAULT_VALUE)
+        max_duration: Maximum duration of the field in s,
+        or None to let the field applied
     """
     if not isinstance(unit, FieldUnit):
         raise TypeError('unit must be an instance of FieldUnit IntEnum')
@@ -451,7 +453,8 @@ def MPC_ExchangeCmd(
 
     Args:
         tx_frame: Frame to transmit
-        tx_bits_number: Number of bits to transmit (8 × tx_frame length if None)
+        tx_bits_number: Number of bits to transmit
+        (8 × tx_frame length if None)
 
     Returns:
         Dictionary made of:
@@ -1219,8 +1222,8 @@ def MPC_FelicaCheck(idm, service_codes,
         raise TypeError('idm must be an instance of 8 bytes')
     if not isinstance(service_codes, list):
         raise TypeError(
-            'service_codes must be an instance of FelicaService list or int list'
-        )
+            'service_codes must be an instance of FelicaService list '
+            'or int list')
     _check_limits(c_uint8, len(service_codes), 'service_codes')
     if not isinstance(blocks, list):
         raise TypeError(
@@ -1236,8 +1239,8 @@ def MPC_FelicaCheck(idm, service_codes,
             services_list[i] = c_uint16(service_codes[i])
         else:
             raise TypeError(
-                'service_codes must be an instance of FelicaService list or int list'
-            )
+                'service_codes must be an instance of FelicaService list '
+                'or int list')
     blocks_list = (c_uint32 * len(blocks))()
     for i in range(len(blocks)):
         if isinstance(blocks[i], FelicaBlock):
@@ -1328,8 +1331,8 @@ def MPC_FelicaUpdate(idm, service_codes, blocks,
         raise TypeError('idm must be an instance of 8 bytes')
     if not isinstance(service_codes, list):
         raise TypeError(
-            'service_codes must be an instance of FelicaService list or int list'
-        )
+            'service_codes must be an instance of FelicaService list '
+            'or int list')
     _check_limits(c_uint8, len(service_codes), 'service_codes')
     if not isinstance(blocks, list):
         raise TypeError(
@@ -1348,8 +1351,8 @@ def MPC_FelicaUpdate(idm, service_codes, blocks,
             services_list[i] = c_uint16(service_codes[i])
         else:
             raise TypeError(
-                'service_codes must be an instance of FelicaService list or int list'
-            )
+                'service_codes must be an instance of FelicaService list '
+                'or int list')
     blocks_list = (c_uint32 * len(blocks))()
     for i in range(len(blocks)):
         if isinstance(blocks[i], FelicaBlock):
@@ -1975,7 +1978,8 @@ def MPC_VcReadMultipleBlock(
     Args:
         flag: Vicinity request flag
         first_block_number: Number of first block to read
-        blocks_number: Number of blocks to read (in addition to first_block_number)
+        blocks_number: Number of blocks to read
+        (in addition to first_block_number)
 
     Returns:
         Dictionary made of:
@@ -2015,7 +2019,8 @@ def MPC_VcExtendedReadMultipleBlock(
     Args:
         flag: Vicinity request flag
         first_block_number: Number of first block to read
-        blocks_number: Number of blocks to read (in addition to first_block_number)
+        blocks_number: Number of blocks to read
+        (in addition to first_block_number)
 
     Returns:
         Dictionary made of:
@@ -2278,7 +2283,8 @@ def MPC_SelectModulationPattern(item_type: ModulationItem, pattern_index: int,
     Args:
         item_type: Modulation pattern item type
         pattern_index: Pattern index
-        start: Transmitted frame items number which will trigger modulation shape application
+        start: Transmitted frame items number which will trigger
+        modulation shape application
         duration: Duration of modulation shape in items count
     """
     if not isinstance(item_type, ModulationItem):
@@ -2299,7 +2305,8 @@ def MPC_FastFallingEdge(delay_fc: float, duration_fc: float) -> None:
     Inverts sine wave signal to improve falling edge duration
 
     Args:
-        delay_fc: Delay between falling edge start and sine wave inversion in carrier periods
+        delay_fc: Delay between falling edge start
+        and sine wave inversion in carrier periods
         duration_fc: Duration of the sine wave inversion in carrier periods
     """
     delay_10fc = round(delay_fc * 1e1)
@@ -2347,7 +2354,10 @@ def MPS_AntiTearing(clock_count: int) -> None:
 
 
 def MPS_AntiTearing2() -> None:
-    """Deactivates RF field during communication upon rising edge on SYNC connector"""
+    """
+    Deactivates RF field during communication upon rising edge
+    on SYNC connector
+    """
     CTS3Exception._check_error(
         _MPuLib.MPS_AntiTearing2(c_uint8(0), c_uint32(2), c_uint32(0)))
 
@@ -3495,7 +3505,8 @@ def MPC_TriggerConfig(trigger_id: NfcTriggerId,
             raise TypeError(
                 'value must be an instance of CTS3ErrorCode IntEnum')
         val = value.value
-    elif config == NfcTrigger.TRIG_RX_FRAME or config == NfcTrigger.TRIG_TX_FRAME:
+    elif (config == NfcTrigger.TRIG_RX_FRAME
+          or config == NfcTrigger.TRIG_TX_FRAME):
         if not isinstance(value, TechnologyType):
             raise TypeError(
                 'value must be an instance of TechnologyType IntEnum')
@@ -3547,9 +3558,11 @@ def MPC_GenerateDisturbance(operation: DisturbanceOperation,
         amplitude: Disturbance amplitude in %
         offset: Disturbance offset in %
         duration: Disturbance duration in s
-        param: True to maintain final field level (if disturbance_type is DISTURBANCE_RAMP),
-               Number of signal periods
-               (if disturbance_type is DISTURBANCE_SQUARE, DISTURBANCE_SINE or DISTURBANCE_SINE2)
+        param: True to maintain final field level
+        (if disturbance_type is DISTURBANCE_RAMP),
+        or number of signal periods
+        (if disturbance_type is DISTURBANCE_SQUARE,
+        DISTURBANCE_SINE or DISTURBANCE_SINE2)
     """
     if not isinstance(operation, DisturbanceOperation):
         raise TypeError(
@@ -3638,7 +3651,8 @@ def MPC_SetDisturbanceTrigger(operation: DisturbanceOperation,
         operation: Disturbance operation to be triggered
         trigger: Trigger condition
         delay: Delay after trigger in s
-        count: Number of times the trigger condition will generate the disturbance
+        count: Number of times the trigger condition
+        will generate the disturbance
     """
     if not isinstance(operation, DisturbanceOperation):
         raise TypeError(
@@ -4124,7 +4138,8 @@ def MPC_NfcRFCollisionAvoidance(unit: FieldUnit, value: float) -> None:
 
     Args:
         unit: Field strength unit
-        value: Field strength in mV, dBm, % or ‰ (ignored if unit is APPLY_DEFAULT_VALUE)
+        value: Field strength in mV, dBm, % or ‰
+        (ignored if unit is APPLY_DEFAULT_VALUE)
     """
     if not isinstance(unit, FieldUnit):
         raise TypeError('unit must be an instance of FieldUnit IntEnum')
@@ -4194,10 +4209,13 @@ def MPC_SetActiveTimings(unit: NfcUnit,
     Args:
         unit: Timings unit
         t_idt: RF field off initial duration, or 0 to keep previous value
-        t_irfg: RF field on initial duration before transmission, or 0 to keep previous value
+        t_irfg: RF field on initial duration before transmission,
+        or 0 to keep previous value
         t_adt: RF field off duration, or 0 to keep previous value
-        t_arfg: RF field on duration before transmission, or 0 to keep previous value
-        t_off: RF field on duration after transmission, or 0 to keep previous value
+        t_arfg: RF field on duration before transmission,
+        or 0 to keep previous value
+        t_off: RF field on duration after transmission,
+        or 0 to keep previous value
         t_mute: Mute answer duration, or 0 to keep previous value
     """
     if not isinstance(unit, NfcUnit):

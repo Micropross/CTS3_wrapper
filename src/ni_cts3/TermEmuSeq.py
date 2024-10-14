@@ -346,8 +346,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
             or action == TermEmuSeqAction.TSCN_DO_USER_EVENT):
         if len(args) != 1:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly three arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('param must be an instance of int')
         _check_limits(c_uint32, args[0], 'param')
@@ -357,8 +357,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_PARAM_CARD_TYPE:
         if len(args) != 1:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly three arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], TechnologyType):
             raise TypeError(
                 'param must be an instance of TechnologyTypeype IntEnum')
@@ -368,8 +368,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_DO_SELECT_VOLTMETER_RANGE:
         if len(args) != 1:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly three arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], VoltmeterRange):
             raise TypeError(
                 'param must be an instance of VoltmeterRange IntEnum')
@@ -379,8 +379,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_PARAM_AUTOMATIC_SWTX_RESPONSE:
         if len(args) != 1:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly three arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], AutoSwtxMgt):
             raise TypeError('param must be an instance of AutoSwtxMgt IntEnum')
         CTS3Exception._check_error(
@@ -389,8 +389,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_DO_TRIGGER_OUT_RX_ON:
         if len(args) != 1:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly three arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('param must be an instance of int')
         _check_limits(c_uint32, args[0], 'param')  # Trigger
@@ -407,8 +407,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
           or action == TermEmuSeqAction.TSCN_DO_TEMPO):
         if len(args) != 1:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly three arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], float) and not isinstance(args[0], int):
             raise TypeError('param must be an instance of float')
         delay_us = round(args[0] * 1e6)
@@ -422,8 +422,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
           or action == TermEmuSeqAction.TSCN_PARAM_FDT_PCD):
         if len(args) != 1:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly three arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], float) and not isinstance(args[0], int):
             raise TypeError('param must be an instance of float')
         delay_ns = round(args[0] * 1e9)
@@ -438,8 +438,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
           or action == TermEmuSeqAction.TSCN_PARAM_ACTIVE_FDT_MODE):
         if len(args) != 1:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly three arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
         CTS3Exception._check_error(
             func_pointer(c_uint8(0), c_uint32(scenario_id), c_uint32(action),
                          c_uint32(1) if args[0] else c_uint32(0)))
@@ -448,8 +448,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_DO_START_RF_MEASURE:
         if len(args) != 2:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly four arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly four '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], NfcTrigger):
             raise TypeError(
                 'trigger must be an instance of NfcTrigger IntEnum')
@@ -467,8 +467,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_DO_CHANGE_DATA_RATE:
         if len(args) != 2:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly four arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly four '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], DataRate):
             raise TypeError(
                 'pcd_datarate must be an instance of DataRate IntEnum')
@@ -486,8 +486,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
           or action == TermEmuSeqAction.TSCN_PARAM_FELICA_FRAMING):
         if len(args) != 2:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly four arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly four '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('value must be an instance of int')
         _check_limits(c_uint32, args[0], 'value')  # Trigger/preamble
@@ -502,8 +502,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
           or action == TermEmuSeqAction.TSCN_DO_REQUESTB_HALTB):
         if len(args) != 2:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly four arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly four '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], bytes):
             raise TypeError('request must be an instance of bytes')
         _check_limits(c_uint32, len(args[0]), 'request')
@@ -524,8 +524,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_DO_CHANGE_VC_COMMUNICATION:
         if len(args) != 3:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly five arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly five '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], VicinityCodingMode):
             raise TypeError(
                 'coding_mode must be an instance of VicinityCodingMode IntEnum'
@@ -548,8 +548,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_DO_TRIGGER:
         if len(args) != 3:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly five arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly five '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], NfcTriggerId):
             raise TypeError('trigger must be an instance of NfcTriggerId Flag')
         if not isinstance(args[1], NfcTrigger):
@@ -579,8 +579,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_PARAM_NFC_ACTIVE_TIMINGS:
         if len(args) != 3:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly five arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly five '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('tadt must be an instance of int')
         _check_limits(c_uint32, args[0], 'tadt')
@@ -605,8 +605,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_PARAM_ACTIVE_TIMINGS:
         if len(args) != 4:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly six arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly six '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('tadt must be an instance of int')
         _check_limits(c_uint32, args[0], 'tadt')
@@ -632,8 +632,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_DO_REQUESTB_ATTRIB_FDT:
         if len(args) != 3:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly five arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly five '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], bytes):
             raise TypeError('request must be an instance of bytes')
         _check_limits(c_uint32, len(args[0]), 'request')
@@ -659,8 +659,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
           or action == TermEmuSeqAction.TSCN_DO_EXCHANGE_ACTIVE_INITIATOR):
         if len(args) < 4:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes six or seven arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes six or seven '
+                f'arguments ({len(args) + 2} given)')
         if args[2] and not isinstance(args[2], bytes):
             raise TypeError('tx_frame must be an instance of bytes')
         if args[1] is None:
@@ -677,8 +677,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
                 or args[3] == SequencerDataFlag.EXCHANGE_ACTIVE_NO_FIELD):
             if len(args) != 4:
                 raise TypeError(
-                    f'MPC_AddToScenarioPicc({action.name}) takes exactly six arguments '
-                    f'({len(args) + 2} given)')
+                    f'MPC_AddToScenarioPicc({action.name}) takes exactly six '
+                    f'arguments ({len(args) + 2} given)')
             CTS3Exception._check_error(
                 func_pointer(
                     c_uint8(0),
@@ -691,8 +691,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
         else:
             if len(args) != 5:
                 raise TypeError(
-                    f'MPC_AddToScenarioPicc({action.name}) takes exactly seven arguments '
-                    f'({len(args) + 2} given)')
+                    f'MPC_AddToScenarioPicc({action.name}) takes exactly seven'
+                    f' arguments ({len(args) + 2} given)')
             if not isinstance(args[4], float) and not isinstance(args[4], int):
                 raise TypeError('timeout must be an instance of float')
             timeout_us = round(args[4] * 1e6)
@@ -711,8 +711,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_DO_EXCHANGE_PATTERN:
         if len(args) != 4 and len(args) != 5:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes six or seven arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes six or seven '
+                f'arguments ({len(args) + 2} given)')
         if args[2] and not isinstance(args[2], bytes):
             raise TypeError('tx_frame must be an instance of bytes')
         if args[1] is None:
@@ -749,8 +749,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_DO_RF_RESET_CMD:
         if len(args) != 5:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly seven arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly seven '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('ask must be an instance of int')
         _check_limits(c_uint32, args[0], 'ask')
@@ -785,8 +785,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_DO_TON_EXCHANGE_AFTER_DELAY_TOFF:
         if len(args) < 6:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes eight or nine arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes eight or nine '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('trigger must be an instance of int')
         _check_limits(c_uint32, args[0], 'trigger')
@@ -809,8 +809,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
         if args[5] == SequencerDataFlag.EXCHANGE_WAIT_RX:
             if len(args) != 6:
                 raise TypeError(
-                    f'MPC_AddToScenarioPicc({action.name}) takes exactly eight arguments '
-                    f'({len(args) + 2} given)')
+                    f'MPC_AddToScenarioPicc({action.name}) takes exactly eight'
+                    f' arguments ({len(args) + 2} given)')
             CTS3Exception._check_error(
                 func_pointer(
                     c_uint8(0),
@@ -825,8 +825,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
         else:
             if len(args) != 7:
                 raise TypeError(
-                    f'MPC_AddToScenarioPicc({action.name}) takes exactly nine arguments '
-                    f'({len(args) + 2} given)')
+                    f'MPC_AddToScenarioPicc({action.name}) takes exactly nine '
+                    f'arguments ({len(args) + 2} given)')
             if not isinstance(args[6], float) and not isinstance(args[6], int):
                 raise TypeError('timeout must be an instance of float')
             timeout_us = round(args[6] * 1e6)
@@ -847,16 +847,16 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_DO_EOF_VICINITY:
         if len(args) < 1:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes three or four arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes three or four '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], SequencerDataFlag):
             raise TypeError(
                 'param must be an instance of SequencerDataFlag IntEnum')
         if args[0] == SequencerDataFlag.EXCHANGE_WAIT_RX:
             if len(args) != 1:
                 raise TypeError(
-                    f'MPC_AddToScenarioPicc({action.name}) takes exactly three arguments '
-                    f'({len(args) + 2} given)')
+                    f'MPC_AddToScenarioPicc({action.name}) takes exactly three'
+                    f' arguments ({len(args) + 2} given)')
             CTS3Exception._check_error(
                 func_pointer(c_uint8(0),
                              c_uint32(scenario_id), c_uint32(action),
@@ -864,8 +864,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
         else:
             if len(args) != 2:
                 raise TypeError(
-                    f'MPC_AddToScenarioPicc({action.name}) takes exactly four arguments '
-                    f'({len(args) + 2} given)')
+                    f'MPC_AddToScenarioPicc({action.name}) takes exactly four '
+                    f'arguments ({len(args) + 2} given)')
             if not isinstance(args[1], float) and not isinstance(args[1], int):
                 raise TypeError('timeout must be an instance of float')
             timeout_us = round(args[1] * 1e6)
@@ -881,8 +881,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_DO_SEND_TWO_FRAMES:
         if len(args) < 8:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes ten or eleven arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes ten or eleven '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[2], bytes):
             raise TypeError('tx_frame_1 must be an instance of bytes')
         if args[1] is None:
@@ -910,8 +910,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
         if args[7] == SequencerDataFlag.EXCHANGE_WAIT_RX:
             if len(args) != 8:
                 raise TypeError(
-                    f'MPC_AddToScenarioPicc({action.name}) takes exactly eleven arguments '
-                    f'({len(args) + 2} given)')
+                    f'MPC_AddToScenarioPicc({action.name}) takes exactly '
+                    f'eleven arguments ({len(args) + 2} given)')
             CTS3Exception._check_error(
                 func_pointer(
                     c_uint8(0),
@@ -929,8 +929,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
         else:
             if len(args) != 9:
                 raise TypeError(
-                    f'MPC_AddToScenarioPicc({action.name}) takes exactly eleven arguments '
-                    f'({len(args) + 2} given)')
+                    f'MPC_AddToScenarioPicc({action.name}) takes exactly '
+                    f'eleven arguments ({len(args) + 2} given)')
             if not isinstance(args[8], float) and not isinstance(args[8], int):
                 raise TypeError('timeout must be an instance of float')
             timeout_us = round(args[8] * 1e6)
@@ -954,8 +954,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_DO_EMV_POLLING:
         if len(args) != 9:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes exactly eleven arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly eleven '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], float) and not isinstance(args[0], int):
             raise TypeError('first_frame_delay must be an instance of float')
         first_delay_us = round(args[0] * 1e6)
@@ -1010,8 +1010,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
     elif action == TermEmuSeqAction.TSCN_DO_SEND_RAW_A106_FRAME:
         if len(args) < 3:
             raise TypeError(
-                f'MPC_AddToScenarioPicc({action.name}) takes five or six arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPicc({action.name}) takes five or six '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('tx_bits must be an instance of int')
         _check_limits(c_uint32, args[0], 'tx_bits')
@@ -1023,8 +1023,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
         if args[2] == SequencerDataFlag.EXCHANGE_WAIT_RX:
             if len(args) != 3:
                 raise TypeError(
-                    f'MPC_AddToScenarioPicc({action.name}) takes exactly five arguments '
-                    f'({len(args) + 2} given)')
+                    f'MPC_AddToScenarioPicc({action.name}) takes exactly five '
+                    f'arguments ({len(args) + 2} given)')
             CTS3Exception._check_error(
                 func_pointer(
                     c_uint8(0),
@@ -1036,8 +1036,8 @@ def MPC_AddToScenarioPicc(scenario_id, action,
         else:
             if len(args) != 4:
                 raise TypeError(
-                    f'MPC_AddToScenarioPicc({action.name}) takes exactly six arguments '
-                    f'({len(args) + 2} given)')
+                    f'MPC_AddToScenarioPicc({action.name}) takes exactly six '
+                    f'arguments ({len(args) + 2} given)')
             if not isinstance(args[3], float) and not isinstance(args[3], int):
                 raise TypeError('timeout must be an instance of float')
             timeout_us = round(args[3] * 1e6)
@@ -1060,7 +1060,8 @@ def MPC_ExecuteScenarioPicc(scenario_id: int,
 
     Args:
         scenario_id: Scenario instance identifier
-        timeout: Scenario timeout in s, or None to compile the scenario without executing it
+        timeout: Scenario timeout in s,
+        or None to compile the scenario without executing it
     """
     _check_limits(c_uint32, scenario_id, 'scenario_id')
     if timeout:

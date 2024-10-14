@@ -106,7 +106,8 @@ def MPC_StartRFMeasure2(settings: MeasureTriggerSetting,
         unit: Delay and duration unit
         delay: Trigger delay
         duration: Acquisition duration
-        file_name: File name (only if settings contains MEAS_TRIG_SETTING_DOWNLOAD)
+        file_name: File name
+        (only if settings contains MEAS_TRIG_SETTING_DOWNLOAD)
     """
     if not isinstance(settings, MeasureTriggerSetting):
         raise TypeError(
@@ -248,7 +249,8 @@ def GetAnalyzedMeasureVoltmeterToFile(
         path: Path to waveform file
 
     Returns:
-        If measurement_type is SCINFC_MEASTYPE_PCD_WAVEFORM, dictionary made of:
+        If measurement_type is SCINFC_MEASTYPE_PCD_WAVEFORM,
+        dictionary made of:
         - 't1': T1 in s (float), applicable to Type A and Vicinity only
         - 't2': T2 in s (float), applicable to Type A 106kb/s and Vicinity only
         - 't3': T3 in s (float), applicable to Type A 106kb/s and Vicinity only
@@ -258,36 +260,42 @@ def GetAnalyzedMeasureVoltmeterToFile(
         - 't6': T6 in s (float), applicable to Type A > 106kb/s only
         - 'v1': V1 in V (float)
         - 'v1_noise_floor': V1 noise floor in V (float),
-            applicable to Type B, FeliCa and Vicinity only
+          applicable to Type B, FeliCa and Vicinity only
         - 'v2': V2 in V (float)
-        - 'v2_noise_floor': V2 noise floor in V (float), applicable to Type B and FeliCa only
+        - 'v2_noise_floor': V2 noise floor in V (float),
+          applicable to Type B and FeliCa only
         - 'v3': V3 in V (float)
         - 'v4': V4 in V (float)
         - 'v5': V5 in V (float), applicable to Type A > 106kb/s only
         - 'modulation_index': Modulation index in V (float)
         - 'modulation_depth': Modulation depth in V (float),
-            applicable to Type A 106kb/s, Type B, FeliCa and Vicinity only
+          applicable to Type A 106kb/s, Type B, FeliCa and Vicinity only
         - 'monotonic_rising_edge': True if rising edge is monotonic (bool)
         - 'rising_time': Rising time in s (float),
-            applicable to Type A > 106kb/s, Type B and FeliCa only
+          applicable to Type A > 106kb/s, Type B and FeliCa only
         - 'overshoot_after_rising_edge': Rising edge overshoot in V (float)
         - 'undershoot_after_rising_edge': Rising edge undershoot in V (float),
-            applicable to Type A > 106kb/s, Type B and FeliCa only
-        - 'ringing_level': Ringing in V (float), applicable to Type A 106kb/s only
-        - 'high_state_noise_floor': High state noise in V (float), applicable to Type A only
+          applicable to Type A > 106kb/s, Type B and FeliCa only
+        - 'ringing_level': Ringing in V (float),
+          applicable to Type A 106kb/s only
+        - 'high_state_noise_floor': High state noise in V (float),
+          applicable to Type A only
         - 'monotonic_falling_edge': True if falling edge is monotonic (bool)
         - 'falling_time': Falling time in s (float),
-            applicable to Type A > 106kb/s, Type B and FeliCa only
+          applicable to Type A > 106kb/s, Type B and FeliCa only
         - 'overshoot_after_falling_edge': Falling edge overshoot in V (float)
-        - 'overshoot_delay_after_falling_edge': Delay adter falling edge in s (float),
-            applicable to Type A and Vicinity only
-        - 'undershoot_after_falling_edge': Falling edge undershoot in V (float),
-            applicable to Type B and FeliCa only
+        - 'overshoot_delay_after_falling_edge':
+          Delay adter falling edge in s (float),
+          applicable to Type A and Vicinity only
+        - 'undershoot_after_falling_edge':
+          Falling edge undershoot in V (float),
+          applicable to Type B and FeliCa only
 
         If measurement_type is SCINFC_MEASTYPE_PICC_LMA, dictionary made of:
         - 'lma': LMA in V (float)
 
-        If measurement_type is SCINFC_MEASTYPE_PCD_FIELD_STRENGTH, dictionary made of:
+        If measurement_type is SCINFC_MEASTYPE_PCD_FIELD_STRENGTH,
+        dictionary made of:
         - 'field_strength': Field strength in Vpp (float)
     """
     if not isinstance(measurement_type, MeasurementType):
@@ -323,7 +331,8 @@ def GetAnalyzedMeasureVoltmeterToFile(
         ptr = c_cast(measurements, POINTER(c_int32 * measurement_count.value))
         values = [i for i in ptr.contents]
         if measurement_type == MeasurementType.SCINFC_MEASTYPE_PCD_WAVEFORM:
-            if card_type == TechnologyType.TYPE_A and data_rate == DataRate.DATARATE_106KB:
+            if (card_type == TechnologyType.TYPE_A
+                    and data_rate == DataRate.DATARATE_106KB):
                 t5 = []
                 for i in range(16, 16 + values[15]):
                     t5 += [values[i] / 1e9]
@@ -347,7 +356,8 @@ def GetAnalyzedMeasureVoltmeterToFile(
                     'modulation_index': values[16 + len(t5)] / 1e6,
                     'modulation_depth': values[17 + len(t5)] / 1e6
                 }
-            elif card_type == TechnologyType.TYPE_A and data_rate > DataRate.DATARATE_106KB:
+            elif (card_type == TechnologyType.TYPE_A
+                  and data_rate > DataRate.DATARATE_106KB):
                 return {
                     't1': values[0] / 1e9,
                     't5': values[1] / 1e9,
@@ -368,7 +378,8 @@ def GetAnalyzedMeasureVoltmeterToFile(
                     'monotonic_falling_edge': values[16] > 0,
                     'monotonic_rising_edge': values[17] > 0
                 }
-            elif card_type == TechnologyType.TYPE_B or card_type == TechnologyType.TYPE_FELICA:
+            elif (card_type == TechnologyType.TYPE_B
+                  or card_type == TechnologyType.TYPE_FELICA):
                 return {
                     'falling_time': values[0] / 1e9,
                     'rising_time': values[1] / 1e9,
@@ -411,7 +422,8 @@ def GetAnalyzedMeasureVoltmeterToFile(
                 return {}
         elif measurement_type == MeasurementType.SCINFC_MEASTYPE_PICC_LMA:
             return {'lma': values[0] / 1e6}
-        elif measurement_type == MeasurementType.SCINFC_MEASTYPE_PCD_FIELD_STRENGTH:
+        elif (measurement_type ==
+              MeasurementType.SCINFC_MEASTYPE_PCD_FIELD_STRENGTH):
             return {'field_strength': values[0] / 1e6}
         else:
             return {}
@@ -518,7 +530,8 @@ def MPC_ImpedanceSelfCompensation(connector: MeasurementConnector,
 
     Args:
         connector: Connector used to perform the cable impedance compensation
-        channel: DAQ SMA input channel used to perform the cable impedance compensation
+        channel: DAQ SMA input channel used to perform
+        the cable impedance compensation
         label: Compensation identifier
     """
     if not isinstance(connector, MeasurementConnector):
@@ -901,10 +914,14 @@ def MPC_GetS11(frequency: float = 0.0) -> Dict[str, Union[float, complex]]:
     Returns:
         Dictionary made of:
         - 'dbm_at_min': Minimum Return Loss in dB (float)
-        - 'frequency_at_min': Frequency giving the minimum return loss in Hz (int)
-        - 'impedance_at_min': Measured complex impedance in Ω at minimum return loss (complex)
-        - 'dbm_at_frequency': Return loss in dB at requested frequency, if not 0 (float)
-        - 'impedance_at_frequency': Measured complex impedance in Ω at requested frequency,
+        - 'frequency_at_min':
+          Frequency giving the minimum return loss in Hz (int)
+        - 'impedance_at_min':
+          Measured complex impedance in Ω at minimum return loss (complex)
+        - 'dbm_at_frequency':
+          Return loss in dB at requested frequency, if not 0 (float)
+        - 'impedance_at_frequency':
+          Measured complex impedance in Ω at requested frequency,
           if not 0 (complex)
     """
     freq_Hz = round(frequency)
@@ -924,7 +941,8 @@ def MPC_GetS11(frequency: float = 0.0) -> Dict[str, Union[float, complex]]:
                              byref(dbm_at_frequency), byref(real_at_frequency),
                              byref(imaginary_at_frequency),
                              byref(module_at_frequency))
-    if ret == CTS3ErrorCode.ERR_RESONANCE_FREQUENCY_MEASUREMENT.value and frequency > 0.0:
+    if (ret == CTS3ErrorCode.ERR_RESONANCE_FREQUENCY_MEASUREMENT.value
+            and frequency > 0.0):
         return {
             'dbm_at_frequency':
             dbm_at_frequency.value,

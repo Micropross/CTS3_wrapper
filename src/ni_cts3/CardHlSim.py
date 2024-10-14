@@ -1,4 +1,5 @@
-from ctypes import c_bool, c_uint8, c_uint16, c_uint32, c_int32, Structure, byref
+from ctypes import (c_bool, c_uint8, c_uint16, c_uint32, c_int32, Structure,
+                    byref)
 from typing import Optional, Union, Dict
 from enum import IntEnum, IntFlag, unique
 from . import _MPuLib, _check_limits
@@ -270,7 +271,8 @@ def MPC_SetSParameterInit(
     Args:
         pcd_to_picc_bitrate: 'Supported bit rates from PCD to PICC' byte value
         picc_to_pcd_bitrate: 'Supported bit rates from PICC to PCD' byte value
-        framing_option_picc_to_pcd: 'Supported framing options from PICC to PCD' byte value
+        framing_option_picc_to_pcd: 'Supported framing options from 
+        PICC to PCD' byte value
     """
     if isinstance(pcd_to_picc_bitrate, bytes):
         if len(pcd_to_picc_bitrate) != 1:
@@ -328,8 +330,8 @@ def MPC_SetT2TInitParameters(masked_events: Optional[Type2TagSimulatorEvent],
     if masked_events is not None and not isinstance(masked_events,
                                                     Type2TagSimulatorEvent):
         raise TypeError(
-            'masked_events must be an instance of Type2TagSimulatorEvent IntFlag'
-        )
+            'masked_events must be an instance of Type2TagSimulatorEvent '
+            'IntFlag')
     if not isinstance(sens_res, bytes) or len(sens_res) != 2:
         raise TypeError('sens_res must be an instance of 2 bytes')
     if isinstance(sel_res, bytes):
@@ -1131,8 +1133,8 @@ def MPS_ChangeSimParameters(
                 and not isinstance(parameter_value, Type2TagSimulatorEvent)):
             raise TypeError(
                 'event must be an instance of IsoSimulatorEvent IntFlag, '
-                'FeliCaSimulatorEvent IntFlag, VicinitySimulatorEvent IntFlag, '
-                'NfcSimulatorEvent IntFlag or Type2TagSimulatorEvent IntFlag')
+                'FeliCaSimulatorEvent IntFlag, VicinitySimulatorEvent IntFlag,'
+                ' NfcSimulatorEvent IntFlag or Type2TagSimulatorEvent IntFlag')
         CTS3Exception._check_error(
             _MPuLib.MPS_ChangeSimParameters(c_uint8(0),
                                             c_uint32(parameter_type),
@@ -1541,9 +1543,9 @@ def MPS_AddFilter(
                 c_uint32(_FilterType.FILTER_TYPE_CL_SUPP_TX.value),
                 c_uint32(0), byref(supp_filter)))
     else:
-        raise TypeError(
-            'filter must be an instance of IoClCrcFilter_index, IoClCrcFilter_pattern, '
-            'IoClFrameSuppFilter_index or IoClFrameSuppFilter_pattern')
+        raise TypeError('filter must be an instance of IoClCrcFilter_index, '
+                        'IoClCrcFilter_pattern, IoClFrameSuppFilter_index or '
+                        'IoClFrameSuppFilter_pattern')
 
 
 def MPS_RemoveFilters() -> None:
@@ -1667,9 +1669,8 @@ def MPS_SimAddRule(event_mask: Union[IsoSimulatorEvent, FeliCaSimulatorEvent,
                                    remote_command.encode('ascii'),
                                    byref(rule_id)))
     else:
-        raise TypeError(
-            'pattern_condition must be an instance of ActionConditionDataPattern'
-        )
+        raise TypeError('pattern_condition must be an instance of '
+                        'ActionConditionDataPattern')
     return rule_id.value
 
 

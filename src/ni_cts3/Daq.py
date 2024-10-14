@@ -305,7 +305,8 @@ class DaqSamplingClk(IntEnum):
 def Daq_SetTimeBase(sampling_rate: DaqSamplingClk = DaqSamplingClk.SCLK_150MHZ,
                     points_number: int = 0x10000000) -> None:
     """
-    Configures the sampling rates and the number of points to acquire on the enabled channels
+    Configures the sampling rates and the number of points to acquire
+    on the enabled channels
 
     Args:
         sampling_rate: Sampling clock source
@@ -347,9 +348,12 @@ def Daq_SetTrigger(trigger_source: DaqTrigSource,
 
     Args:
         trigger_source: Trigger source
-        level: Trigger level in V (only if trigger source is TRIG_CH1 or TRIG_CH2)
-        direction: Trigger direction (only if trigger source is TRIG_EXT, TRIG_CH1 or TRIG_CH2)
-        delay: Samples number between the trigger and the beginning of the acquisition
+        level: Trigger level in V
+        (only if trigger source is TRIG_CH1 or TRIG_CH2)
+        direction: Trigger direction
+        (only if trigger source is TRIG_EXT, TRIG_CH1 or TRIG_CH2)
+        delay: Samples number between the trigger
+        and the beginning of the acquisition
     """
     if not isinstance(trigger_source, DaqTrigSource):
         raise TypeError(
@@ -395,7 +399,8 @@ def Daq_StartStopAcq(
 
     Args:
         acq_mode: Acquisition mode
-        download_mode: Download mode (only if acq_mode is MODE_SINGLE or MODE_RUN)
+        download_mode: Download mode
+        (only if acq_mode is MODE_SINGLE or MODE_RUN)
         data_format: Not used
         file_name: File name (only if acq_mode is MODE_SINGLE or MODE_RUN)
     """

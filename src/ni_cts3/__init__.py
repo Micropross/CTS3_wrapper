@@ -140,7 +140,9 @@ class _FirmwareLog(Thread):
                                      stderr=DEVNULL)
                 else:
                     # Running from remote environment, open SSH connection
-                    ssh_cmd = f'ssh -Tnq -l default -o StrictHostKeyChecking=no {self.host}'
+                    ssh_cmd = (
+                        'ssh -Tnq -l default -o StrictHostKeyChecking=no '
+                        f'{self.host}')
                     self.log = Popen(split(f'{ssh_cmd} {log_cmd}'),
                                      bufsize=1,
                                      universal_newlines=True,
@@ -350,7 +352,8 @@ def MPOS_CloseResource(
         ret = CTS3ErrorCode(
             _MPuLib.MPOS_CloseResource(c_uint32(MPOS_GetResourceID()),
                                        c_uint8(0)))
-        if ret != CTS3ErrorCode.RET_OK and ret != CTS3ErrorCode.RET_RESOURCE_NOT_OPEN:
+        if (ret != CTS3ErrorCode.RET_OK
+                and ret != CTS3ErrorCode.RET_RESOURCE_NOT_OPEN):
             raise CTS3Exception(ret)
         ret = CTS3ErrorCode(
             _MPuLib.MPOS_CloseResource(
@@ -364,7 +367,8 @@ def MPOS_CloseResource(
         _check_limits(c_uint32, resource_id, 'resource_id')
         ret = CTS3ErrorCode(
             _MPuLib.MPOS_CloseResource(c_uint32(resource_id), c_uint8(0)))
-        if ret != CTS3ErrorCode.RET_OK and ret != CTS3ErrorCode.RET_RESOURCE_NOT_OPEN:
+        if (ret != CTS3ErrorCode.RET_OK
+                and ret != CTS3ErrorCode.RET_RESOURCE_NOT_OPEN):
             raise CTS3Exception(ret)
 
 
@@ -649,7 +653,8 @@ def MPS_ResetHard(resource_id: Union[int, ResourceType, None] = None) -> None:
     Resets application to its default state
 
     Args:
-        resource_id: Resource to reset, or any other value to reset currently opened resources
+        resource_id: Resource to reset,
+        or any other value to reset currently opened resources
     """
     if resource_id is None:
         resource_id = 0
@@ -1205,7 +1210,8 @@ def MPS_PortReceive(data_count: Optional[int] = None) -> bytes:
     Reads data from serial port
 
     Args:
-        data_count: Size of data to read. If None, data currently received are returned
+        data_count: Size of data to read.
+        If None, data currently received are returned
 
     Returns:
         Data read
@@ -1477,7 +1483,8 @@ def SendFrame(command: Optional[str],
     Args:
         command: Remote command to send
         timeout: Communication timeout in s (-1 to use default value)
-        asynchronous_tx: True to send command to connected CTS3 without waiting for an answer
+        asynchronous_tx: True to send command to connected CTS3
+        without waiting for an answer
 
     Returns:
         CTS3 answer
@@ -1632,7 +1639,8 @@ def UploadClientFile(local_path: Union[str, Path], remote_name: str) -> None:
 
     Args:
         local_path: Path to file to upload
-        remote_name: CTS3 remote file name (will be over-written if already exists)
+        remote_name: CTS3 remote file name
+        (will be over-written if already exists)
     """
     if isinstance(local_path, Path):
         file = str(local_path).encode('ascii')

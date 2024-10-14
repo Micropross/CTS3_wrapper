@@ -1,5 +1,6 @@
 from warnings import warn
-from ctypes import c_bool, c_uint8, c_uint16, c_int32, c_uint32, c_double, byref
+from ctypes import (c_bool, c_uint8, c_uint16, c_int32, c_uint32, c_double,
+                    byref)
 from typing import Dict, Union, Optional
 from enum import IntEnum, unique
 from . import _MPuLib, _check_limits
@@ -50,9 +51,8 @@ def MPC_ChannelFlush(
         direction: Direction of channel to flush
     """
     if not isinstance(direction, CardEmulationChannelDirection):
-        raise TypeError(
-            'direction must be an instance of CardEmulationChannelDirection IntEnum'
-        )
+        raise TypeError('direction must be an instance of '
+                        'CardEmulationChannelDirection IntEnum')
     CTS3Exception._check_error(
         _MPuLib.MPC_ChannelFlush(c_uint8(0), c_uint8(direction)))
 
@@ -352,8 +352,10 @@ def MPS_SimSetDesyncPattern(t1_fc: Optional[float],
     Enables NFC Desync Pattern for following FeliCa frames
 
     Args:
-        t1_fc: t1 pattern duration in carrier periods (None to deactivate Desync Pattern)
-        t2_fc: t2 pattern duration in carrier periods(None to deactivate Desync Pattern)
+        t1_fc: t1 pattern duration in carrier periods
+        (None to deactivate Desync Pattern)
+        t2_fc: t2 pattern duration in carrier periods
+        (None to deactivate Desync Pattern)
     """
     if t1_fc is not None and t2_fc is not None:
         t1_10fc = round(t1_fc * 1e1)
@@ -500,8 +502,8 @@ def MPC_IQLoadModulationSuspendControlLoop(suspend: bool) -> None:
         suspend: True to suspend the regulation
     """
     warn(
-        'MPC_IQLoadModulationSuspendControlLoop renamed as MPC_IQLMSuspendControlLoop',
-        FutureWarning, 2)
+        'MPC_IQLoadModulationSuspendControlLoop renamed as '
+        'MPC_IQLMSuspendControlLoop', FutureWarning, 2)
     return MPC_IQLMSuspendControlLoop(suspend)
 
 
@@ -638,8 +640,8 @@ def MPC_IQLoadModulationChangeParameters(parameter: IqlmParameter,
         value: Parameter value
     """
     warn(
-        'MPC_IQLoadModulationChangeParameters renamed as MPC_IQLMChangeParameters',
-        FutureWarning, 2)
+        'MPC_IQLoadModulationChangeParameters renamed as '
+        'MPC_IQLMChangeParameters', FutureWarning, 2)
     return MPC_IQLMChangeParameters(parameter, value)
 
 

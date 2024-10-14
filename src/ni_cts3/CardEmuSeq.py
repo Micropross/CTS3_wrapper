@@ -336,8 +336,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
             or action == CardEmuSeqAction.TSCN_DO_USER_EVENT):
         if len(args) != 1:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly three arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('param1 must be an instance of int')
         _check_limits(c_uint32, args[0], 'param1')
@@ -348,8 +348,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
           or action == CardEmuSeqAction.TSCN_PARAM_ACTIVE_FDT_MODE):
         if len(args) != 1:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly three arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
         CTS3Exception._check_error(
             func_pointer(c_uint8(0), c_uint32(scenario_id), c_uint32(action),
                          c_uint32(1) if args[0] else c_uint32(0)))
@@ -357,8 +357,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_TEMPO:
         if len(args) != 1:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly three arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], float) and not isinstance(args[0], int):
             raise TypeError('param1 must be an instance of float')
         tempo_us = round(args[0] * 1e6)
@@ -372,8 +372,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
           or action == CardEmuSeqAction.TSCN_PARAM_FDT2_PICC_NS):
         if len(args) != 1:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly three arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], float) and not isinstance(args[0], int):
             raise TypeError('param1 must be an instance of float')
         delay_ns = round(args[0] * 1e9)
@@ -384,8 +384,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_EMD_SUBCARRIER:
         if len(args) != 1:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly three arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], EmdSubCarrier):
             raise TypeError(
                 'param1 must be an instance of EmdSubCarrier IntEnum')
@@ -395,8 +395,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_SELECT_VOLTMETER_RANGE:
         if len(args) != 1:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly three arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], VoltmeterRange):
             raise TypeError(
                 'param1 must be an instance of VoltmeterRange IntEnum')
@@ -407,8 +407,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
           or action == CardEmuSeqAction.TSCN_DO_TRIGGER_OUT_EMD_GENERATION):
         if len(args) != 1:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly three arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('param1 must be an instance of int')
         _check_limits(c_uint32, args[0], 'param1')  # Trigger
@@ -425,8 +425,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
           or action == CardEmuSeqAction.TSCN_DO_VICINITY_COLLISION):
         if len(args) != 2:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly four arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly four '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('param1 must be an instance of int')
         _check_limits(c_uint32, args[0], 'param1')
@@ -439,8 +439,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_TRIGGER_OUT:
         if len(args) != 2:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly four arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly four '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('param1 must be an instance of int')
         _check_limits(c_uint32, args[0], 'param1')  # Trigger
@@ -454,8 +454,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_CHANGE_VC_DATA_RATE:
         if len(args) != 2:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly four arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly four '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], VicinityDataRate):
             raise TypeError(
                 'param1 must be an instance of VicinityDataRate IntEnum')
@@ -472,8 +472,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_CHANGE_DATA_RATE:
         if len(args) != 2:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly four arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly four '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], DataRate):
             raise TypeError('param1 must be an instance of DataRate IntEnum')
         if not isinstance(args[1], DataRate):
@@ -488,8 +488,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_START_RF_MEASURE:
         if len(args) != 2:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly four arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly four '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], NfcTrigger):
             raise TypeError('param1 must be an instance of NfcTrigger IntEnum')
         if not isinstance(args[1], float) and not isinstance(args[1], int):
@@ -506,8 +506,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_COMPLETE_ANTICOLLISION:
         if len(args) != 2:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly four arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly four '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[1], int):
             raise TypeError('param2 must be an instance of int')
         _check_limits(c_uint32, args[1], 'param2')  # Sak
@@ -521,8 +521,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_SET_LMA_CARD_EMULATION:
         if len(args) != 2:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly four arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly four '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], float) and not isinstance(args[0], int):
             raise TypeError('param1 must be an instance of float')
         low_mV = round(args[0] * 1e3)
@@ -541,8 +541,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_SET_PCD_MASK:
         if len(args) != 2:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly four arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly four '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], TechnologyType):
             raise TypeError(
                 'pcd_type must be an instance of TechnologyType IntEnum')
@@ -562,8 +562,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_CE_TRIGGER:
         if len(args) != 3:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly five arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly five '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], NfcTriggerId):
             raise TypeError(
                 'param1 must be an instance of int or NfcTriggerId IntFlag')
@@ -588,8 +588,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_SEQUENCE_ERROR:
         if len(args) != 3:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly five arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly five '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('param1 must be an instance of int')
         _check_limits(c_uint32, args[0], 'param1')  # ByteNumber
@@ -610,8 +610,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_PARAM_NFC_ACTIVE_TIMINGS:
         if len(args) != 3:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly five arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly five '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('param1 must be an instance of int')
         _check_limits(c_uint32, args[0], 'param1')  # Tadt
@@ -634,8 +634,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_EXCHANGE_RAW_TYPEA:
         if len(args) != 3:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly five arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly five '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[1], str):
             raise TypeError('pcd_frame must be an instance of str')
         if not isinstance(args[2], str):
@@ -652,8 +652,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_WAIT_VC_SEND_SOF_ONLY:
         if len(args) != 3:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly five arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly five '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[2], bytes):
             raise TypeError('vcd_frame must be an instance of bytes')
         _check_limits(c_uint32, len(args[2]), 'vcd_frame')
@@ -671,8 +671,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_NEGATIVE_MODULATION:
         if len(args) < 2 or len(args) > 3:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes four or five arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes four or five '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[1], int):
             raise TypeError('param2 must be an instance of int')
         _check_limits(c_uint32, args[1], 'param2')  # TimeBeforeTload_clk
@@ -701,8 +701,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_PARAM_ACTIVE_TIMINGS:
         if len(args) != 4:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly six arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly six '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('tadt must be an instance of int')
         _check_limits(c_uint32, args[0], 'tadt')
@@ -729,8 +729,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_EMD:
         if len(args) != 2:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly four arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly four '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[0], int):
             raise TypeError('fdt must be an instance of int')
         _check_limits(c_uint32, args[0], 'fdt')  # FdtEmd
@@ -755,8 +755,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_EXCHANGE:
         if len(args) != 4 and len(args) != 6:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes six or eight arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes six or eight '
+                f'arguments ({len(args) + 2} given)')
         if len(args) > 5:
             if not isinstance(args[2], TechnologyType):
                 raise TypeError(
@@ -818,8 +818,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_EXCHANGE_ACTIVE_TARGET:
         if len(args) != 6:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes exactly eight arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes exactly eight '
+                f'arguments ({len(args) + 2} given)')
         if not isinstance(args[2], TechnologyType):
             raise TypeError(
                 'pcd_type must be an instance of TechnologyType IntEnum')
@@ -861,8 +861,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_WAIT_VC_EOF_ONLY:
         if len(args) < 1 or len(args) > 2:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes three or four arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes three or four '
+                f'arguments ({len(args) + 2} given)')
         if len(args) > 1:
             if not isinstance(args[1], bytes):
                 raise TypeError('picc_frame must be an instance of bytes')
@@ -890,8 +890,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_WAIT_TYPEA106_SEND_BITS:
         if len(args) != 3 and len(args) != 5:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes five or seven arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes five or seven '
+                f'arguments ({len(args) + 2} given)')
         if len(args) > 4:
             if not isinstance(args[3], int):
                 raise TypeError('picc_bits_number must be an instance of int')
@@ -974,8 +974,8 @@ def MPC_AddToScenarioPcd(scenario_id, action,
     elif action == CardEmuSeqAction.TSCN_DO_EXCHANGE_EBF:
         if len(args) != 6 and len(args) != 10:
             raise TypeError(
-                f'MPC_AddToScenarioPcd({action.name}) takes eight or twelve arguments '
-                f'({len(args) + 2} given)')
+                f'MPC_AddToScenarioPcd({action.name}) takes eight or twelve '
+                f'arguments ({len(args) + 2} given)')
         if len(args) > 9:
             if not isinstance(args[2], int):
                 raise TypeError('pcd_picc_option must be an instance of int')
