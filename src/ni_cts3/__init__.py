@@ -169,6 +169,7 @@ class _FirmwareLog(Thread):
             self.running = False
             self.log.terminate()
             self.log.wait()
+            self.log.__exit__(None, None, None)
             Thread.join(self)
 
 
