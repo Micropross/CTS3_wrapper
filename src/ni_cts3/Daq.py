@@ -93,101 +93,145 @@ def load_signals(file_path: Union[str, Path]) -> List[List[DaqPoint]]:
         List of signals loaded from acquisition file
     """
     with open(file_path, 'rb') as f:
-        header = _DaqHeader.from_buffer_copy(f.read(sizeof(_DaqHeader)))
-        if header.version < 2:
-            raise Exception(f'Unsupported DAQ file version ({header.version})')
-        data_width = int(header.bits_per_sample / 8)
-        data_length = cast(int, header.measurements_count)
+        signal_1: List[DaqPoint] = []
+        signal_2: List[DaqPoint] = []
         start_date = 0.0
-        if header.version > 2:
-            start_date = cast(int, header.delay) / 1e9
-        sampling = cast(int, header.sampling)
-        channels = cast(int, header.channels)
-        file_content = f.read(channels * data_length * data_width)
-        footer = _DaqFooter.from_buffer_copy(f.read(sizeof(_DaqFooter)))
-        if footer.metadata_size:
-            f.read(footer.metadata_size)
-
-    signal: List[DaqPoint] = []
-    date = start_date
-    if data_width == sizeof(c_int16):
-        SOURCE_TXRX = 1
-        SOURCE_PHASE = 6
-        SOURCE_VDC = 5
-        if channels == 1:
-            if header.source == SOURCE_PHASE:
-                # Phase
-                for y in iter_unpack('<h', file_content):
-                    value = float('nan') if y[0] > 8192 else 180.0 * cast(
-                        int, y[0]) / 8192.0
-                    signal.append(DaqPoint(date, value))
-                    date += 1.0 / sampling
-            elif header.source == SOURCE_VDC:
-                # Vdc
-                offset = cast(float, header.ch1.offset)
-                slope = cast(float, header.ch1.slope)
-                quadratic = cast(float, header.ch1.rms_noise)
-                cubic = cast(float, header.ch1.demod_noise)
-                for y in iter_unpack('<h', file_content):
-                    value = (offset + slope * cast(int, y[0]) +
-                             quadratic * cast(int, y[0])**2 +
-                             cubic * cast(int, y[0])**3) / 1e3
-                    signal.append(DaqPoint(date, value))
-                    date += 1.0 / sampling
-            else:
-                # Modulated signal
-                if header.ch1.config & 1:
-                    offset = cast(float, header.ch1.offset)
-                    slope = cast(float, header.ch1.slope)
+        while True:
+            buffer = f.read(sizeof(_DaqHeader))
+            if len(buffer) != sizeof(_DaqHeader):
+                if len(buffer) > 0:
+                    raise Exception('Unexpected end of file')
+                break
+            header = _DaqHeader.from_buffer_copy(buffer)
+            if header.version < 2:
+                raise Exception(
+                    f'Unsupported DAQ file version ({header.version})')
+            data_width = int(header.bits_per_sample / 8)
+            data_length = cast(int, header.measurements_count)
+            if data_length == 0:
+                break
+            sampling = cast(int, header.sampling)
+            if header.version > 2:
+                if sampling == 0.0:
+                    start_date += cast(int, header.delay)
                 else:
-                    offset = cast(float, header.ch2.offset)
-                    slope = cast(float, header.ch2.slope)
-                if header.source != SOURCE_TXRX:
-                    slope /= 1e3
-                for y in iter_unpack('<h', file_content):
-                    value = slope * (cast(int, y[0]) + offset)
-                    signal.append(DaqPoint(date, value))
-                    date += 1.0 / sampling
-            return [signal]
+                    start_date += cast(int, header.delay) / 1e9
 
-        else:
-            # CH1 and CH2 data interleaved
-            offset_1 = cast(float, header.ch1.offset)
-            slope_1 = cast(float, header.ch1.slope) / 1e3
-            offset_2 = cast(float, header.ch2.offset)
-            slope_2 = cast(float, header.ch2.slope) / 1e3
-
-            signal_1: List[DaqPoint] = []
-            signal_2: List[DaqPoint] = []
             date = start_date
-            toggle = True
-            for y in iter_unpack('<h', file_content):
-                if toggle:
-                    value = slope_1 * (cast(int, y[0]) + offset_1)
-                    signal_1.append(DaqPoint(date, value))
+            if sampling == 0.0:
+                start_date += data_length + 1
+                if len(signal_1) > 0:
+                    signal_1.append(DaqPoint(start_date, float('nan')))
+                if len(signal_2) > 0:
+                    signal_2.append(DaqPoint(start_date, float('nan')))
+                start_date += 1
+                if header.version > 2:
+                    start_date -= cast(int, header.delay)
+            else:
+                start_date += (data_length + 1) / sampling
+                if len(signal_1) > 0:
+                    signal_1.append(DaqPoint(start_date, float('nan')))
+                if len(signal_2) > 0:
+                    signal_2.append(DaqPoint(start_date, float('nan')))
+                start_date += 1.0 / sampling
+                if header.version > 2:
+                    start_date -= cast(int, header.delay) / 1e9
+
+            if data_width == sizeof(c_int16):
+                SOURCE_TXRX = 1
+                SOURCE_PHASE = 6
+                SOURCE_VDC = 5
+                channels = cast(int, header.channels)
+                if channels == 1:
+                    buffer = f.read(data_length * sizeof(c_int16))
+                    if len(buffer) != data_length * sizeof(c_int16):
+                        break
+                    if header.source == SOURCE_PHASE:
+                        # Phase
+                        for y in iter_unpack('<h', buffer):
+                            value = float('nan') if y[0] > 8192 else (
+                                180.0 * cast(int, y[0]) / 8192.0)
+                            signal_1.append(DaqPoint(date, value))
+                            date += 1.0 / sampling
+                    elif header.source == SOURCE_VDC:
+                        # Vdc
+                        offset = cast(float, header.ch1.offset)
+                        slope = cast(float, header.ch1.slope)
+                        quadratic = cast(float, header.ch1.rms_noise)
+                        cubic = cast(float, header.ch1.demod_noise)
+                        for y in iter_unpack('<h', buffer):
+                            value = (offset + slope * cast(int, y[0]) +
+                                     quadratic * cast(int, y[0])**2 +
+                                     cubic * cast(int, y[0])**3) / 1e3
+                            signal_1.append(DaqPoint(date, value))
+                            date += 1.0 / sampling
+                    else:
+                        # Modulated signal
+                        if header.ch1.config & 1:
+                            offset = cast(float, header.ch1.offset)
+                            slope = cast(float, header.ch1.slope)
+                        else:
+                            offset = cast(float, header.ch2.offset)
+                            slope = cast(float, header.ch2.slope)
+                        if header.source != SOURCE_TXRX:
+                            slope /= 1e3
+                        for y in iter_unpack('<h', buffer):
+                            value = slope * (cast(int, y[0]) + offset)
+                            signal_1.append(DaqPoint(date, value))
+                            date += 1.0 / sampling
+
                 else:
-                    value = slope_2 * (cast(int, y[0]) + offset_2)
-                    signal_2.append(DaqPoint(date, value))
+                    # Dual channel
+                    buffer = f.read(data_length * sizeof(c_int16) * 2)
+                    if len(buffer) != data_length * sizeof(c_int16) * 2:
+                        break
+                    offset_1 = cast(float, header.ch1.offset)
+                    slope_1 = cast(float, header.ch1.slope) / 1e3
+                    offset_2 = cast(float, header.ch2.offset)
+                    slope_2 = cast(float, header.ch2.slope) / 1e3
+
+                    # CH1 and CH2 data interleaved
+                    toggle = True
+                    for y in iter_unpack('<h', buffer):
+                        if toggle:
+                            value = slope_1 * (cast(int, y[0]) + offset_1)
+                            signal_1.append(DaqPoint(date, value))
+                        else:
+                            value = slope_2 * (cast(int, y[0]) + offset_2)
+                            signal_2.append(DaqPoint(date, value))
+                            date += 1.0 / sampling
+                        toggle = not toggle
+
+            elif data_width == sizeof(c_uint32):
+                # Demodulated signal
+                buffer = f.read(data_length * sizeof(c_uint32))
+                if len(buffer) != data_length * sizeof(c_uint32):
+                    break
+                if header.ch1.config & 1:
+                    slope = cast(float, header.ch1.slope)
+                    noise = cast(float, header.ch1.demod_noise)
+                else:
+                    slope = cast(float, header.ch2.slope)
+                    noise = cast(float, header.ch2.demod_noise)
+                slope *= cast(float, header.normalization) / 1e3
+                for y in iter_unpack('<L', buffer):
+                    value = slope * sqrt(y[0] - noise) if y[0] > noise else 0.0
+                    signal_1.append(DaqPoint(date, value))
                     date += 1.0 / sampling
-                toggle = not toggle
-            return [signal_1, signal_2]
 
-    elif data_width == sizeof(c_uint32):
-        # Demodulated signal
-        if header.ch1.config & 1:
-            slope = cast(float, header.ch1.slope)
-            noise = cast(float, header.ch1.demod_noise)
-        else:
-            slope = cast(float, header.ch2.slope)
-            noise = cast(float, header.ch2.demod_noise)
-        slope *= cast(float, header.normalization) / 1e3
-        for y in iter_unpack('<L', file_content):
-            value = slope * sqrt(y[0] - noise) if y[0] > noise else 0.0
-            signal.append(DaqPoint(date, value))
-            date += 1.0 / sampling
-        return [signal]
+            else:
+                break
 
-    return []
+            # Read footer
+            buffer = f.read(sizeof(_DaqFooter))
+            if len(buffer) != sizeof(_DaqFooter):
+                break
+            footer = _DaqFooter.from_buffer_copy(buffer)
+            metadata_len = int(footer.metadata_size)
+            if metadata_len:
+                f.read(metadata_len)
+
+    return [signal_1, signal_2] if len(signal_2) > 0 else [signal_1]
 
 
 def load_signal(file_path: Union[str, Path]) -> List[List[float]]:
