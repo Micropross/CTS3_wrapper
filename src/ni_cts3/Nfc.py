@@ -1,6 +1,6 @@
 from warnings import warn
 from pathlib import Path
-from typing import Dict, Union, Optional, List, Tuple, Callable, overload
+from typing import Dict, Union, Optional, List, Tuple, Callable, cast, overload
 from enum import IntEnum, IntFlag, unique
 from . import _MPuLib, _MPuLib_variadic, _check_limits, _get_connection_string
 from .MPStatus import CTS3ErrorCode
@@ -3185,8 +3185,8 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             func_pointer(
                 c_uint8(0),
                 c_uint32(test_type),
-                c_uint32(args[0]) if test_type == TestType.TEST_RF_RESET_CMD
-                else c_double(args[0]),  # Ask
+                (c_uint32(cast(int, args[0])) if test_type
+                 == TestType.TEST_RF_RESET_CMD else c_double(args[0])),  # Ask
                 c_uint32(time1_us),  # Time1_us
                 c_uint32(time2_us),  # Time2_us
                 c_uint32(args[3]),  # TxBits
@@ -3237,9 +3237,9 @@ def MPC_Test(test_type, *args):  # type: ignore[no-untyped-def]
             func_pointer(
                 c_uint8(0),
                 c_uint32(test_type),
-                c_uint32(args[0])
-                if test_type == TestType.TEST_RF_RESET_CMD_WITH_TRIGGER_IN else
-                c_double(args[0]),  # Ask
+                (c_uint32(cast(int, args[0]))
+                 if test_type == TestType.TEST_RF_RESET_CMD_WITH_TRIGGER_IN
+                 else c_double(args[0])),  # Ask
                 c_uint32(time1_us),  # Time1_us
                 c_uint32(time2_us),  # Time2_us
                 c_uint32(timeout_triggerin_ms),  # TimeOutTriggerIn_ms
