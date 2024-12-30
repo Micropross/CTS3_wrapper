@@ -1,6 +1,6 @@
 from enum import IntEnum, unique
 from ctypes import c_uint8, c_int32, c_uint32, byref
-from typing import Union, Optional, overload
+from typing import Union, Optional, overload, List
 from warnings import warn
 from . import _MPuLib, _MPuLib_variadic, _check_limits
 from .Measurement import VoltmeterRange
@@ -81,6 +81,7 @@ class TermEmuSeqAction(IntEnum):
     TSCN_DO_EXCHANGE_PATTERN = 81
     TSCN_PARAM_ACTIVE_TIMINGS = 82
     TSCN_PARAM_FELICA_FRAMING = 83
+    TSCN_DO_RF_PULSES = 84
 
 
 @unique
@@ -168,6 +169,13 @@ def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
 def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
                           tadt: int, tarfg: int, toff: int) -> None:
     # TSCN_PARAM_NFC_ACTIVE_TIMINGS
+    ...
+
+
+@overload
+def MPC_AddToScenarioPicc(scenario_id: int, action: TermEmuSeqAction,
+                          pulses: List[float]) -> None:
+    # TSCN_DO_RF_PULSES
     ...
 
 
@@ -401,6 +409,27 @@ def MPC_AddToScenarioPicc(scenario_id, action,
                 c_uint32(action),
                 c_uint32(args[0]),  # Trigger
                 c_uint32(0)))  # Rfu
+    elif action == TermEmuSeqAction.TSCN_DO_RF_PULSES:
+        if len(args) != 1:
+            raise TypeError(
+                f'MPC_AddToScenarioPicc({action.name}) takes exactly three '
+                f'arguments ({len(args) + 2} given)')
+        if not isinstance(args[0], list):
+            raise TypeError('pulses must be an instance of floats list')
+        _check_limits(c_uint32, len(args[0]), 'pulses')
+        pulses_list = (c_uint32 * len(args[0]))()
+        for i in range(len(args[0])):
+            if not isinstance(args[0][i], float) and not isinstance(args[0][i], int):
+                raise TypeError('pulses must be an instance of floats list')
+            _check_limits(c_uint32, round(args[0][i] * 1e6), 'pulses')
+            pulses_list[i] = c_uint32(round(args[0][i] * 1e6))
+        CTS3Exception._check_error(
+            func_pointer(
+                c_uint8(0),
+                c_uint32(scenario_id),
+                c_uint32(action),
+                c_uint32(len(args[0])),
+                pulses_list))
     # µs
     elif (action == TermEmuSeqAction.TSCN_PARAM_FWT
           or action == TermEmuSeqAction.TSCN_DO_RF_RESET
