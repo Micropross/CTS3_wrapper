@@ -594,6 +594,26 @@ def MPC_SendSBlockParameters(tx_frame: bytes) -> bytes:
     return data[:length.value]
 
 
+def MPC_SParametersBitRateActivation(pcd_data_rate: DataRate,
+                                     picc_data_rate: DataRate) -> None:
+    """
+    Change datarate using an S(PARAMETERS) block
+
+    Args:
+        pcd_data_rate: PCD to PICC data rate
+        picc_data_rate: PICC to PCD data rate
+    """
+    if not isinstance(pcd_data_rate, DataRate):
+        raise TypeError(
+            'pcd_data_rate must be an instance of DataRate IntEnum')
+    if not isinstance(picc_data_rate, DataRate):
+        raise TypeError(
+            'picc_data_rate must be an instance of DataRate IntEnum')
+    CTS3Exception._check_error(
+        _MPuLib.MPC_SParametersBitRateActivation(c_uint8(0),
+                                                 c_uint16(pcd_data_rate),
+                                                 c_uint16(picc_data_rate)))
+
 def MPC_SetTxDelay(tx_delay: float, unit: NfcUnit) -> None:
     """
     Selects delay between Rx frame and following Tx frame
