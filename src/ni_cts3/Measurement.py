@@ -771,6 +771,8 @@ def MPC_ResonanceFrequency(method: ResonanceMethod,
         Dictionary made of:
         - 'resonance_frequency' Measured resonance frequency in Hz (int)
         - 'q_factor': Measured quality factor (float)
+        - 'real_part': Measured impedance real part at resonance in Ω (float)
+          (applicable to RESONANCE_ISO method only)
     """
     if not isinstance(method, ResonanceMethod):
         raise TypeError(
@@ -786,17 +788,36 @@ def MPC_ResonanceFrequency(method: ResonanceMethod,
     _check_limits(c_uint32, average, 'average')
     freq = c_uint32()
     q = c_uint32()
-    CTS3Exception._check_error(
-        _MPuLib.MPC_ResonanceFrequencyVS(c_uint8(0), c_uint8(method),
-                                         c_int32(power_dbm_int),
-                                         c_uint32(step_Hz), c_uint32(average),
-                                         c_uint32(freq_min_Hz),
-                                         c_uint32(freq_max_Hz), byref(freq),
-                                         byref(q)))
-    return {
-        'resonance_frequency': freq.value,
-        'q_factor': float(q.value) / 1e1
-    }
+    real_max = c_uint32()
+    vs2_available = True
+    ret = _MPuLib.MPC_ResonanceFrequencyVS2(c_uint8(0), c_uint8(method),
+                                            c_int32(power_dbm_int),
+                                            c_uint32(step_Hz),
+                                            c_uint32(average),
+                                            c_uint32(freq_min_Hz),
+                                            c_uint32(freq_max_Hz), byref(freq),
+                                            byref(q), byref(real_max))
+    if ret == CTS3ErrorCode.RET_UNKNOWN_COMMAND.value:
+        vs2_available = False
+        ret = _MPuLib.MPC_ResonanceFrequencyVS(c_uint8(0), c_uint8(method),
+                                               c_int32(power_dbm_int),
+                                               c_uint32(step_Hz),
+                                               c_uint32(average),
+                                               c_uint32(freq_min_Hz),
+                                               c_uint32(freq_max_Hz),
+                                               byref(freq), byref(q))
+    CTS3Exception._check_error(ret)
+    if method == ResonanceMethod.RESONANCE_ISO and vs2_available:
+        return {
+            'resonance_frequency': freq.value,
+            'q_factor': float(q.value) / 1e1,
+            'real_part': float(real_max.value) / 1e3
+        }
+    else:
+        return {
+            'resonance_frequency': freq.value,
+            'q_factor': float(q.value) / 1e1
+        }
 
 
 @unique
