@@ -418,6 +418,7 @@ class DaqAcqMode(IntEnum):
     MODE_STOP = 0
     MODE_SINGLE = 1
     MODE_NORMAL = 2
+    MODE_CANCEL = 3
 
 
 @unique
