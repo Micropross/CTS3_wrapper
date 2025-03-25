@@ -2600,6 +2600,9 @@ def MPC_ChangeProtocolParameters(
                 or (not isinstance(param_value, float)
                     and not isinstance(param_value, int))):
             raise TypeError('param_value must be an instance of float')
+        if param_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE:
+            warn("deprecated 'CPP_ANALOG_IN_AUTORANGE' parameter",
+                 FutureWarning, 2)
         value_ms = round(param_value * 1e3)
         _check_limits(c_uint32, value_ms, 'param_value')
         int_val = c_uint32(value_ms)
@@ -2748,6 +2751,9 @@ def MPC_GetProtocolParameters(
           or param_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE
           or param_type == ProtocolParameters.CPP_PLI_STEP
           or param_type == ProtocolParameters.CPP_AUTORANGE_MARGIN):
+        if param_type == ProtocolParameters.CPP_ANALOG_IN_AUTORANGE:
+            warn("deprecated 'CPP_ANALOG_IN_AUTORANGE' parameter",
+                 FutureWarning, 2)
         int_val = c_uint32()
         CTS3Exception._check_error(
             _MPuLib.MPC_GetProtocolParameters(c_uint8(0), c_uint32(param_type),
