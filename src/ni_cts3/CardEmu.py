@@ -119,6 +119,19 @@ def MPC_SetLMAForEMD(low_voltage: float, high_voltage: float) -> None:
                                  c_int32(high_voltage_mV)))
 
 
+def MPC_ForceLoadingEffect(duration: float) -> None:
+    """
+    Forces a loading effect when RF field is detected
+
+    Args:
+        duration: Loading effect duration in s
+    """
+    duration_us = round(duration * 1e6)
+    _check_limits(c_uint32, duration_us, 'duration')
+    CTS3Exception._check_error(
+        _MPuLib.MPC_ForceLoadingEffect(c_uint8(0), c_uint32(duration_us)))
+
+
 @unique
 class SubcarrierFrequency(IntEnum):
     """Sub-carrier frequency"""
