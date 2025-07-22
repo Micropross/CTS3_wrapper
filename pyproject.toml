@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools>=61.2"
+    "setuptools>=80.9"
 ]
 build-backend = "setuptools.build_meta"
 
@@ -24,7 +24,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
@@ -44,13 +43,14 @@ requires-python = ">=3.6"
 dynamic = [
     "version"
 ]
+license = "MIT"
+license-files = [
+    "LICENSE"
+]
 
 [project.readme]
 file = "README.rst"
 content-type = "text/x-rst"
-
-[project.license]
-text = "MIT"
 
 [project.urls]
 Homepage = "https://www.fime.com/shop/product/contactless-test-station-cts-iii-41"
@@ -62,9 +62,6 @@ include-package-data = true
 platforms = [
     "win32",
     "linux"
-]
-license-files = [
-    "LICENSE"
 ]
 
 [tool.setuptools.package-dir]
