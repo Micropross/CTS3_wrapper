@@ -24,7 +24,7 @@ if sys.version_info >= (3, 9):
 if sys.platform == 'win32':
     from ctypes import WinDLL
 
-__version__ = '25.0.1'
+__version__ = '25.2.2'
 __author__ = 'FIME'
 __copyright__ = f'Copyright 20{__version__[:2]}, FIME'
 __license__ = 'MIT'
