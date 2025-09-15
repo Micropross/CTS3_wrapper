@@ -614,6 +614,7 @@ def MPC_SParametersBitRateActivation(pcd_data_rate: DataRate,
                                                  c_uint16(pcd_data_rate),
                                                  c_uint16(picc_data_rate)))
 
+
 def MPC_SetTxDelay(tx_delay: float, unit: NfcUnit) -> None:
     """
     Selects delay between Rx frame and following Tx frame
@@ -3481,14 +3482,26 @@ class NfcTrigger(IntEnum):
     TRIG_PICC_CHAR_TYPE_B = 63
     TRIG_PICC_CHAR_TYPE_F = 64
     TRIG_PICC_CHAR_TYPE_V = 65
+    TRIG_DAQ = 66
+    TRIG_LEVEL_RX = 67
+    TRIG_LEVEL_VDC = 68
 
 
-def MPC_TriggerConfig(trigger_id: NfcTriggerId,
-                      config: NfcTrigger,
-                      value: Union[float, TechnologyType, CTS3ErrorCode,
-                                   bool] = 0,
-                      frame: Optional[bytes] = None,
-                      mask: Optional[bytes] = None) -> None:
+@unique
+class TrigDir(IntEnum):
+    """Level trigger direction"""
+    TRIGGER_LEVEL_DIR_BOTH = 0
+    TRIGGER_LEVEL_DIR_FALLING = 1
+    TRIGGER_LEVEL_DIR_RISING = 2
+
+
+def MPC_TriggerConfig(
+        trigger_id: NfcTriggerId,
+        config: NfcTrigger,
+        value: Union[float, TechnologyType, CTS3ErrorCode, bool] = 0,
+        frame: Optional[bytes] = None,
+        mask: Optional[bytes] = None,
+        direction: TrigDir = TrigDir.TRIGGER_LEVEL_DIR_BOTH) -> None:
     """
     Configures trigger
 
@@ -3500,8 +3513,10 @@ def MPC_TriggerConfig(trigger_id: NfcTriggerId,
                if config is TRIG_ON_ERROR: error code (CTS3ErrorCode),
                if config is TRIG_RX_FRAME: frame technology (TechnologyType),
                if config is TRIG_TX_FRAME: frame technology (TechnologyType)
+               if config is TRIG_LEVEL_RX or TRIG_LEVEL_VDC: voltage in V (float)
         frame: Rx frame to match
         mask: Rx frame mask
+        direction: Level trigger direction (if config is TRIG_LEVEL_VDC)
     """
     if not isinstance(trigger_id, NfcTriggerId):
         raise TypeError(
@@ -3537,6 +3552,18 @@ def MPC_TriggerConfig(trigger_id: NfcTriggerId,
             raise TypeError(
                 'value must be an instance of TechnologyType IntEnum')
         val = value.value
+    elif config == NfcTrigger.TRIG_LEVEL_VDC:
+        if not isinstance(direction, TrigDir):
+            raise TypeError('direction must be an instance of TrigDir IntEnum')
+        val = round(value * 1e3)
+        _check_limits(c_uint16, val, 'value')
+        if direction == TrigDir.TRIGGER_LEVEL_DIR_RISING:
+            val |= 0x80000000
+        elif direction == TrigDir.TRIGGER_LEVEL_DIR_FALLING:
+            val |= 0x40000000
+    elif config == NfcTrigger.TRIG_LEVEL_RX:
+        val = round(value * 1e3)
+        _check_limits(c_uint32, val, 'value')
     else:
         val = 0
 
