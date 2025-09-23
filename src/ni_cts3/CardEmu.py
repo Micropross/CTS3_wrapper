@@ -4,7 +4,8 @@ from ctypes import (c_bool, c_uint8, c_uint16, c_int32, c_uint32, c_double,
 from typing import Dict, Union, Optional
 from enum import IntEnum, unique
 from . import _MPuLib, _check_limits
-from .Nfc import TechnologyType, DataRate, VicinityDataRate, VicinitySubCarrier
+from .Nfc import (TechnologyType, DataRate, NfcTrigger, VicinityDataRate,
+                  VicinitySubCarrier)
 from .MPException import CTS3Exception
 
 
@@ -119,17 +120,23 @@ def MPC_SetLMAForEMD(low_voltage: float, high_voltage: float) -> None:
                                  c_int32(high_voltage_mV)))
 
 
-def MPC_ForceLoadingEffect(duration: float) -> None:
+def MPC_ForceLoadingEffect(
+        duration: float,
+        trigger: NfcTrigger = NfcTrigger.TRIG_RF_FIELD_ON) -> None:
     """
     Forces a loading effect when RF field is detected
 
     Args:
         duration: Loading effect duration in s
+        trigger: Event triggering the loading effect
     """
     duration_us = round(duration * 1e6)
     _check_limits(c_uint32, duration_us, 'duration')
+    if not isinstance(trigger, NfcTrigger):
+        raise TypeError('trigger must be an instance of NfcTrigger IntEnum')
     CTS3Exception._check_error(
-        _MPuLib.MPC_ForceLoadingEffect(c_uint8(0), c_uint32(duration_us)))
+        _MPuLib.MPC_ForceLoadingEffect(c_uint8(0), c_uint32(duration_us),
+                                       c_uint32(trigger)))
 
 
 @unique
